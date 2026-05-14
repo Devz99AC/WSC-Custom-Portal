@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>WSC Client Portal — Prototype</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css" />
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#e9edf2;
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    color:#1c2331;
+    -webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;align-items:center;
+    padding:32px 16px 48px;
+  }
+  .demo-banner{
+    width:100%;max-width:760px;text-align:center;margin-bottom:18px;
+  }
+  .demo-banner h1{
+    font-family:'Arial Black','Helvetica Neue',Arial,sans-serif;font-weight:800;
+    font-size:18px;color:#16223f;letter-spacing:-.01em;
+  }
+  .demo-banner p{font-size:12px;color:#6a7689;margin-top:4px}
+  .demo-banner .pill{
+    display:inline-block;margin-top:8px;font-size:10px;font-weight:800;
+    letter-spacing:.06em;text-transform:uppercase;color:#a50d26;
+    background:#fbe7ea;padding:4px 10px;border-radius:20px;
+  }
+  .wsc2{
+    --navy:#16223f;--navy-d:#0f1830;--navy-700:#26365c;--navy-300:#5a6b8c;
+    --red:#c8102e;--red-d:#a50d26;--red-bg:#fbe7ea;
+    --gold:#c4a259;--gold-d:#a3863d;
+    --ink:#1c2331;--mut:#6a7689;--line:#dde2ea;--bg:#f3f5f8;
+    --ok:#2e7d52;--ok-bg:#e6f2eb;--warn:#a8762a;--warn-bg:#faf0db;
+    --hold:#5a52a8;--hold-bg:#eceaf6;
+    width:100%;max-width:760px;
+  }
+  .wsc2 *{box-sizing:border-box}
+  .disp{font-family:'Arial Black','Helvetica Neue',Arial,sans-serif;font-weight:800;letter-spacing:-.01em}
+
+  .chrome{background:#dfe3e9;border:1px solid var(--line);border-radius:12px 12px 0 0;padding:10px 13px;display:flex;align-items:center;gap:8px}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .urlbar{flex:1;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 11px;font-size:11px;color:var(--mut);display:flex;align-items:center;gap:6px}
+  .frame{border:1px solid var(--line);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;background:var(--bg);box-shadow:0 18px 50px -22px rgba(15,24,48,.4)}
+
+  .wsc-logo{font-family:'Arial Black',Arial,sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .wsc-logo .c{color:var(--red)}
+
+  /* LOGIN */
+  .login{background:linear-gradient(157deg,#0f1830,#26365c);padding:54px 24px;min-height:470px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .login-card{background:#fff;border-radius:14px;padding:34px 32px;width:100%;max-width:350px;text-align:center}
+  .login-card .wsc-logo{font-size:40px;color:var(--navy);margin-bottom:4px}
+  .login-card .wmark{font-size:8px;letter-spacing:.06em;color:var(--navy-300);font-weight:700;margin-bottom:22px}
+  .login-card .wmark b{color:var(--red)}
+  .kicker{font-size:10px;letter-spacing:.18em;color:var(--red);text-transform:uppercase;margin-bottom:9px;font-weight:800}
+  .login-card h1{font-size:23px;color:var(--navy);margin-bottom:6px}
+  .login-card p.sub{font-size:13px;color:var(--mut);margin-bottom:22px;line-height:1.5}
+  .field{text-align:left;margin-bottom:14px}
+  .field label{font-size:10.5px;font-weight:700;color:var(--ink);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+  .field input{width:100%;border:1px solid var(--line);border-radius:8px;padding:11px 12px;font-size:13px;color:var(--ink);font-family:inherit}
+  .field input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(196,162,89,.18)}
+  .btn-gold{width:100%;background:var(--gold);color:var(--navy);border:none;border-radius:8px;padding:13px;font-size:13px;font-weight:800;cursor:pointer;transition:.15s;letter-spacing:.01em;font-family:inherit}
+  .btn-gold:hover{background:var(--gold-d);color:#fff}
+  .login-foot{font-size:11px;color:var(--mut);margin-top:16px;line-height:1.5}
+  .login-mark{color:#c4cedd;font-size:10.5px;margin-top:26px;letter-spacing:.06em;font-weight:600}
+
+  /* SHELL */
+  .shell{display:none;grid-template-columns:184px 1fr;min-height:512px}
+  .side{background:var(--navy);padding:20px 0;display:flex;flex-direction:column}
+  .side-logo{padding:0 17px 16px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:12px}
+  .side-logo .wsc-logo{font-size:28px;color:#fff}
+  .side-logo .sl-sub{font-size:7px;letter-spacing:.08em;color:#8b9bb5;font-weight:700;margin-top:3px}
+  .side-logo .sl-sub b{color:var(--red)}
+  .nav-i{display:flex;align-items:center;gap:10px;padding:10px 17px;color:#9fb0ca;font-size:13px;cursor:pointer;border-left:3px solid transparent;transition:.15s}
+  .nav-i:hover{color:#fff;background:rgba(255,255,255,.05)}
+  .nav-i.on{color:#fff;background:rgba(255,255,255,.08);border-left-color:var(--red);font-weight:700}
+  .nav-i i{font-size:16px;width:17px;text-align:center}
+  .side-foot{margin-top:auto;padding:14px 17px 0;border-top:1px solid rgba(255,255,255,.1)}
+  .side-user{display:flex;align-items:center;gap:9px}
+  .ava{width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+  .side-user .nm{color:#fff;font-size:11px;font-weight:700}
+  .side-user .em{color:#8295ad;font-size:9.5px}
+
+  .main{padding:22px 24px;overflow-y:auto;max-height:512px}
+  .pg{display:none}.pg.on{display:block}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:18px;gap:12px}
+  .topbar h2{font-size:20px;color:var(--navy)}
+  .topbar p{font-size:11.5px;color:var(--mut);margin-top:3px}
+  .help-btn{background:#fff;border:1px solid var(--line);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--navy);cursor:pointer;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:inherit}
+  .help-btn:hover{border-color:var(--gold)}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:17px 18px;margin-bottom:14px}
+  .card-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:14px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 15px}
+  .stat .lab{font-size:9.5px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:6px}
+  .stat .val{font-size:21px;color:var(--navy);font-weight:800;font-family:'Arial Black',Arial,sans-serif;letter-spacing:-.01em}
+  .stat .val.red{color:var(--red)}
+  .stat .sub2{font-size:9.5px;color:var(--mut);margin-top:3px}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:20px}
+  .b-ok{background:var(--ok-bg);color:var(--ok)}
+  .b-warn{background:var(--warn-bg);color:var(--warn)}
+  .b-dang{background:var(--red-bg);color:var(--red-d)}
+  .b-hold{background:var(--hold-bg);color:var(--hold)}
+
+  .track{display:flex;align-items:flex-start;margin:6px 0 2px}
+  .tstep{flex:1;text-align:center;position:relative}
+  .tstep .ring{width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid var(--line);margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--mut);position:relative;z-index:2;font-weight:700}
+  .tstep.done .ring{background:var(--ok);border-color:var(--ok);color:#fff}
+  .tstep.cur .ring{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 0 0 4px rgba(200,16,46,.16)}
+  .tstep .tl{font-size:9px;color:var(--mut);font-weight:700;line-height:1.25;padding:0 2px}
+  .tstep.done .tl,.tstep.cur .tl{color:var(--navy)}
+  .tstep:not(:last-child):after{content:"";position:absolute;top:12px;left:50%;width:100%;height:2px;background:var(--line);z-index:1}
+  .tstep.done:not(:last-child):after{background:var(--ok)}
+
+  .tl-row{display:flex;gap:11px;padding-bottom:14px;position:relative}
+  .tl-row:not(:last-child):before{content:"";position:absolute;left:6px;top:14px;bottom:-2px;width:2px;background:var(--line)}
+  .tl-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:1px;border:2px solid #fff;z-index:2}
+  .tl-dot.g{background:var(--ok)}.tl-dot.r{background:var(--red)}.tl-dot.n{background:#c8d2dc}
+  .tl-body .tt{font-size:12px;color:var(--navy);font-weight:700}
+  .tl-body .td{font-size:10.5px;color:var(--mut);margin-top:2px;line-height:1.45}
+  .tl-body .tm{font-size:9.5px;color:#9aa7b5;margin-top:3px}
+
+  table.lst{width:100%;border-collapse:collapse}
+  table.lst th{text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-weight:800;padding:0 0 8px;border-bottom:1px solid var(--line)}
+  table.lst td{font-size:11.5px;color:var(--ink);padding:9px 0;border-bottom:1px solid var(--line)}
+  table.lst tr:last-child td{border-bottom:none}
+  .tnum{color:var(--navy);font-weight:800}
+
+  .doc-row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .doc-row:last-child{border-bottom:none}
+  .doc-ic{width:36px;height:36px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--navy-300);flex-shrink:0}
+  .doc-row .dn{font-size:12px;color:var(--navy);font-weight:700}
+  .doc-row .dmeta{font-size:10px;color:var(--mut);margin-top:1px}
+  .dl-btn{margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:6px;padding:6px 11px;font-size:10.5px;color:var(--navy);cursor:pointer;font-weight:700;font-family:inherit}
+  .dl-btn:hover{border-color:var(--gold)}
+
+  .note{background:var(--bg);border-left:3px solid var(--red);border-radius:0 7px 7px 0;padding:10px 12px;margin-bottom:9px}
+  .note .ntx{font-size:11px;color:var(--ink);line-height:1.5}
+  .note .nm{font-size:9.5px;color:var(--mut);margin-top:4px;font-weight:600}
+
+  .prod{display:flex;gap:13px;align-items:flex-start}
+  .prod-ic{width:48px;height:48px;border-radius:10px;background:linear-gradient(150deg,#16223f,#26365c);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:22px;flex-shrink:0}
+  .prod .pn{font-size:14px;color:var(--navy);font-weight:800}
+  .prod .pd{font-size:11px;color:var(--mut);margin-top:3px;line-height:1.5}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .kv div .k{font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+  .kv div .v{font-size:12px;color:var(--ink);font-weight:700;margin-top:2px}
+
+  .alert{display:flex;gap:11px;background:var(--warn-bg);border-radius:9px;padding:12px 14px;margin-bottom:14px;align-items:center}
+  .alert i{color:var(--warn);font-size:17px}
+  .alert .at{font-size:11.5px;color:#7a560f;font-weight:800}
+  .alert .ad{font-size:10.5px;color:#8a6a1f;margin-top:2px;line-height:1.45}
+  .pay-btn{background:var(--red);color:#fff;border:none;border-radius:7px;padding:9px 15px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;font-family:inherit}
+  .pay-btn:hover{background:var(--red-d)}
+
+  .page-foot{width:100%;max-width:760px;text-align:center;margin-top:20px;font-size:11px;color:#8a94a3;line-height:1.6}
+
+  @media(max-width:560px){
+    .shell{grid-template-columns:1fr}
+    .side{flex-direction:row;flex-wrap:wrap;padding:12px}
+    .side-logo{width:100%;border:none;padding:0 0 10px;margin:0}
+    .side-foot{display:none}
+    .nav-i{border-left:none;border-radius:6px;padding:8px 10px;font-size:12px}
+    .nav-i.on{border-left:none}
+    .stat-grid{grid-template-columns:1fr}
+    .kv{grid-template-columns:1fr}
+    .track{flex-wrap:wrap;gap:10px 0}
+    .tstep{flex:0 0 33.33%}
+    .tstep:not(:last-child):after{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  <h1>WSC Client Portal</h1>
+  <p>Interactive prototype — click "Send secure sign-in link" to enter the portal.</p>
+  <span class="pill">Mockup · sample data only</span>
+</div>
+
+<div class="wsc2">
+  <div class="chrome">
+    <div class="dot" style="background:#e25b5b"></div>
+    <div class="dot" style="background:#e6b04a"></div>
+    <div class="dot" style="background:#5cab5c"></div>
+    <div class="urlbar"><i class="ti ti-lock" style="font-size:11px"></i>portal.wholesaleshelfcorporations.com</div>
+  </div>
+  <div class="frame">
+
+    <!-- LOGIN -->
+    <div class="login" id="loginView">
+      <div class="login-card">
+        <div class="wsc-logo">WS<span class="c">C</span></div>
+        <div class="wmark"><b>W</b>HOLESALE<b>S</b>HELF<b>C</b>ORPORATIONS.COM</div>
+        <div class="kicker">Client Portal</div>
+        <h1 class="disp">Welcome back</h1>
+        <p class="sub">Enter your email and we'll send a secure sign-in link &mdash; no password to remember.</p>
+        <div class="field">
+          <label>Email address</label>
+          <input type="email" value="m.brown@acmeholdings.com" />
+        </div>
+        <button class="btn-gold" id="enterBtn">Send secure sign-in link</button>
+        <p class="login-foot">Trouble signing in? Call your advisor<br>+1 (720) 534-2065</p>
+      </div>
+      <div class="login-mark">Established 2010 &mdash; 16 Years of Experience</div>
+    </div>
+
+    <!-- APP -->
+    <div class="shell" id="appShell">
+      <aside class="side">
+        <div class="side-logo">
+          <div class="wsc-logo">WS<span class="c">C</span></div>
+          <div class="sl-sub"><b>W</b>HOLESALE<b>S</b>HELF<b>C</b>ORP</div>
+        </div>
+        <div class="nav-i on" data-pg="dash"><i class="ti ti-layout-dashboard"></i>Dashboard</div>
+        <div class="nav-i" data-pg="order"><i class="ti ti-file-certificate"></i>My Order</div>
+        <div class="nav-i" data-pg="pay"><i class="ti ti-credit-card"></i>Payments</div>
+        <div class="nav-i" data-pg="docs"><i class="ti ti-folder"></i>Documents</div>
+        <div class="nav-i" data-pg="prof"><i class="ti ti-user"></i>Profile</div>
+        <div class="side-foot">
+          <div class="side-user">
+            <div class="ava">MB</div>
+            <div><div class="nm">Marcus Brown</div><div class="em">Acme Holdings LLC</div></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+
+        <!-- DASHBOARD -->
+        <div class="pg on" id="pg-dash">
+          <div class="topbar">
+            <div><h2 class="disp">Good afternoon, Marcus</h2><p>Here's where your order stands today.</p></div>
+            <button class="help-btn"><i class="ti ti-headset"></i>Contact advisor</button>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><div class="lab">Order total</div><div class="val">$8,750</div><div class="sub2">Order #OO-1042</div></div>
+            <div class="stat"><div class="lab">Paid to date</div><div class="val">$5,000</div><div class="sub2">2 payments verified</div></div>
+            <div class="stat"><div class="lab">Balance due</div><div class="val red">$3,750</div><div class="sub2">Due before shipping</div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-route" style="font-size:13px"></i>Order progress</div>
+            <div class="track">
+              <div class="tstep done"><div class="ring"><i class="ti ti-check"></i></div><div class="tl">Payment verified</div></div>
+              <div class="tstep done"><div class="ring"><i class="ti ti-check"></i></div><div class="tl">Initial contact</div></div>
+              <div class="tstep cur"><div class="ring"><i class="ti ti-progress"></i></div><div class="tl">Work started</div></div>
+              <div class="tstep"><div class="ring">4</div><div class="tl">Ready to ship</div></div>
+              <div class="tstep"><div class="ring">5</div><div class="tl">Shipped</div></div>
+              <div class="tstep"><div class="ring">6</div><div class="tl">Complete</div></div>
+            </div>
+            <div style="margin-top:14px;padding-top:13px;border-top:1px solid var(--line);display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+              <span class="badge b-ok"><i class="ti ti-circle-filled" style="font-size:7px"></i>Verified &mdash; Work Started</span>
+              <span style="font-size:11px;color:var(--mut)">Our team is preparing your corporation's credit-ready features.</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-clock" style="font-size:13px"></i>Recent activity</div>
+            <div class="tl-row"><div class="tl-dot r"></div><div class="tl-body"><div class="tt">Status changed to "Work Started"</div><div class="td">Your advisor began the IRS &amp; State compliance setup.</div><div class="tm">May 11, 2026 &middot; 2:14 PM</div></div></div>
+            <div class="tl-row"><div class="tl-dot g"></div><div class="tl-body"><div class="tt">Document uploaded &mdash; Purchase Agreement</div><div class="td">A new document is available in your Documents tab.</div><div class="tm">May 9, 2026 &middot; 10:02 AM</div></div></div>
+            <div class="tl-row"><div class="tl-dot g"></div><div class="tl-body"><div class="tt">Payment of $2,500 verified</div><div class="td">Second installment confirmed by the finance team.</div><div class="tm">May 8, 2026 &middot; 4:40 PM</div></div></div>
+          </div>
+        </div>
+
+        <!-- MY ORDER -->
+        <div class="pg" id="pg-order">
+          <div class="topbar">
+            <div><h2 class="disp">My Order</h2><p>Order #OO-1042 &middot; Placed May 2, 2026</p></div>
+            <span class="badge b-ok"><i class="ti ti-circle-filled" style="font-size:7px"></i>Work Started</span>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-package" style="font-size:13px"></i>Product purchased</div>
+            <div class="prod">
+              <div class="prod-ic"><i class="ti ti-building-bank"></i></div>
+              <div>
+                <div class="pn">Aged Shelf Corporation &mdash; 2016 Wyoming LLC</div>
+                <div class="pd">Credit-Ready package with all 14 credibility &amp; verification features included. 8 years time-in-business on transfer.</div>
+              </div>
+            </div>
+            <div class="kv">
+              <div><div class="k">Entity type</div><div class="v">Wyoming LLC</div></div>
+              <div><div class="k">Year established</div><div class="v">2016</div></div>
+              <div><div class="k">Credit-ready features</div><div class="v">14 included</div></div>
+              <div><div class="k">Assigned advisor</div><div class="v">Rinkie S.</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-timeline" style="font-size:13px"></i>Full status history</div>
+            <div class="tl-row"><div class="tl-dot r"></div><div class="tl-body"><div class="tt">Verified &mdash; Work Started</div><div class="td">Credit-ready feature setup in progress.</div><div class="tm">May 11, 2026</div></div></div>
+            <div class="tl-row"><div class="tl-dot g"></div><div class="tl-body"><div class="tt">Verified &mdash; Initial Contact</div><div class="td">Advisor introduction call completed.</div><div class="tm">May 9, 2026</div></div></div>
+            <div class="tl-row"><div class="tl-dot g"></div><div class="tl-body"><div class="tt">Pending Balance</div><div class="td">Initial payment verified; balance scheduled.</div><div class="tm">May 8, 2026</div></div></div>
+            <div class="tl-row"><div class="tl-dot g"></div><div class="tl-body"><div class="tt">To Verify Payment</div><div class="td">Order received, awaiting first payment confirmation.</div><div class="tm">May 2, 2026</div></div></div>
+            <div class="tl-row"><div class="tl-dot n"></div><div class="tl-body"><div class="tt">Upcoming: Waiting to Ship &rarr; Shipped &rarr; Delivered &rarr; Complete</div><div class="td">Remaining stages once the balance is cleared.</div></div></div>
+          </div>
+        </div>
+
+        <!-- PAYMENTS -->
+        <div class="pg" id="pg-pay">
+          <div class="topbar">
+            <div><h2 class="disp">Payments</h2><p>All payments tied to Order #OO-1042</p></div>
+          </div>
+          <div class="alert">
+            <i class="ti ti-alert-triangle"></i>
+            <div style="flex:1"><div class="at">Balance of $3,750 remaining</div><div class="ad">Your corporation ships once the full balance is verified. You can pay anytime.</div></div>
+            <button class="pay-btn">Pay balance</button>
+          </div>
+          <div class="stat-grid">
+            <div class="stat"><div class="lab">Total</div><div class="val">$8,750</div></div>
+            <div class="stat"><div class="lab">Verified</div><div class="val">$5,000</div></div>
+            <div class="stat"><div class="lab">Remaining</div><div class="val red">$3,750</div></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-receipt" style="font-size:13px"></i>Payment history</div>
+            <table class="lst">
+              <tr><th>Date</th><th>Method</th><th>Amount</th><th>Status</th><th></th></tr>
+              <tr><td>May 8, 2026</td><td>Wire transfer</td><td class="tnum">$2,500</td><td><span class="badge b-ok">Verified</span></td><td style="text-align:right"><button class="dl-btn">Receipt</button></td></tr>
+              <tr><td>May 3, 2026</td><td>Credit card</td><td class="tnum">$2,500</td><td><span class="badge b-ok">Verified</span></td><td style="text-align:right"><button class="dl-btn">Receipt</button></td></tr>
+              <tr><td>&mdash;</td><td>Balance payment</td><td class="tnum">$3,750</td><td><span class="badge b-warn">Pending</span></td><td style="text-align:right"><button class="dl-btn">Pay now</button></td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- DOCUMENTS -->
+        <div class="pg" id="pg-docs">
+          <div class="topbar">
+            <div><h2 class="disp">Documents</h2><p>Files and notes shared by your team</p></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-files" style="font-size:13px"></i>Attachments</div>
+            <div class="doc-row"><div class="doc-ic"><i class="ti ti-file-text"></i></div><div><div class="dn">Purchase Agreement &mdash; OO-1042.pdf</div><div class="dmeta">PDF &middot; 240 KB &middot; Uploaded May 9, 2026</div></div><button class="dl-btn">Download</button></div>
+            <div class="doc-row"><div class="doc-ic"><i class="ti ti-file-certificate"></i></div><div><div class="dn">Articles of Incorporation &mdash; 2016.pdf</div><div class="dmeta">PDF &middot; 180 KB &middot; Uploaded May 9, 2026</div></div><button class="dl-btn">Download</button></div>
+            <div class="doc-row"><div class="doc-ic"><i class="ti ti-file-invoice"></i></div><div><div class="dn">EIN Confirmation Letter.pdf</div><div class="dmeta">PDF &middot; 96 KB &middot; Uploaded May 10, 2026</div></div><button class="dl-btn">Download</button></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-message-2" style="font-size:13px"></i>Notes from your team</div>
+            <div class="note"><div class="ntx">Welcome aboard, Marcus! I've started the IRS &amp; State compliance setup. Expect the 411 directory listing active within 5 business days.</div><div class="nm">Rinkie S. &middot; Advisor &middot; May 11, 2026</div></div>
+            <div class="note"><div class="ntx">Your Purchase Agreement is uploaded and ready for your records. Let me know if you have questions before we proceed.</div><div class="nm">Rinkie S. &middot; Advisor &middot; May 9, 2026</div></div>
+          </div>
+        </div>
+
+        <!-- PROFILE -->
+        <div class="pg" id="pg-prof">
+          <div class="topbar">
+            <div><h2 class="disp">Profile</h2><p>Your contact and account details</p></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-user" style="font-size:13px"></i>Account holder</div>
+            <div class="prod">
+              <div class="ava" style="width:48px;height:48px;font-size:16px">MB</div>
+              <div><div class="pn">Marcus Brown</div><div class="pd">Acme Holdings LLC &middot; Client since May 2026</div></div>
+            </div>
+            <div class="kv">
+              <div><div class="k">Email</div><div class="v">m.brown@acmeholdings.com</div></div>
+              <div><div class="k">Phone</div><div class="v">+1 (305) 555-0148</div></div>
+              <div><div class="k">Preferred language</div><div class="v">English</div></div>
+              <div><div class="k">Notifications</div><div class="v">Email &middot; enabled</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><i class="ti ti-shield-lock" style="font-size:13px"></i>Security</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;gap:12px">
+              <div><div style="font-size:12px;color:var(--navy);font-weight:700">Two-factor authentication</div><div style="font-size:10.5px;color:var(--mut);margin-top:1px">Add an extra layer of protection to your account.</div></div>
+              <button class="dl-btn">Enable</button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</div>
+
+<div class="page-foot">
+  Prototype for demonstration only &mdash; not connected to Salesforce. All data shown is fictional.
+</div>
+
+<script>
+  (function(){
+    var enterBtn=document.getElementById('enterBtn');
+    if(enterBtn){
+      enterBtn.addEventListener('click',function(){
+        document.getElementById('loginView').style.display='none';
+        document.getElementById('appShell').style.display='grid';
+        window.scrollTo({top:0,behavior:'smooth'});
+      });
+    }
+    var navItems=document.querySelectorAll('.nav-i');
+    navItems.forEach(function(n){
+      n.addEventListener('click',function(){
+        navItems.forEach(function(x){x.classList.remove('on')});
+        n.classList.add('on');
+        var pg=n.getAttribute('data-pg');
+        document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on')});
+        var t=document.getElementById('pg-'+pg);
+        if(t)t.classList.add('on');
+        var m=document.querySelector('.main');
+        if(m)m.scrollTop=0;
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
