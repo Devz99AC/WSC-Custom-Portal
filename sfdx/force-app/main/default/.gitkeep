@@ -1,0 +1,3 @@
+# Placeholder so the SFDX default package directory is tracked in git.
+# Salesforce metadata (custom objects, fields, Apex, permission sets) lands here
+# starting in Phase 1 (ROADMAP 1.1–1.5). Empty in Phase 0.

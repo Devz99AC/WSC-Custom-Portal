@@ -1,0 +1,9 @@
+# Metadata to ignore on deploy/retrieve
+**/jsconfig.json
+**/.eslintrc.json
+
+# Profiles are environment-specific — manage permissions via Permission Sets
+**/profiles/**
+
+# Never source-track secrets or connected-app consumer secrets
+**/connectedApps/**/*.secret

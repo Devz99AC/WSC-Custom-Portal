@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Tooling caches
+.turbo/
+coverage/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment & secrets — NEVER commit real values (CLAUDE.md §4)
+.env
+.env.*
+!.env.example
+
+# Salesforce DX local state
+sfdx/.sf/
+sfdx/.sfdx/
+sfdx/.localdevserver/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

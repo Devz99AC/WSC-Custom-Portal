@@ -1,0 +1,90 @@
+/*
+ * WSC brand design tokens — extracted verbatim from the original prototype
+ * (see apps/web/public/prototype.html). Single source for the navy/red/gold
+ * palette so components never hardcode brand colors. The full component library
+ * is built on these in Phase 4 (ROADMAP 4.1).
+ */
+:root {
+  --wsc-navy: #16223f;
+  --wsc-navy-d: #0f1830;
+  --wsc-navy-700: #26365c;
+  --wsc-navy-300: #5a6b8c;
+
+  --wsc-red: #c8102e;
+  --wsc-red-d: #a50d26;
+  --wsc-red-bg: #fbe7ea;
+
+  --wsc-gold: #c4a259;
+  --wsc-gold-d: #a3863d;
+
+  --wsc-ink: #1c2331;
+  --wsc-mut: #6a7689;
+  --wsc-line: #dde2ea;
+  --wsc-bg: #f3f5f8;
+
+  --wsc-ok: #2e7d52;
+  --wsc-ok-bg: #e6f2eb;
+  --wsc-warn: #a8762a;
+  --wsc-warn-bg: #faf0db;
+  --wsc-hold: #5a52a8;
+  --wsc-hold-bg: #eceaf6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: var(--wsc-bg);
+  color: var(--wsc-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+.wsc-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.wsc-title {
+  color: var(--wsc-navy);
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+
+.wsc-sub {
+  color: var(--wsc-mut);
+  font-size: 13px;
+  margin: 0 0 16px;
+}
+
+.wsc-sub a {
+  color: var(--wsc-red);
+}
+
+.wsc-pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wsc-pipeline li {
+  border: 1px solid var(--wsc-line);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--wsc-mut);
+  background: #fff;
+}
+
+.wsc-pipeline li.is-current {
+  border-color: var(--wsc-red);
+  color: var(--wsc-red-d);
+  background: var(--wsc-red-bg);
+  font-weight: 700;
+}

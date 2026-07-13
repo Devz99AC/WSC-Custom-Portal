@@ -1,0 +1,7 @@
+node_modules
+dist
+.turbo
+coverage
+pnpm-lock.yaml
+# Frozen design reference — keep the original prototype byte-for-byte.
+apps/web/public/prototype.html
