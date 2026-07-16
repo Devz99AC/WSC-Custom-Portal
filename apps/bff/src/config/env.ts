@@ -16,6 +16,11 @@ const envSchema = z.object({
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
+  // Demo data source. "mock" = in-memory real-shaped data; "salesforce" = live reads
+  // from the org via the CLI's stored auth (dev-only; prod uses JWT Bearer).
+  PORTAL_DATA_SOURCE: z.enum(["mock", "salesforce"]).default("mock"),
+  // Username of the authorized org (e.g. from `sf org list`). Required for "salesforce".
+  SF_TARGET_USERNAME: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

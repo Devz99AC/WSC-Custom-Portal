@@ -1,52 +1,53 @@
 import { describe, expect, it } from "vitest";
 import {
-  ORDER_STAGES,
-  ORDER_STAGE_TO_SF_STAGE,
+  ORDER_PIPELINE,
   orderStageIndex,
-  orderSchema,
+  orderStageLabel,
+  isTerminalStatus,
+  orderDashboardSchema,
 } from "./index.js";
 
 describe("order pipeline", () => {
-  it("has the 8 canonical stages, in order", () => {
-    expect(ORDER_STAGES).toHaveLength(8);
-    expect(ORDER_STAGES[0]).toBe("To Verify Payment");
-    expect(ORDER_STAGES.at(-1)).toBe("Complete");
+  it("has the 8 progressive stages in order, using real SF picklist values", () => {
+    expect(ORDER_PIPELINE).toHaveLength(8);
+    expect(ORDER_PIPELINE[0]?.sfValue).toBe("To Verify Payment");
+    expect(ORDER_PIPELINE.at(-1)?.sfValue).toBe("Verified - Complete");
   });
 
-  it("maps every stage to a Salesforce StageName", () => {
-    for (const stage of ORDER_STAGES) {
-      expect(ORDER_STAGE_TO_SF_STAGE[stage]).toBeTruthy();
-    }
+  it("derives progress index and friendly labels from raw SF values", () => {
+    expect(orderStageIndex("Verified - Work Started")).toBe(3);
+    expect(orderStageLabel("Verified - Work Started")).toBe("Work Started");
+    expect(orderStageIndex("Cancelled - Refunded")).toBe(-1);
   });
 
-  it("derives a monotonic progress index", () => {
-    expect(orderStageIndex("To Verify Payment")).toBe(0);
-    expect(orderStageIndex("Work Started")).toBe(3);
+  it("flags terminal states outside the progress bar", () => {
+    expect(isTerminalStatus("ON HOLD - Other Reasons")).toBe(true);
+    expect(isTerminalStatus("Verified - Shipped")).toBe(false);
   });
 });
 
-describe("orderSchema", () => {
-  it("accepts a well-formed order and rejects a bad order number", () => {
-    const ok = orderSchema.safeParse({
-      id: "006AA",
-      orderNumber: "OO-1042",
-      amount: 8750,
-      balanceDue: 3750,
-      stage: "Work Started",
-      advisor: "Rinkie S.",
-      shelfCorpId: "a01AA",
-    });
-    expect(ok.success).toBe(true);
+describe("orderDashboardSchema", () => {
+  it("accepts a well-formed dashboard payload and rejects a bad email", () => {
+    const payload = {
+      client: { id: "a01", email: "m.brown@acme.com", name: "Marcus", phone: null, businessName: "Acme" },
+      order: {
+        id: "o1",
+        orderNumber: "OO-1042",
+        amount: 8750,
+        paidToDate: 5000,
+        balanceDue: 3750,
+        statusSf: "Verified - Work Started",
+        placedAt: "2026-05-02",
+        advisorName: "Rinkie S.",
+        paymentMethod: "Wire Transfer",
+        shelfCorp: null,
+        clientId: "a01",
+      },
+      payments: [],
+    };
+    expect(orderDashboardSchema.safeParse(payload).success).toBe(true);
 
-    const bad = orderSchema.safeParse({
-      id: "006AA",
-      orderNumber: "1042",
-      amount: 8750,
-      balanceDue: 3750,
-      stage: "Work Started",
-      advisor: null,
-      shelfCorpId: "a01AA",
-    });
-    expect(bad.success).toBe(false);
+    const bad = { ...payload, client: { ...payload.client, email: "not-an-email" } };
+    expect(orderDashboardSchema.safeParse(bad).success).toBe(false);
   });
 });

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ConnectedApp xmlns="http://soap.sforce.com/2006/04/metadata">
+    <contactEmail>support@wholesaleshelfcorporations.com</contactEmail>
+    <label>WSC Portal BFF</label>
+    <description>Server-to-server integration for the WSC Customer Portal BFF (OAuth 2.0 JWT Bearer, ROADMAP 1.4/1.6). The certificate below is PUBLIC and safe to version. The matching PRIVATE key never lives in git - it is held only in the secrets manager as SF_JWT_PRIVATE_KEY.</description>
+    <oauthConfig>
+        <callbackUrl>http://localhost:1717/OauthRedirect</callbackUrl>
+        <certificate>MIIDEzCCAfugAwIBAgIUCqLq0qJbPH2QAv6voxh0Gabcer4wDQYJKoZIhvcNAQELBQAwGTEXMBUGA1UEAwwOd3NjLXBvcnRhbC1iZmYwHhcNMjYwNzE1MjAwMjU5WhcNMjcwNzE1MjAwMjU5WjAZMRcwFQYDVQQDDA53c2MtcG9ydGFsLWJmZjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAMM3MvusZJx3DkJTrcbc0D8CeBR8QY+RWglkpf9tGhYzqpxYlp5Q/+2AfLbm5tug3AKed8XLMQGTSIDQRD1FbQ1QNak8YHIu+08hiSMemvmcbgESXui7DYOrdhRSu+Wr0CxZJYEIq1UChmToWnhXkyBopsflr584CkA/HcnXHzY6CrqBt1hkJFru3LJ/h3cAsvSjkSQycI0HHNuxcWwHngocjFAex89ZYNu6slgvxa17+i2sewEPhoJf4TFeKaLT/pfdiFrQkwYGCl/NFdsWFbmDoerAjNw8mNY0t3r3OPS7cQdZGccCxyPysY2gciFEWRg1Ec8H91sbRsb3CtahcOcCAwEAAaNTMFEwHQYDVR0OBBYEFKod4vKm5P/VfskBpywnrXfE03dHMB8GA1UdIwQYMBaAFKod4vKm5P/VfskBpywnrXfE03dHMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAC+ITZNgv9g+lQYZWBV4anj1KVpSZSmyWjJCvlB5kWCLcU2mVmoVB9/7kfXIuUxEy+5wJzxXi3/ITpSg9ACU3zNHM4oxotj+CLOetJOrebKvT5RUVpFycpWuaHxh7w3N+7KUnyjIfeRsPIrL5s+QxE5lrrXjfqUS5+U8vrJmfXBTx2yg2U6V8pvk9jBjM5EK7bOm/zs5C+EMbkmQraEOv00kgSEuhc729Ih6T3Do92PkWv0dAbcy/GR3bVyng33wZwmvHty6w0gNbS6s3Gr2Helqh5HKm8GpFFiXoDm/jjF8BX97Mbtzad32X0W8ogKpEV+oiW4axLKndvfbLUUumpU=</certificate>
+        <isAdminApproved>true</isAdminApproved>
+        <scopes>Api</scopes>
+        <scopes>RefreshToken</scopes>
+    </oauthConfig>
+    <!-- "Permitted Users = Admin approved users are pre-authorized" is expressed by
+         oauthConfig/isAdminApproved above; ConnectedAppOauthPolicy has no permittedUsers. -->
+    <oauthPolicy>
+        <ipRelaxation>BYPASS</ipRelaxation>
+    </oauthPolicy>
+</ConnectedApp>

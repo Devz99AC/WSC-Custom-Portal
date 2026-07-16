@@ -1,43 +1,64 @@
 /**
- * Canonical order-status pipeline.
- *
- * This is DATA, not display copy. Per CLAUDE.md §1 ("Field/stage labels are data")
- * and §3 (naming authority), components and DTOs must derive labels and progress
- * from this single source and never hardcode stage strings. The pipeline maps 1:1
- * to `Opportunity.StageName` — see docs/ARCHITECTURE.md §2.3 for the mapping table.
+ * Canonical order pipeline — mirrors the REAL Salesforce `Online_Order__c.Status__c`
+ * picklist discovered in the org (see docs/salesforce-data-model.md). `sfValue` is the
+ * exact SF picklist string; `label` is the client-facing display. Progress is derived
+ * from the order of the PROGRESSIVE stages below; terminal states sit outside the bar.
+ * Labels are data here (CLAUDE.md §1) — components never hardcode stage strings.
  */
-export const ORDER_STAGES = [
-  "To Verify Payment",
-  "Pending Balance",
-  "Initial Contact",
-  "Work Started",
-  "Waiting to Ship",
-  "Shipped",
-  "Delivered",
-  "Complete",
+export interface OrderStageDef {
+  readonly sfValue: string;
+  readonly label: string;
+}
+
+export const ORDER_PIPELINE = [
+  { sfValue: "To Verify Payment", label: "To Verify Payment" },
+  { sfValue: "Pending Balance", label: "Pending Balance" },
+  { sfValue: "Verified - Initial Contact", label: "Initial Contact" },
+  { sfValue: "Verified - Work Started", label: "Work Started" },
+  { sfValue: "Verified - Waiting to Ship", label: "Waiting to Ship" },
+  { sfValue: "Verified - Shipped", label: "Shipped" },
+  { sfValue: "Verified - Delivered", label: "Delivered" },
+  { sfValue: "Verified - Complete", label: "Complete" },
+] as const satisfies readonly OrderStageDef[];
+
+/** Exact SF picklist value of a progressive pipeline stage. */
+export type OrderStageSfValue = (typeof ORDER_PIPELINE)[number]["sfValue"];
+
+/** Terminal states outside the progress bar (real SF picklist values). */
+export const CANCELLED_STATES = [
+  "Cancelled - Payment Failed",
+  "Cancelled - Client Requested",
+  "Cancelled - Duplicate Order",
+  "Cancelled - Chargeback Received",
+  "Cancelled - Refunded",
 ] as const;
 
-export type OrderStage = (typeof ORDER_STAGES)[number];
+export const ON_HOLD_STATES = [
+  "ON HOLD - Client's Unresponsive",
+  "ON HOLD - Other Reasons",
+  "ON HOLD - Waiting for Client",
+] as const;
 
-/**
- * Portal stage → Salesforce `Opportunity.StageName` API value.
- * (docs/ARCHITECTURE.md §2.3). Kept here so no adapter hardcodes SF picklist names.
- */
-export const ORDER_STAGE_TO_SF_STAGE: Readonly<Record<OrderStage, string>> = {
-  "To Verify Payment": "To_Verify_Payment",
-  "Pending Balance": "Pending_Balance",
-  "Initial Contact": "Initial_Contact",
-  "Work Started": "Work_Started",
-  "Waiting to Ship": "Waiting_To_Ship",
-  Shipped: "Shipped",
-  Delivered: "Delivered",
-  Complete: "Closed_Won",
-};
+/** Any valid `Online_Order__c.Status__c` value (progressive or terminal). */
+export type OrderStatusSf =
+  | OrderStageSfValue
+  | (typeof CANCELLED_STATES)[number]
+  | (typeof ON_HOLD_STATES)[number];
 
-/**
- * Zero-based position of a stage in the pipeline. Pure derivation over the
- * canonical data above (used e.g. to render a progress bar) — no business rules.
- */
-export function orderStageIndex(stage: OrderStage): number {
-  return ORDER_STAGES.indexOf(stage);
+/** Zero-based progress index of a progressive stage; -1 if terminal/unknown. */
+export function orderStageIndex(sfValue: string): number {
+  return ORDER_PIPELINE.findIndex((stage) => stage.sfValue === sfValue);
+}
+
+/** Client-facing label for any status value (falls back to the raw value). */
+export function orderStageLabel(sfValue: string): string {
+  return ORDER_PIPELINE.find((stage) => stage.sfValue === sfValue)?.label ?? sfValue;
+}
+
+/** True when the status is a `Cancelled - *` or `ON HOLD - *` terminal state. */
+export function isTerminalStatus(sfValue: string): boolean {
+  return (
+    (CANCELLED_STATES as readonly string[]).includes(sfValue) ||
+    (ON_HOLD_STATES as readonly string[]).includes(sfValue)
+  );
 }
