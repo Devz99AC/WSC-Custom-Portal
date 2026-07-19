@@ -6,12 +6,15 @@ an aged shelf corporation, make payments, sign documents, and follow order statu
 front of it. See [`CLAUDE.md`](CLAUDE.md), [`ROADMAP.md`](ROADMAP.md), and
 [`docs/`](docs/) for the authoritative architecture and plan.
 
-> **Status (2026-07-16):** Phase 0 **done**. Ahead of plan, a **working demo** exists — Login +
-> Dashboard (React) served by the BFF, which reads **real Salesforce data** in dev via a read-only
-> adapter (`PORTAL_DATA_SOURCE=salesforce`, reusing the `sf` CLI session — no Connected App yet).
-> A mock adapter (`PORTAL_DATA_SOURCE=mock`, default) serves identically-shaped sample data.
-> **👉 Current state, gaps, and the updated action plan: [`docs/STATUS.md`](docs/STATUS.md).**
-> Still open: customer auth decision, production server→SF auth, most of Phases 1–5.
+> **Status (2026-07-19):** Phase 0 **done**, merged to `main`. Ahead of plan, a **working demo**
+> exists — Login + Dashboard (React) served by the BFF, which reads **real Salesforce data** via
+> three swappable adapters: `PORTAL_DATA_SOURCE=mock` (default, sample data), `=salesforce` (dev,
+> reuses the `sf` CLI session), `=salesforce-jwt` (real OAuth 2.0 JWT Bearer flow — works from any
+> host, no CLI session needed).
+> **👉 Current state: [`docs/STATUS.md`](docs/STATUS.md). What to do next (prioritized by what
+> needs zero Salesforce/admin dependency): [`docs/ACTION-PLAN.md`](docs/ACTION-PLAN.md).**
+> Still open: customer auth decision (ADR-0005), a least-privilege Salesforce integration user,
+> public deployment, most of Phases 1–5.
 
 ## Monorepo layout
 

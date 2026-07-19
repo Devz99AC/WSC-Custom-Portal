@@ -1,7 +1,10 @@
 # WSC Customer Portal — Estado del proyecto y plan de acción
 
-> **Actualizado:** 2026-07-19 · **Rama:** `phase-0-foundations` (commiteada + pushed;
-> este doc y ajustes relacionados quedan pendientes de commit)
+> **Actualizado:** 2026-07-19 · **Rama:** todo mergeado a `main` (fast-forward limpio
+> desde `phase-0-foundations`, pusheado a origin). `phase-0-foundations` sigue existiendo
+> en el mismo commit; el próximo bloque de trabajo puede seguir en `main` o abrir una
+> rama nueva. Ver [`ACTION-PLAN.md`](ACTION-PLAN.md) para el plan priorizado por lo que
+> se puede hacer ya sin depender de Salesforce/admin.
 > **Resumen:** Fase 0 **completa y verificada**. Se construyó, adelantándose al plan, un
 > **demo funcional** (Login + Dashboard) que ya lee **datos reales de Salesforce** vía un
 > adaptador de solo-lectura. **El auth servidor→SF (JWT Bearer) ya quedó resuelto y probado**

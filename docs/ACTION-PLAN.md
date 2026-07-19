@@ -1,96 +1,73 @@
-# WSC Customer Portal — Action Plan (a partir de 2026-07-19)
+# WSC Customer Portal — Action Plan (actualizado 2026-07-19, post-merge a `main`)
 
-> Plan hacia adelante desde el estado actual. Para el historial completo (qué se
-> descubrió, qué se intentó, qué falló) ver [`STATUS.md`](STATUS.md) — este doc
-> es el checklist de "qué sigue", no repite el diagnóstico completo.
+> Para el historial completo (qué se descubrió, qué falló, por qué) ver
+> [`STATUS.md`](STATUS.md). Este doc es el checklist accionable, **priorizado por
+> qué se puede hacer AHORA sin depender de Salesforce ni de acceso de admin**, que es
+> justo lo que pediste.
 
-## Dónde estamos (resumen de una línea por hito)
+## Estado
 
-- ✅ Fase 0 completa; demo funcional (Login + Dashboard) leyendo Salesforce real.
-- ✅ Orden `UO1423102` con flujo de negocio **completo**: corp "Devin LLC" (Sold),
-  2 pagos `Cleared` ($2,000 + $6,750 = $8,750), la orden avanzó **sola** (trigger real
-  de SF) a `Verified - Initial Contact`.
-- ✅ G2 (auth servidor→SF) resuelto: External Client App + JWT Bearer probado a mano
-  (`sf org login jwt`).
-- ✅ **Código real del JWT Bearer ya implementado** en el BFF (no solo probado a mano) —
-  `PORTAL_DATA_SOURCE=salesforce-jwt` (ver §"Código nuevo" abajo).
-- ✅ Mockup estático (`apps/web/public/prototype.html`) rediseñado: sin frame de
-  navegador/Mac, ancho fluido, responsive real en tablet y phone.
-- ❌ G1 (decisión auth del cliente), G3 (integration user de mínimo privilegio),
-  despliegue público — todavía no.
+- ✅ Todo mergeado a **`main`** (fast-forward limpio, sin conflictos) y pusheado a origin.
+  `main` ya tiene: Fase 0 completa, demo con datos reales de Salesforce, JWT Bearer
+  real implementado en el BFF, mockup rediseñado y sincronizado con la orden real
+  `UO1423102`.
+- La rama `phase-0-foundations` sigue existiendo en el mismo commit — puedes seguir
+  trabajando directo en `main` o abrir una rama nueva para el próximo bloque.
 
-## Código nuevo esta sesión
+---
 
-- `apps/bff/src/infrastructure/salesforce/salesforce-jwt-auth.ts` — firma el JWT
-  (RS256) y lo canjea en `/services/oauth2/token`; cache en memoria + invalidación
-  reactiva en `INVALID_SESSION_ID`.
-- `createJwtSalesforceQuery()` en `salesforce-query.ts` — mismo puerto
-  `SalesforceQuery` que ya usan `SalesforcePortalRepository` y el adaptador dev; el
-  resto de la app no cambia.
-- `main.ts` / `env.ts`: nuevo modo `PORTAL_DATA_SOURCE=salesforce-jwt`, junto a
-  `SF_CLIENT_ID` / `SF_JWT_PRIVATE_KEY` (PEM o ruta a archivo) / `SF_INTEGRATION_USERNAME`
-  / `SF_LOGIN_URL` / `SF_API_VERSION` en `.env.example`.
-- Typecheck + lint del BFF, verdes.
-- Dependencias agregadas: `jsonwebtoken`, `@jsforce/jsforce-node`.
+## 🟢 Grupo A — Se puede hacer YA, cero dependencia de Salesforce/admin
 
-**Por qué esto y no "ofuscar" el Consumer Key:** ofuscar un string en código no es un
-control de seguridad real (es "seguridad por oscuridad"). Lo correcto — y lo que ya
-implementamos — es que el secreto **nunca viva en código**: solo en `.env.local`
-(git-ignorado) en local, y en el gestor de variables de la plataforma de hosting en
-producción. Falta que tú mismo pongas los valores reales en tu `.env.local` (no lo
-hice yo para no duplicar la exposición del Consumer Key que ya pegaste en el chat).
+Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sugerido:
 
-## Pendiente — en orden recomendado
+1. **ADR-0005** — decisión de auth del cliente (magic-link nativo del BFF vs
+   Auth0/Cognito). Es la única decisión de arquitectura que sigue abierta (G1);
+   puedo redactarla ahora si me confirmas la dirección (magic-link nativo es mi
+   recomendación — ver el chat anterior).
+2. **Deploy del frontend en Vercel** (`Root Directory = apps/web`). Tu dominio se
+   agrega ahí apuntando DNS desde donde ya lo tengas — no hace falta transferirlo.
+3. **Deploy del backend en Railway** (`Root Directory = apps/bff`). Puede desplegarse
+   incluso antes de tener las credenciales JWT nuevas (arranca en modo `mock` mientras
+   tanto).
+4. **`vercel.json` con rewrite** de `/api/*` → la URL de Railway (un solo dominio,
+   sin CORS).
+5. **HTTP Basic Auth** en el borde (Vercel Edge Middleware o Password Protection) —
+   para que el demo no quede abierto al público.
+6. **Redis para caché de lecturas** (ROADMAP 1.9) — infraestructura pura, no toca SF.
+7. **Portar el resto de las 5 vistas del prototipo a React real** (Order/Payments/
+   Documents/Profile — hoy solo Login+Dashboard están portados) — trabajo de
+   componentes de frontend, reutilizando `packages/shared`.
+8. Revisar el mockup pulido en dispositivos reales (ya está publicado y sincronizado
+   con la orden real) e iterar si algo no calza visualmente.
 
-### Paso 1 — Seguridad, antes de cualquier despliegue público (no negociable)
-- [ ] **G3**: crear un integration user de mínimo privilegio + Permission Set propio
-  (solo objetos WSC, filtrado `Brand__c='WSC'`, sin "View/Modify All Data").
-- [ ] Crear una **External Client App nueva**, separada de la de hoy, ligada a ese
-  integration user. La de hoy quedó pre-autorizada para el **admin** y su Consumer
-  Key se compartió en este chat — trátala como no apta para uso público.
-- [ ] Generar un **nuevo par de llaves X.509** para esa app nueva (no reusar
-  `~/.wsc-keys/server.key`, que es del admin).
-- [ ] Esos valores nuevos van **solo** en env vars: `.env.local` en local, gestor de
-  secretos de Railway (o el host que uses) en producción. Nunca en el repo.
+## 🟡 Grupo B — Necesitas Salesforce Setup, pero ya tienes el acceso (no es "el admin", eres tú)
 
-### Paso 2 — Despliegue del demo
-- [ ] **Frontend → Vercel** (Root Directory = `apps/web`). Tu dominio **no necesita
-  estar comprado/gestionado en Vercel** — se agrega en Project → Settings → Domains
-  y apuntas los registros DNS desde donde ya lo tengas (Namecheap, GoDaddy, el que
-  sea). Vercel te da los registros exactos a crear.
-- [ ] **Backend → Railway** (Root Directory = `apps/bff`), variables de entorno del
-  Paso 1 + `PORTAL_DATA_SOURCE=salesforce-jwt`.
-- [ ] `vercel.json` con `rewrite` de `/api/*` → la URL del servicio en Railway (un
-  solo dominio visible, sin CORS).
-- [ ] **Muro de acceso**: HTTP Basic Auth (Vercel Edge Middleware, o "Password
-  Protection" nativo en plan Pro) — no dejar el demo abierto al público.
-- [ ] Probar `PORTAL_DATA_SOURCE=salesforce-jwt` en local primero (con las llaves del
-  Paso 1) antes de desplegar.
+Repetir el mismo runbook de hoy (documentado en `salesforce-sandbox-setup.md` §B-bis),
+con un usuario nuevo en vez del admin:
 
-### Paso 3 — Qué demo se despliega (decisión abierta, ver nota abajo)
-- [ ] Confirmar si el despliegue público es (a) el **mockup estático** rediseñado
-  (`prototype.html` — cero backend, cero riesgo, no refleja tiempos de carga reales)
-  o (b) la **app React + BFF real** (sí refleja tiempos de carga reales, requiere
-  todo el Paso 1). Ver nota.
-- [ ] Revisar visualmente el mockup rediseñado en desktop/tablet/phone reales —
-  iterar si algo no calza.
-- [ ] Si se elige (b): portar el resto de las 5 vistas del prototipo a React (Fase 4).
+9. **G3** — integration user de mínimo privilegio + Permission Set propio (solo
+   objetos WSC, `Brand__c='WSC'`).
+10. **External Client App nueva**, separada de la de hoy (la de hoy quedó ligada al
+    admin y su Consumer Key ya se compartió en este chat — no reusar para nada público).
+11. **Nuevo par de llaves X.509** para esa app (no reusar `~/.wsc-keys/server.key`,
+    que es del admin).
 
-### Paso 4 — Resto de Fase 1 (cuando el demo esté validado)
-- [ ] **ADR-0005** — decisión de auth del cliente (magic-link nativo vs Auth0/Cognito), G1.
-- [ ] Redis para caché de lecturas.
-- [ ] Middleware de identidad/sesión del cliente (una vez resuelto G1).
+## 🔴 Grupo C — Depende de que A y B estén listos
 
-## Nota — dos caminos de despliegue, distinto riesgo y propósito
+12. Probar `PORTAL_DATA_SOURCE=salesforce-jwt` en producción con las credenciales
+    nuevas del Grupo B, cargadas como variables de entorno en Railway (nunca en el repo).
+13. Decidir si el despliegue público final es el **mockup estático** (cero riesgo,
+    ya listo) o la **app React + BFF real** (tiempos de carga reales, requiere A+B
+    completos) — ver la tabla comparativa que ya armamos.
 
-| | Mockup estático (`prototype.html`) | App React + BFF real |
-|---|---|---|
-| Backend | Ninguno | Fastify + Salesforce vía JWT |
-| Riesgo de seguridad | Ninguno (no hay secretos, no hay conexión a SF) | Requiere Paso 1 completo |
-| Tiempos de carga reales | No (todo es HTML/CSS estático, instantáneo) | Sí — es justo lo que pediste |
-| Costo/tiempo | Minutos, cualquier host estático gratis | ~$5-25/mes, medio día de trabajo |
-| Sirve para | Mostrar diseño/look-and-feel | Probar experiencia completa con datos "reales" |
+---
 
-Como pediste explícitamente **tiempos de carga realistas hasta trasladar a admin**,
-el camino (b) es el que responde a eso — pero exige el Paso 1 de seguridad primero,
-no es opcional dado que toca un CRM compartido real.
+## Por qué este orden
+
+El Grupo A es donde vale la pena empezar: son ~7 tareas de puro código/infraestructura/
+decisión que no requieren volver a tocar Salesforce ni esperar nada externo. El Grupo B
+es Salesforce, pero es exactamente el mismo procedimiento que ya hiciste hoy — no hay
+nada nuevo que aprender, solo repetirlo con un usuario distinto. El Grupo C es la
+integración final entre ambos.
+
+¿Por cuál del Grupo A arrancamos?
