@@ -2,7 +2,10 @@ import { loadEnv } from "./config/env.js";
 import { GetDashboard } from "./application/get-dashboard.js";
 import type { PortalRepository } from "./application/ports/portal-repository.js";
 import { MockPortalRepository } from "./infrastructure/repositories/mock-portal-repository.js";
-import { createDevSalesforceQuery } from "./infrastructure/salesforce/salesforce-query.js";
+import {
+  createDevSalesforceQuery,
+  createJwtSalesforceQuery,
+} from "./infrastructure/salesforce/salesforce-query.js";
 import { SalesforcePortalRepository } from "./infrastructure/salesforce/salesforce-portal-repository.js";
 import { buildServer } from "./infrastructure/http/server.js";
 
@@ -21,6 +24,20 @@ async function main(): Promise<void> {
       throw new Error("SF_TARGET_USERNAME is required when PORTAL_DATA_SOURCE=salesforce");
     }
     const query = await createDevSalesforceQuery(env.SF_TARGET_USERNAME);
+    repository = new SalesforcePortalRepository(query);
+  } else if (env.PORTAL_DATA_SOURCE === "salesforce-jwt") {
+    if (!env.SF_CLIENT_ID || !env.SF_JWT_PRIVATE_KEY || !env.SF_INTEGRATION_USERNAME || !env.SF_LOGIN_URL) {
+      throw new Error(
+        "SF_CLIENT_ID, SF_JWT_PRIVATE_KEY, SF_INTEGRATION_USERNAME and SF_LOGIN_URL are required when PORTAL_DATA_SOURCE=salesforce-jwt"
+      );
+    }
+    const query = await createJwtSalesforceQuery({
+      clientId: env.SF_CLIENT_ID,
+      privateKey: env.SF_JWT_PRIVATE_KEY,
+      username: env.SF_INTEGRATION_USERNAME,
+      loginUrl: env.SF_LOGIN_URL,
+      apiVersion: env.SF_API_VERSION,
+    });
     repository = new SalesforcePortalRepository(query);
   } else {
     repository = new MockPortalRepository();

@@ -6,6 +6,10 @@
 > 🇪🇸 **Propósito:** una única fuente de verdad de *qué construir*, *qué tan profundo debe ir cada pieza* y *en qué orden*, para que cualquier ingeniero pueda tomar un pilar y avanzarlo. Es un proyecto **greenfield** — el único activo previo es un prototipo estático `index.html`.
 >
 > **SSOT:** Salesforce · **Companion doc:** [`docs/ARCHITECTURE-AND-ROADMAP.md`](docs/ARCHITECTURE-AND-ROADMAP.md) (deep rationale / justificación profunda).
+>
+> 📌 **Live status (2026-07-16):** Phase 0 **done**; a working demo (Login + Dashboard reading
+> real Salesforce) exists ahead of plan. Current state, gaps & the updated action plan live in
+> [`docs/STATUS.md`](docs/STATUS.md) — read that for "where we are / what's missing / what's next".
 
 ---
 
@@ -132,18 +136,18 @@
 **Goal / Objetivo:** freeze the stack, stand up the empty skeleton, no business logic yet.
 **Duración estimada / Estimated:** ~1 week / ~1 semana.
 
-- [ ] **0.1** Lock the stack & write ADRs (Architecture Decision Records). — **D3 🟠 · S**
+- [x] **0.1** Lock the stack & write ADRs (Architecture Decision Records). — **D3 🟠 · S**
   - *EN DoD:* `docs/adr/` contains ADRs for: Headless vs Experience Cloud, S3 vs SF Files, Platform Events vs Outbound Messages, Payments=Stripe. Each ADR states context, decision, consequences.
   - *ES DoD:* `docs/adr/` con ADRs de: Headless vs Experience Cloud, S3 vs SF Files, Platform Events vs Outbound Messages, Pagos=Stripe. Cada ADR: contexto, decisión, consecuencias.
-- [ ] **0.2** Monorepo scaffold (pnpm + turbo): `apps/web`, `apps/bff`, `packages/shared`. — **D1 🟢 · S**
+- [x] **0.2** Monorepo scaffold (pnpm + turbo): `apps/web`, `apps/bff`, `packages/shared`. — **D1 🟢 · S**
   - *DoD:* `pnpm install && pnpm build` green; empty apps boot; shared package imports across both.
-- [ ] **0.3** Tooling baseline: ESLint, Prettier, `tsconfig` with `strict:true`, `noUncheckedIndexedAccess`. — **D1 🟢 · XS**
+- [x] **0.3** Tooling baseline: ESLint, Prettier, `tsconfig` with `strict:true`, `noUncheckedIndexedAccess`. — **D1 🟢 · XS**
   - *DoD:* `pnpm lint && pnpm typecheck` pass on the empty skeleton.
-- [ ] **0.4** CI pipeline (GitHub Actions): install → lint → typecheck → test → build on every PR. — **D2 🟡 · S**
+- [x] **0.4** CI pipeline (GitHub Actions): install → lint → typecheck → test → build on every PR. — **D2 🟡 · S**
   - *DoD:* a trivial PR runs the pipeline green; failing lint blocks merge.
-- [ ] **0.5** Environments defined: `local`, `staging`, `prod`; secrets via a secrets manager (never committed). — **D2 🟡 · S**
+- [x] **0.5** Environments defined: `local`, `staging`, `prod`; secrets via a secrets manager (never committed). — **D2 🟡 · S**
   - *DoD:* `.env.example` documents every var (see Appendix C); real secrets live in the manager.
-- [ ] **0.6** Provision a **Salesforce sandbox / scratch org** for dev. — **D2 🟡 · S**
+- [x] **0.6** Provision a **Salesforce sandbox / scratch org** for dev. — **D2 🟡 · S**
   - *DoD:* SFDX project created; can deploy/retrieve metadata; a dev can log in.
 
 **Depth note / Nota de profundidad:** 0.1 is D3 because the ADRs are the contract the rest of the team builds against — don't rush them. / 0.1 es D3 porque los ADRs son el contrato contra el que construye el equipo — no los apresures.
@@ -154,6 +158,14 @@
 
 **Goal / Objetivo:** a request can flow browser → BFF → Salesforce, authenticated end-to-end.
 **Estimated:** ~2 weeks / ~2 semanas.
+
+> ⚠️ **Status update (see [`docs/STATUS.md`](docs/STATUS.md) §3–§5):** the sandbox is provisioned,
+> and a BFF→Salesforce read path already works in dev (reusing the CLI session via `@salesforce/core`
+> — no Connected App). Two changes vs. the original plan: **(1.1) the custom objects ALREADY EXIST**
+> in the org (`FU_User__c`/`Online_Order__c`/`SC_Corp__c`/`Online_Payment__c`) → this becomes *map to
+> existing*, not *create*. **(1.4) creating a Connected App is BLOCKED by the org** → production JWT
+> auth needs an admin to enable it or an External Client App. **Customer auth (1.7/1.8) is an OPEN
+> decision** (Auth0 vs BFF-native magic-link) — needs an ADR first.
 
 #### 1.A Salesforce data model / Modelo de datos en Salesforce
 - [ ] **1.1** Create custom objects + fields (`Shelf_Corp__c`, `Document__c`, `Credit_Profile__c`, `Payment__c`, `Portal_Event__c`). — **D3 🟠 · M**

@@ -6,6 +6,14 @@
 > Complementa `sfdx/README.md` (quickstart de CLI). Referencias: ROADMAP 0.6, 1.4–1.6;
 > docs/ARCHITECTURE.md §3.1, §5.2.
 
+> ✅ **Status (2026-07-19):** sandbox `wsc-sandbox` conectado; el BFF ya lee la org en dev
+> reusando la sesión del CLI (`@salesforce/core`, sin Connected App). ⛔ **Crear una Connected App
+> clásica sigue BLOQUEADO por la org**, pero ✅ **el flujo JWT Bearer ya se probó y funciona vía una
+> External Client App** — ver el paso a paso real en **§1.B-bis** (reemplaza §1.B en este sandbox).
+> Smoke test exitoso: `sf org login jwt` → alias `wsc-jwt`, estado `Connected`. Pendiente: el código
+> del BFF (§1.6 ROADMAP) y el integration user de mínimo privilegio (§1.C, hoy se probó con el
+> admin). Estado completo y plan: [`STATUS.md`](STATUS.md).
+
 ## 0. Decisión previa (la tomas tú antes de pedir nada)
 
 Hay dos formas de tener un org de dev, y conviene usar **ambas**:
@@ -62,6 +70,39 @@ Mándale este bloque tal cual. Todo esto requiere rol de admin en el org de prod
 
 > ⚠️ La Connected App puede tardar **2–10 min** en propagar; el primer `login jwt` puede
 > fallar de forma transitoria — reintentar.
+
+### B-bis. Lo que REALMENTE funcionó en este sandbox: External Client App
+
+Este sandbox bloquea Connected Apps clásicas (`Setup → App Manager → New Connected App` no
+aparece), pero **sí permite External Client Apps** — cubren el mismo flujo JWT Bearer. Pasos
+reales verificados el 2026-07-19:
+
+1. **Setup → Quick Find → "External Client Apps" → New External Client App.**
+2. **Basic Information**: Name (p. ej. `WSC Customer - Devin Sandbox`), Contact Email,
+   Distribution State = **Local** → **Create**.
+3. Dentro de la app ya creada → **Settings → OAuth Settings → Edit**: Enable OAuth = ON,
+   Callback URL = `http://localhost:1717/OauthRedirect`, Selected OAuth Scopes = `api` +
+   `refresh_token, offline_access` → **Save**.
+4. **Settings → Flow Enablement**: marcar **"Enable JWT Bearer Flow"** → aparece el campo
+   para subir el **certificado** (`server.crt`, el público del par de `sfdx/README.md` §2) → guardar.
+5. **Policies → OAuth Policies → Plugin Policies → Permitted Users**: cambiar de *"All users
+   can self-authorize"* a **"Admin approved users are pre-authorized"**.
+6. **Policies → App Authorization → IP Relaxation** = **"Relax IP restrictions"**.
+7. **Policies → App Policies → Select Permission Sets**: agregar un Permission Set dedicado
+   (creado aparte en `Setup → Permission Sets → New`, License = `--None--`) a "Selected
+   Permission Sets" → **Save**. *(Ojo: "Assigned Connected Apps" dentro del Permission Set es
+   para visibilidad en el App Launcher, **no** para esta pre-autorización — es un campo distinto.)*
+8. En ese mismo Permission Set → **Manage Assignments → Add Assignment** → asignarlo al
+   usuario que va a autenticarse (el integration user real cuando exista, G3; el admin
+   mientras tanto para la prueba).
+9. **Settings → OAuth Settings → Consumer Key and Secret → View** → copiar el **Consumer Key**
+   (= `SF_CLIENT_ID`). El secret no se usa en JWT.
+10. **Smoke test** (igual que en §3 de este doc, mismo comando):
+    ```bash
+    sf org login jwt --username "<username>" --jwt-key-file server.key \
+      --client-id "<CONSUMER_KEY>" --instance-url https://test.salesforce.com --alias wsc-jwt
+    sf org list   # confirma alias wsc-jwt en estado "Connected" (no imprime el token)
+    ```
 
 ### C. Integration user con **mínimo privilegio** (crítico, D4)
 - [ ] Crear un **integration user dedicado** (NO un usuario humano, NO Community/Chatter).

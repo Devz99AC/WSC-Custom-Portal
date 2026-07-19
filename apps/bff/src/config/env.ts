@@ -17,10 +17,19 @@ const envSchema = z.object({
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
   // Demo data source. "mock" = in-memory real-shaped data; "salesforce" = live reads
-  // from the org via the CLI's stored auth (dev-only; prod uses JWT Bearer).
-  PORTAL_DATA_SOURCE: z.enum(["mock", "salesforce"]).default("mock"),
+  // reusing the CLI's stored auth (dev-only, one developer machine); "salesforce-jwt" =
+  // live reads via the real OAuth 2.0 JWT Bearer flow (works from any host, CLAUDE.md §1).
+  PORTAL_DATA_SOURCE: z.enum(["mock", "salesforce", "salesforce-jwt"]).default("mock"),
   // Username of the authorized org (e.g. from `sf org list`). Required for "salesforce".
   SF_TARGET_USERNAME: z.string().min(1).optional(),
+  // JWT Bearer flow config. Required for "salesforce-jwt" (checked in the composition
+  // root, not here, matching how SF_TARGET_USERNAME is handled above).
+  SF_CLIENT_ID: z.string().min(1).optional(),
+  // Either the PEM contents directly (deployed hosts) or a path to the key file (local dev).
+  SF_JWT_PRIVATE_KEY: z.string().min(1).optional(),
+  SF_INTEGRATION_USERNAME: z.string().min(1).optional(),
+  SF_LOGIN_URL: z.string().url().optional(),
+  SF_API_VERSION: z.string().min(1).default("v62.0"),
 });
 
 export type Env = z.infer<typeof envSchema>;

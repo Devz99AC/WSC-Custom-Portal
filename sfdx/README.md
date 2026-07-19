@@ -7,6 +7,18 @@
 > (CLAUDE.md §4). This folder only ships the **project configuration**; the org itself does
 > not exist yet.
 
+> ✅ **Status (2026-07-19):** the sandbox is **provisioned and authorized** in the CLI
+> (alias `wsc-sandbox`, `sf_admin@utopia6.com.devinzonde`), and a dev BFF already reads it live.
+> ⛔ **Connected App creation is BLOCKED by the org** ("contact Salesforce Customer Support") — but
+> ✅ **the JWT Bearer flow is proven working via an External Client App** (`WSC Customer - Devin
+> Sandbox`): certificate uploaded, JWT Bearer Flow enabled, Permission Set pre-authorization, smoke
+> test passed (`sf org login jwt` → alias `wsc-jwt`, status `Connected`). The steps below (1–5) are
+> written for the classic Connected App; the same secrets (cert, Consumer Key) now exist via the
+> ECA path instead — no admin ticket needed. Still pending: the BFF code doesn't implement this flow
+> yet (still uses dev CLI-session reuse), and the smoke test used the admin user, not a least-privilege
+> integration user. See [`../docs/STATUS.md`](../docs/STATUS.md) §4 (G2/G3) and
+> [`../docs/salesforce-data-model.md`](../docs/salesforce-data-model.md).
+
 This is ROADMAP task **0.6** (D2). Definition of Done: an SFDX project exists that can
 deploy/retrieve metadata and a developer can log in. The steps below get you there.
 

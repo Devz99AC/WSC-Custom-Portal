@@ -1,3 +1,6 @@
+import { getJwtAccessToken, invalidateJwtAccessToken, isInvalidSessionError } from "./salesforce-jwt-auth.js";
+import type { JwtBearerConfig } from "./salesforce-jwt-auth.js";
+
 export type SalesforceRecord = Record<string, unknown>;
 
 /** Minimal read port: run a SOQL string, get raw records. Keeps the repository
@@ -18,5 +21,36 @@ export async function createDevSalesforceQuery(username: string): Promise<Salesf
   return async (soql: string): Promise<SalesforceRecord[]> => {
     const result = await connection.query(soql);
     return result.records as unknown as SalesforceRecord[];
+  };
+}
+
+/**
+ * PRODUCTION Salesforce connection (ROADMAP 1.6): authenticates via the OAuth 2.0
+ * JWT Bearer flow — no browser, no CLI session, works from any host. Reuses the
+ * exact same `SalesforceQuery` port as the dev adapter above, so
+ * `SalesforcePortalRepository` and everything above it never changes.
+ */
+export async function createJwtSalesforceQuery(
+  config: JwtBearerConfig & { apiVersion: string }
+): Promise<SalesforceQuery> {
+  const { Connection } = await import("@jsforce/jsforce-node");
+
+  return async (soql: string): Promise<SalesforceRecord[]> => {
+    const run = async (): Promise<SalesforceRecord[]> => {
+      const { accessToken, instanceUrl } = await getJwtAccessToken(config);
+      const connection = new Connection({ accessToken, instanceUrl, version: config.apiVersion });
+      const result = await connection.query(soql);
+      return result.records as unknown as SalesforceRecord[];
+    };
+
+    try {
+      return await run();
+    } catch (error) {
+      if (!isInvalidSessionError(error)) {
+        throw error;
+      }
+      invalidateJwtAccessToken();
+      return run();
+    }
   };
 }

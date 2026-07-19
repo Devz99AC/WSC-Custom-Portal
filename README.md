@@ -6,8 +6,12 @@ an aged shelf corporation, make payments, sign documents, and follow order statu
 front of it. See [`CLAUDE.md`](CLAUDE.md), [`ROADMAP.md`](ROADMAP.md), and
 [`docs/`](docs/) for the authoritative architecture and plan.
 
-> **Status:** Phase 0 (Foundations) — empty, buildable skeleton. **No business logic, no
-> live Salesforce, no real endpoints yet.** See `ROADMAP.md` §3, Phase 0.
+> **Status (2026-07-16):** Phase 0 **done**. Ahead of plan, a **working demo** exists — Login +
+> Dashboard (React) served by the BFF, which reads **real Salesforce data** in dev via a read-only
+> adapter (`PORTAL_DATA_SOURCE=salesforce`, reusing the `sf` CLI session — no Connected App yet).
+> A mock adapter (`PORTAL_DATA_SOURCE=mock`, default) serves identically-shaped sample data.
+> **👉 Current state, gaps, and the updated action plan: [`docs/STATUS.md`](docs/STATUS.md).**
+> Still open: customer auth decision, production server→SF auth, most of Phases 1–5.
 
 ## Monorepo layout
 
@@ -31,6 +35,10 @@ pnpm install
 pnpm build               # turbo: build shared → bff → web
 pnpm dev                 # runs web (5173) and bff (8080) in parallel
 ```
+
+Then open **http://localhost:5173** and sign in with `m.brown@acmeholdings.com` (demo). To read
+**live Salesforce** instead of mock data, set `PORTAL_DATA_SOURCE=salesforce` and
+`SF_TARGET_USERNAME=<your org user>` before starting the BFF — see [`docs/STATUS.md`](docs/STATUS.md) §2.
 
 ## Quality gates (also run in CI)
 
