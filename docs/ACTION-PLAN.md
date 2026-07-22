@@ -70,8 +70,12 @@ Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sug
    actual + fecha de la orden), no un timeline inventado. Tests: `AppShell.test.tsx`
    nuevo, `Dashboard.test.tsx` actualizado al refactor. Typecheck/lint/tests/build
    verdes — falta revisión visual en browser real (no pude verificarlo yo mismo).
-9. Revisar el mockup pulido en dispositivos reales (ya está publicado y sincronizado
-   con la orden real) e iterar si algo no calza visualmente.
+9. ~~**Revisar en un dispositivo/browser real**~~ ✅ **Confirmado (2026-07-22)**: login
+   con `m.brown@acmeholdings.com` end-to-end en producción (Vercel + Railway + Redis +
+   magic-link real, link recuperado de los logs de consola de Railway ya que
+   `EMAIL_SENDER=console`) y las 5 vistas navegadas sin problemas visuales.
+
+**🟢 Grupo A completo (2026-07-22).**
 
 ## 🟡 Grupo B — Necesitas Salesforce Setup, pero ya tienes el acceso (no es "el admin", eres tú)
 
