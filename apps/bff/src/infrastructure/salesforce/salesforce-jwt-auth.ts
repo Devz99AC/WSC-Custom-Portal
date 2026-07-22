@@ -22,10 +22,15 @@ type CachedToken = { accessToken: string; instanceUrl: string; expiresAt: number
  */
 let cached: CachedToken | null = null;
 
-/** Accepts either the PEM contents directly (deployed hosts) or a path to the key file (local dev). */
+/**
+ * Accepts either the PEM contents directly (deployed hosts) or a path to the key file
+ * (local dev). Inline PEM values get their literal "\n" sequences (two characters —
+ * common after pasting multi-line content into a single-line-oriented env var UI)
+ * normalized to real newlines; a value that already has real newlines is unaffected.
+ */
 function resolvePrivateKey(value: string): string {
   if (value.includes("BEGIN") || !existsSync(value)) {
-    return value;
+    return value.replace(/\\n/g, "\n");
   }
   return readFileSync(value, "utf8");
 }
