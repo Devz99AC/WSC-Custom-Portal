@@ -1,22 +1,46 @@
 import { useState, type FormEvent } from "react";
-
-interface LoginProps {
-  onSignIn: (email: string) => void;
-}
+import { requestMagicLink } from "../api/client";
 
 /**
- * Passwordless magic-link login (visual). In the demo, "sending the link" resolves the
- * session immediately; in Phase 1 this posts to the BFF, which emails a one-time link.
+ * Passwordless magic-link login (ADR-0005). Submitting posts to the BFF, which emails a
+ * one-time link — this screen never learns whether the email matched an account
+ * (anti-enumeration; the BFF's response is intentionally generic either way).
  */
-export function Login({ onSignIn }: LoginProps) {
+export function Login() {
   const [email, setEmail] = useState("m.brown@acmeholdings.com");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const linkWasInvalid = new URLSearchParams(window.location.search).has("login_error");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = email.trim();
-    if (trimmed) {
-      onSignIn(trimmed);
+    if (!trimmed) {
+      return;
     }
+    setStatus("sending");
+    try {
+      await requestMagicLink(trimmed);
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  if (status === "sent") {
+    return (
+      <div className="login">
+        <div className="login-card">
+          <div className="wsc-logo">
+            WS<span className="c">C</span>
+          </div>
+          <h1 className="disp">Check your email</h1>
+          <p className="sub">
+            If <strong>{email}</strong> is on file, a secure sign-in link is on its way —
+            it expires in 15 minutes and works once.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -34,6 +58,9 @@ export function Login({ onSignIn }: LoginProps) {
           Enter your email and we&apos;ll send a secure sign-in link — no password to
           remember.
         </p>
+        {linkWasInvalid && (
+          <p className="err">That link is invalid or expired — request a new one below.</p>
+        )}
         <div className="field">
           <label htmlFor="email">Email address</label>
           <input
@@ -44,9 +71,12 @@ export function Login({ onSignIn }: LoginProps) {
             autoComplete="email"
           />
         </div>
-        <button className="btn-gold" type="submit">
-          Send secure sign-in link
+        <button className="btn-gold" type="submit" disabled={status === "sending"}>
+          {status === "sending" ? "Sending…" : "Send secure sign-in link"}
         </button>
+        {status === "error" && (
+          <p className="err">Something went wrong — please try again.</p>
+        )}
         <p className="login-foot">
           Trouble signing in? Call your advisor
           <br />

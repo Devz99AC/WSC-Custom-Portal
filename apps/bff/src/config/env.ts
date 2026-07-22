@@ -30,6 +30,23 @@ const envSchema = z.object({
   SF_INTEGRATION_USERNAME: z.string().min(1).optional(),
   SF_LOGIN_URL: z.string().url().optional(),
   SF_API_VERSION: z.string().min(1).default("v62.0"),
+
+  // Customer identity (ADR-0005: BFF-native magic-link, ARCHITECTURE.md §3.2).
+  SESSION_JWT_SECRET: z.string().min(1).optional(),
+  SESSION_JWT_KID: z.string().min(1).default("1"),
+  MAGIC_LINK_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+  APP_BASE_URL: z.string().url().default("http://localhost:5173"),
+
+  // Email delivery for the magic-link. "console" (default, dev) logs the link instead of
+  // sending it. "smtp" sends via Google Workspace (or any SMTP account) — no separate
+  // transactional-email vendor, reuses a mailbox WSC already pays for.
+  EMAIL_SENDER: z.enum(["console", "smtp"]).default("console"),
+  SMTP_HOST: z.string().min(1).default("smtp.gmail.com"),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_USER: z.string().min(1).optional(),
+  SMTP_PASSWORD: z.string().min(1).optional(),
+  SMTP_FROM_EMAIL: z.string().email().optional(),
+  SMTP_FROM_NAME: z.string().min(1).default("WSC Client Portal"),
 });
 
 export type Env = z.infer<typeof envSchema>;

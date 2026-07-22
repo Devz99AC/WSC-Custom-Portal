@@ -7,7 +7,7 @@ import {
   type PaymentMethod,
   type ShelfCorp,
 } from "@wsc/shared";
-import type { PortalRepository } from "../../application/ports/portal-repository.js";
+import type { ClientIdentity, PortalRepository } from "../../application/ports/portal-repository.js";
 import type { SalesforceQuery, SalesforceRecord } from "./salesforce-query.js";
 
 const str = (value: unknown): string | null =>
@@ -74,6 +74,25 @@ export class SalesforcePortalRepository implements PortalRepository {
     );
 
     return this.toDashboard(email, orderRecord, paymentRecords);
+  }
+
+  /** email → FU_User__c (ADR-0005). Brand-scoped isn't needed here: FU_User__c isn't
+   *  brand-specific, unlike Online_Order__c — the row-level scoping happens at the
+   *  order/payment read above, keyed off this resolved client id. */
+  async findClientByEmail(email: string): Promise<ClientIdentity | null> {
+    const safeEmail = soqlEscape(email);
+    const clients = await this.query(
+      `SELECT Id, Name, E_Mail__c FROM FU_User__c WHERE E_Mail__c = '${safeEmail}' LIMIT 1`,
+    );
+    const record = clients[0];
+    if (!record) {
+      return null;
+    }
+    return {
+      id: str(record.Id) ?? "",
+      email: str(record.E_Mail__c) ?? email,
+      name: str(record.Name) ?? "Client",
+    };
   }
 
   private toDashboard(

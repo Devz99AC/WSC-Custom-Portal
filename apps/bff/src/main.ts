@@ -1,13 +1,54 @@
-import { loadEnv } from "./config/env.js";
+import { randomBytes } from "node:crypto";
+import { loadEnv, type Env } from "./config/env.js";
 import { GetDashboard } from "./application/get-dashboard.js";
+import { RequestMagicLink } from "./application/request-magic-link.js";
+import { VerifyMagicLink } from "./application/verify-magic-link.js";
 import type { PortalRepository } from "./application/ports/portal-repository.js";
+import type { EmailSender } from "./application/ports/email-sender.js";
 import { MockPortalRepository } from "./infrastructure/repositories/mock-portal-repository.js";
 import {
   createDevSalesforceQuery,
   createJwtSalesforceQuery,
 } from "./infrastructure/salesforce/salesforce-query.js";
 import { SalesforcePortalRepository } from "./infrastructure/salesforce/salesforce-portal-repository.js";
+import { InMemoryMagicLinkStore } from "./infrastructure/auth/in-memory-magic-link-store.js";
+import { createConsoleEmailSender } from "./infrastructure/email/console-email-sender.js";
+import { createSmtpEmailSender } from "./infrastructure/email/smtp-email-sender.js";
+import { renderMagicLinkEmail } from "./infrastructure/email/magic-link-template.js";
 import { buildServer } from "./infrastructure/http/server.js";
+
+/** Required in production; falls back to a per-boot random secret in dev so `pnpm dev`
+ *  works with no setup — sessions just won't survive a restart until it's set for real. */
+function resolveSessionSecret(env: Env): string {
+  if (env.SESSION_JWT_SECRET) {
+    return env.SESSION_JWT_SECRET;
+  }
+  if (env.NODE_ENV === "production") {
+    throw new Error("SESSION_JWT_SECRET is required in production");
+  }
+  console.warn(
+    "SESSION_JWT_SECRET not set — using an ephemeral dev-only secret (sessions won't " +
+      "survive a restart). Set it in .env.local for anything beyond quick local testing.",
+  );
+  return randomBytes(32).toString("hex");
+}
+
+function buildEmailSender(env: Env): EmailSender {
+  if (env.EMAIL_SENDER !== "smtp") {
+    return createConsoleEmailSender();
+  }
+  if (!env.SMTP_USER || !env.SMTP_PASSWORD || !env.SMTP_FROM_EMAIL) {
+    throw new Error("SMTP_USER, SMTP_PASSWORD and SMTP_FROM_EMAIL are required when EMAIL_SENDER=smtp");
+  }
+  return createSmtpEmailSender({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    user: env.SMTP_USER,
+    password: env.SMTP_PASSWORD,
+    fromEmail: env.SMTP_FROM_EMAIL,
+    fromName: env.SMTP_FROM_NAME,
+  });
+}
 
 /**
  * Composition root: load config, wire adapters, start listening. The data source is
@@ -44,7 +85,17 @@ async function main(): Promise<void> {
   }
 
   const getDashboard = new GetDashboard(repository);
-  const app = buildServer(env, { getDashboard });
+
+  const sessionConfig = { secret: resolveSessionSecret(env), kid: env.SESSION_JWT_KID };
+  const magicLinkStore = new InMemoryMagicLinkStore();
+  const sendEmail = buildEmailSender(env);
+  const requestMagicLink = new RequestMagicLink(repository, magicLinkStore, sendEmail, renderMagicLinkEmail, {
+    appBaseUrl: env.APP_BASE_URL,
+    ttlSeconds: env.MAGIC_LINK_TTL_SECONDS,
+  });
+  const verifyMagicLink = new VerifyMagicLink(magicLinkStore);
+
+  const app = buildServer(env, { getDashboard, requestMagicLink, verifyMagicLink, sessionConfig });
   await app.listen({ port: env.PORT, host: env.HOST });
 }
 

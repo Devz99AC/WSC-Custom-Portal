@@ -168,7 +168,9 @@
 > — see `docs/STATUS.md` G2. **Customer auth (1.7/1.8) is DECIDED** by
 > [ADR-0005](docs/adr/0005-customer-identity-magic-link.md): BFF-native magic-link, not Auth0/Cognito.
 > Also: 1.8's "email → `Contact.Id`" is corrected to "email → `FU_User__c.Id`" (no standard Contact
-> in this org).
+> in this org). **1.7/1.8 code is now DONE too** (see their Progress notes below) — `/auth/request-link`,
+> `/auth/verify`, session-cookie auth on `/api/dashboard`, SMTP email delivery. Boxes stay unchecked
+> pending an HTTP-level integration test.
 
 #### 1.A Salesforce data model / Modelo de datos en Salesforce
 - [ ] **1.1** Create custom objects + fields (`Shelf_Corp__c`, `Document__c`, `Credit_Profile__c`, `Payment__c`, `Portal_Event__c`). — **D3 🟠 · M**
@@ -189,14 +191,17 @@
 - [ ] **1.6** Implement JWT Bearer flow in BFF: sign JWT, exchange for access token, cache + auto re-mint on expiry. — **D4 🔴 · M**
   - *EN DoD:* BFF obtains a token on boot; a `GET` to SF REST succeeds; token auto-refreshes after forced expiry; **token never leaves the server** (asserted in a test).
   - *ES DoD:* el BFF obtiene token al arrancar; un `GET` a SF REST funciona; el token se re-emite tras expiración forzada; **el token nunca sale del servidor** (aseverado en test).
+  - *Progress 2026-07-22:* **code DONE** (`salesforce-jwt-auth.ts` + `createJwtSalesforceQuery()`, `PORTAL_DATA_SOURCE=salesforce-jwt`, hand-verified against the sandbox) — box stays unchecked because the **DoD tests are missing** (forced-expiry re-mint + token-never-leaves-server assertions).
   - *Depends on:* 1.4, 1.5.
 
 #### 1.C Customer identity (magic-link) / Identidad del cliente (magic-link)
-- [ ] **1.7** Configure IdP (Auth0 / Cognito / Supabase Auth) with passwordless email magic-link. — **D2 🟡 · S**
+- [ ] **1.7** ~~Configure IdP (Auth0 / Cognito / Supabase Auth)~~ Build the BFF-native magic-link (ADR-0005) with passwordless email. — **D2 🟡 · S**
   - *DoD:* a user receives a magic-link email and lands with a valid JWT.
-- [ ] **1.8** BFF middleware: verify IdP JWT → resolve `email → Contact.Id` → attach to request context. — **D4 🔴 · M**
-  - *EN DoD:* requests without a valid JWT get `401`; valid ones carry the resolved `Contact.Id`; an unknown email is rejected (no auto-provisioning of strangers).
-  - *ES DoD:* requests sin JWT válido reciben `401`; los válidos llevan el `Contact.Id` resuelto; un email desconocido se rechaza (sin auto-aprovisionar desconocidos).
+  - *Progress 2026-07-22:* **code DONE** — `/auth/request-link` + `/auth/verify` + `RequestMagicLink`/`VerifyMagicLink` use-cases, in-memory single-use token store, session JWT cookie. Email delivery via SMTP (Google Workspace, `EMAIL_SENDER=smtp`) or console (dev). Hand-verified end-to-end with curl: link issued → token exchanged → session cookie set → reused/garbage tokens correctly rejected. Box stays unchecked: unit tests cover the use-cases in isolation, but there's no HTTP-level integration test hitting the actual routes/cookies.
+- [ ] **1.8** BFF middleware: verify session JWT → resolve `email → FU_User__c.Id` (corrected per ADR-0005; no standard Contact in this org) → attach to request context. — **D4 🔴 · M**
+  - *EN DoD:* requests without a valid JWT get `401`; valid ones carry the resolved `FU_User__c.Id`; an unknown email is rejected (no auto-provisioning of strangers).
+  - *ES DoD:* requests sin JWT válido reciben `401`; los válidos llevan el `FU_User__c.Id` resuelto; un email desconocido se rechaza (sin auto-aprovisionar desconocidos).
+  - *Progress 2026-07-22:* **code DONE** — `/api/dashboard` now reads identity from the `wsc_session` cookie only (no more client-supplied `?email=`), 401 without it. `PortalRepository.findClientByEmail` resolves `FU_User__c` and never auto-creates one. Hand-verified with curl (401 without cookie, 200 with it, 401 again after `/auth/logout`). Box stays unchecked for the same reason as 1.7 — no HTTP-level integration test yet.
   - *Depends on:* 1.6, 1.7.
 
 #### 1.D Infra services / Servicios de infraestructura

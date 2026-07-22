@@ -1,17 +1,18 @@
 # WSC Customer Portal — Estado del proyecto y plan de acción
 
-> **Actualizado:** 2026-07-19 · **Rama:** todo mergeado a `main` (fast-forward limpio
+> **Actualizado:** 2026-07-22 (corrección de staleness: el código JWT del BFF ya estaba
+> implementado y los pagos ya estaban sembrados; estado del sandbox **re-verificado en vivo**
+> vía `sf data query` con el alias `wsc-jwt`) · **Rama:** todo mergeado a `main` (fast-forward limpio
 > desde `phase-0-foundations`, pusheado a origin). `phase-0-foundations` sigue existiendo
 > en el mismo commit; el próximo bloque de trabajo puede seguir en `main` o abrir una
 > rama nueva. Ver [`ACTION-PLAN.md`](ACTION-PLAN.md) para el plan priorizado por lo que
 > se puede hacer ya sin depender de Salesforce/admin.
 > **Resumen:** Fase 0 **completa y verificada**. Se construyó, adelantándose al plan, un
 > **demo funcional** (Login + Dashboard) que ya lee **datos reales de Salesforce** vía un
-> adaptador de solo-lectura. **El auth servidor→SF (JWT Bearer) ya quedó resuelto y probado**
-> en el sandbox vía una **External Client App** (G2 — mecanismo verificado). Falta una decisión
-> clave (auth del cliente, G1), migrar el código del BFF al JWT real (hoy sigue en modo
-> CLI-session de dev), el integration user de mínimo privilegio (G3), y el grueso de las
-> Fases 1–5.
+> adaptador de solo-lectura. **El auth servidor→SF (JWT Bearer) quedó resuelto, probado e
+> IMPLEMENTADO en el BFF** (`PORTAL_DATA_SOURCE=salesforce-jwt`) vía una **External Client App**
+> (G2 — cerrado). Falta una decisión clave (auth del cliente, G1), el integration user de
+> mínimo privilegio (G3), el despliegue público, y el grueso de las Fases 1–5.
 
 ---
 
@@ -35,8 +36,9 @@
   (orden) ─ `SC_Corp__c` (producto) · `Online_Payment__c` (pagos), marca `Brand__c='WSC'`.
 - **`packages/shared`** alineado a los valores reales (pipeline `Verified - *`, métodos/estados de pago).
 - **BFF** (`apps/bff`): endpoints `/health` y `/api/dashboard`, tras el puerto `PortalRepository`
-  con **dos adaptadores** — `MockPortalRepository` (datos con forma real) y
-  `SalesforcePortalRepository` (lee la org en vivo, reusando la sesión del CLI vía `@salesforce/core`).
+  con **tres modos de datos** (`PORTAL_DATA_SOURCE`) — `mock` (datos con forma real),
+  `salesforce` (lee la org en vivo reusando la sesión del CLI vía `@salesforce/core`, solo dev) y
+  `salesforce-jwt` (**JWT Bearer real**, ver más abajo).
 - **Web** (`apps/web`): Login + Dashboard reales (React + TanStack Query + tema WSC), consumiendo el BFF.
 - **1 orden WSC real sembrada** (`Online_Order__c` UO1423102) → el demo la lee **en vivo**.
 - Par X.509 generado (`~/.wsc-keys/`) y `ConnectedApp` como metadata escrita (deploy bloqueado, ver §4).
@@ -45,12 +47,19 @@
   habilitado, Permission Set `WSC Customer Portal - JWT Access` pre-autoriza al usuario vía
   "OAuth Policies → Permitted Users = Admin approved" + "App Policies → Select Permission Sets".
   `sf org login jwt` → *"Successfully authorized"*; `sf org list` → alias `wsc-jwt` en estado
-  `Connected`. **El mecanismo está listo**; falta (a) implementarlo en el código del BFF — sigue
-  con auth-CLI de dev, ver §5 B.5 — y (b) repetirlo con un integration user real en vez del admin (G3).
-- **Orden `UO1423102` ahora tiene producto real vinculado**: `Corp__c` → `SC_Corp__c` "Devin LLC"
-  (creada por el usuario, con sus Investment Batches). Falta sembrar `Online_Payment__c` —
-  bloqueado por una validación que exige un `Merchant_Account__c` válido, objeto sin registros en
-  todo el sandbox (ver G8 en §4).
+  `Connected` (re-verificado en vivo 2026-07-22). **Y el código del BFF ya lo implementa** (§5 B.5 ✅):
+  `salesforce-jwt-auth.ts` firma la assertion RS256 (`iss`=Consumer Key / `sub`=username /
+  `aud`=login URL, exp 3 min), la canjea en `/services/oauth2/token`, cachea el token (10 min,
+  in-memory hasta que llegue Redis/G6) y lo invalida en `INVALID_SESSION_ID`; se activa con
+  `PORTAL_DATA_SOURCE=salesforce-jwt`. Falta solo repetir la pre-autorización con un
+  integration user real en vez del admin (G3).
+- **Orden `UO1423102` con el flujo de negocio COMPLETO** (sembrado 2026-07-19, re-verificado en
+  vivo 2026-07-22): `Corp__c` → `SC_Corp__c` "Devin LLC" en **`Sold`**, y **2 `Online_Payment__c`
+  sembrados** ($2,000 + $6,750 = $8,750, ambos `Status__c='Cleared'`, Wire Transfer). El bloqueo
+  de `Merchant_Account__c` se resolvió con un registro placeholder (G8 ✅, ver §4); al insertar el
+  2º pago, el trigger Apex real (`Online_PaymentTrigger`) avanzó la orden **solo** a
+  `Status__c='Verified - Initial Contact'`. La corp NO es un aged corp real (Incorporation_Date
+  2026-07-19, age=0) — es placeholder para destrabar el flujo.
 
 ---
 
@@ -65,10 +74,17 @@ $env:PORTAL_DATA_SOURCE="salesforce"; $env:SF_TARGET_USERNAME="sf_admin@utopia6.
 corepack pnpm --filter @wsc/bff dev   # terminal 1
 corepack pnpm --filter @wsc/web dev   # terminal 2  →  login m.brown@acmeholdings.com
 
+# Demo vía JWT Bearer real (External Client App, sin sesión CLI):
+$env:PORTAL_DATA_SOURCE="salesforce-jwt"
+# + SF_CLIENT_ID / SF_JWT_PRIVATE_KEY (PEM o ruta) / SF_INTEGRATION_USERNAME / SF_LOGIN_URL
+
 corepack pnpm test | typecheck | lint # calidad
 ```
 Login demo: `m.brown@acmeholdings.com`. Nota de entorno: pnpm corre vía `corepack pnpm`
 (shim en `AppData\Local\corepack-shims`); Vite dev bindea IPv6 → abrir con `localhost`, no `127.0.0.1`.
+Nota CLI (2026-07-22): el alias `wsc-sandbox` **ya no existe** en el CLI; queda `wsc-jwt`
+(mismo username, `Connected`). `SF_TARGET_USERNAME` sigue funcionando igual — `@salesforce/core`
+resuelve la auth por username, no por alias.
 
 ---
 
@@ -90,14 +106,14 @@ Login demo: `m.brown@acmeholdings.com`. Nota de entorno: pnpm corre vía `corepa
 
 | # | Falta | Severidad | Nota |
 |---|---|:--:|---|
-| G1 | ~~Decisión de auth del cliente~~ | 🟢 Resuelto | [ADR-0005](adr/0005-customer-identity-magic-link.md) (2026-07-19): magic-link nativo del BFF, no Auth0/Cognito. Falta el **código** (BFF `/auth/request-link` + `/auth/verify` per ARCHITECTURE.md §3.2, ROADMAP 1.7/1.8) — la decisión está tomada, la implementación no. |
-| G2 | **Auth servidor→SF de producción (JWT Bearer)** | 🟢 Resuelto (mecanismo) | La org **prohíbe Connected Apps clásicas**, pero **sí permite External Client Apps** — se creó `WSC Customer - Devin Sandbox` y se probó el JWT Bearer Flow completo (`sf org login jwt` ✅, 2026-07-19). **Pendiente real:** (1) el **código** del BFF todavía no usa este flujo, sigue con auth-CLI de dev (ROADMAP 1.6); (2) la prueba usó el usuario **admin**, no un integration user de mínimo privilegio (eso es G3, separado). |
+| G1 | ~~Decisión de auth del cliente~~ | 🟢 Resuelto | [ADR-0005](adr/0005-customer-identity-magic-link.md): magic-link nativo del BFF. **Código también implementado y verificado** (2026-07-22): `/auth/request-link`, `/auth/verify`, `/auth/logout`, cookie de sesión protegiendo `/api/dashboard`, email vía SMTP (Google Workspace) o consola en dev. Falta portar esto a las 4 vistas restantes del prototipo y un test de integración HTTP. |
+| G2 | **Auth servidor→SF de producción (JWT Bearer)** | 🟢 Resuelto | La org **prohíbe Connected Apps clásicas**, pero **sí permite External Client Apps** — se creó `WSC Customer - Devin Sandbox`, se probó el flujo completo (`sf org login jwt` ✅, 2026-07-19) **y el BFF ya lo implementa** (`salesforce-jwt-auth.ts` + `createJwtSalesforceQuery()`, `PORTAL_DATA_SOURCE=salesforce-jwt`, en `main` — ROADMAP 1.6: código ✅, faltan sus tests de DoD). **Pendiente real:** la pre-autorización usó el usuario **admin** y ese Consumer Key se compartió en chat → crear credenciales nuevas con el integration user (G3) antes de cualquier despliegue público. |
 | G3 | **Integration user + permission set mínimo** (1.5, licencia Salesforce Integration) | 🟠 Alta | Requiere admin. Hoy el demo usa el usuario admin (no es mínimo privilegio). |
 | G4 | **Datos realistas** en un entorno | 🟠 Media | Developer sandbox vacío. Evaluar Partial/Full sandbox. |
 | G5 | **API de lectura real** (catálogo, orders, payments, documents, profile) | 🟡 | Solo existe `/api/dashboard`. Falta el resto mapeado a los objetos reales + OpenAPI. |
 | G6 | **Infra**: S3 (vault) + Redis (caché) | 🟡 | No provisionados (ROADMAP 1.9/1.10). |
 | G7 | **Fases 2–5**: reserva atómica, realtime (Pub/Sub+SSE), Stripe, firma, vault, 5 vistas UI, tests integración/e2e, hardening | 🟡 | No iniciadas. |
-| G8 | **`Merchant_Account__c` vacío** bloquea sembrar `Online_Payment__c` | 🟡 Media | Objeto de configuración de gateway de pago (credenciales, límites) con **0 registros en todo el org** (no solo WSC) — consistente con el hallazgo #3 (sandbox Developer = solo metadata). Tiene validaciones propias no triviales ("Fill in the empty fields in the sections of Limits and Supports"), no visibles vía API describe. Probablemente sí existan registros en producción. Opciones: crearlo a mano vía Setup UI (la página muestra las secciones "Limits"/"Supports" con labels, más fácil que adivinar por API) o esperar a un Partial/Full sandbox con datos reales (G4). |
+| G8 | ~~**`Merchant_Account__c` vacío** bloquea sembrar `Online_Payment__c`~~ | 🟢 Resuelto | Se creó un `Merchant_Account__c` **placeholder** (2026-07-19; `Provider__c` explicita que no es un gateway real, sin credenciales) llenando los campos de "Limits and Supports" que exige su validación — fórmula exacta obtenida vía Tooling API `ValidationRule.Metadata`, no adivinada. Con eso se sembraron los 2 pagos y el trigger `Online_PaymentTrigger` avanzó la orden (ver §1). En un Partial/Full sandbox (G4) existirían registros reales de este objeto. |
 
 ---
 
@@ -107,18 +123,21 @@ Login demo: `m.brown@acmeholdings.com`. Nota de entorno: pnpm corre vía `corepa
 1. ~~Elegir el modelo de auth del cliente~~ → **[ADR-0005](adr/0005-customer-identity-magic-link.md)
    escrito y aceptado (2026-07-19)**: magic-link nativo. *(G1 — decisión resuelta, falta el código.)*
 2. ~~Resolver el auth SF de producción~~ *(G2 — RESUELTO 2026-07-19)*: se creó una **External Client
-   App** y se probó el **JWT Bearer Flow** real (certificado + Consumer Key + Permission Set). Sigue
-   pendiente en **B.5** escribir el código en el BFF que reemplace el adaptador dev-CLI, y en **G3**
-   repetir la pre-autorización con un integration user de mínimo privilegio en vez del admin.
+   App** y se probó el **JWT Bearer Flow** real (certificado + Consumer Key + Permission Set).
+   El código del BFF ya lo implementa (**B.5 ✅**); solo queda **G3**: repetir la pre-autorización
+   con un integration user de mínimo privilegio en vez del admin.
 3. **Crear el integration user + permission set de mínimo privilegio** (licencia Salesforce Integration,
    solo objetos WSC, `Brand__c='WSC'`) *(G3)*. Verificar que no ve otras marcas.
 4. **Definir entorno de datos**: ¿Partial/Full sandbox para pruebas realistas? *(G4)*
 
 ### B. Completar Fase 1 (infra + auth)
-5. Implementar el **JWT Bearer flow real** en el BFF (reemplaza el adaptador dev) — **G2 ya
-   desbloqueado**: existe la External Client App + Consumer Key + par de llaves en `~/.wsc-keys/`.
-   Falta el código: firmar un JWT (`jsonwebtoken`, claims `iss`=Consumer Key/`sub`=username/`aud`=login
-   URL) y canjearlo en `/services/oauth2/token` (grant_type `urn:ietf:params:oauth:grant-type:jwt-bearer`).
+5. ~~Implementar el **JWT Bearer flow real** en el BFF~~ — ✅ **HECHO** (en `main`):
+   `apps/bff/src/infrastructure/salesforce/salesforce-jwt-auth.ts` firma la assertion
+   (`jsonwebtoken`, RS256, claims `iss`=Consumer Key/`sub`=username/`aud`=login URL) y la canjea
+   en `/services/oauth2/token` (`grant_type urn:ietf:params:oauth:grant-type:jwt-bearer`), con
+   caché del token e invalidación reactiva en `INVALID_SESSION_ID`. Activable con
+   `PORTAL_DATA_SOURCE=salesforce-jwt`. Para producción solo faltan las credenciales nuevas de
+   G3 (las actuales son del admin y su Consumer Key se compartió en chat).
 6. **Middleware de identidad de cliente** (magic-link) → resolver `email → FU_User__c`, **authz por fila**.
 7. Provisionar **S3** (SSE-KMS, Object Lock) y **Redis** (caché) *(G6)*.
 

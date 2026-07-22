@@ -1,5 +1,5 @@
 import type { OrderDashboard } from "@wsc/shared";
-import type { PortalRepository } from "../../application/ports/portal-repository.js";
+import type { ClientIdentity, PortalRepository } from "../../application/ports/portal-repository.js";
 
 /**
  * In-memory adapter for the demo. The data has the EXACT shape the Salesforce adapter
@@ -70,5 +70,13 @@ const DEMO_DASHBOARD: OrderDashboard = {
 export class MockPortalRepository implements PortalRepository {
   getDashboardByEmail(email: string): Promise<OrderDashboard | null> {
     return Promise.resolve(email === DEMO_EMAIL ? DEMO_DASHBOARD : null);
+  }
+
+  findClientByEmail(email: string): Promise<ClientIdentity | null> {
+    if (email !== DEMO_EMAIL) {
+      return Promise.resolve(null);
+    }
+    const { id, email: clientEmail, name } = DEMO_DASHBOARD.client;
+    return Promise.resolve({ id, email: clientEmail, name });
   }
 }

@@ -9,6 +9,9 @@ export default defineConfig({
     // Explicit IPv4 (not "localhost") to avoid the IPv6 ::1 vs 127.0.0.1 mismatch.
     proxy: {
       "/api": "http://127.0.0.1:8080",
+      // Magic-link endpoints (ADR-0005) — same-origin so the session cookie is set
+      // against the SPA's own origin, matching the prod vercel.json rewrite.
+      "/auth": "http://127.0.0.1:8080",
     },
   },
 });
