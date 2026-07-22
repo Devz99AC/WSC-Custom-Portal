@@ -1,10 +1,12 @@
 import { randomBytes } from "node:crypto";
+import { Redis } from "ioredis";
 import { loadEnv, type Env } from "./config/env.js";
 import { GetDashboard } from "./application/get-dashboard.js";
 import { RequestMagicLink } from "./application/request-magic-link.js";
 import { VerifyMagicLink } from "./application/verify-magic-link.js";
 import type { PortalRepository } from "./application/ports/portal-repository.js";
 import type { EmailSender } from "./application/ports/email-sender.js";
+import type { MagicLinkStore } from "./application/ports/magic-link-store.js";
 import { MockPortalRepository } from "./infrastructure/repositories/mock-portal-repository.js";
 import {
   createDevSalesforceQuery,
@@ -12,6 +14,7 @@ import {
 } from "./infrastructure/salesforce/salesforce-query.js";
 import { SalesforcePortalRepository } from "./infrastructure/salesforce/salesforce-portal-repository.js";
 import { InMemoryMagicLinkStore } from "./infrastructure/auth/in-memory-magic-link-store.js";
+import { RedisMagicLinkStore } from "./infrastructure/auth/redis-magic-link-store.js";
 import { createConsoleEmailSender } from "./infrastructure/email/console-email-sender.js";
 import { createSmtpEmailSender } from "./infrastructure/email/smtp-email-sender.js";
 import { renderMagicLinkEmail } from "./infrastructure/email/magic-link-template.js";
@@ -31,6 +34,15 @@ function resolveSessionSecret(env: Env): string {
       "survive a restart). Set it in .env.local for anything beyond quick local testing.",
   );
   return randomBytes(32).toString("hex");
+}
+
+/** Redis when configured (multi-instance/restart-safe); in-memory otherwise (dev). */
+function buildMagicLinkStore(env: Env): { store: MagicLinkStore; redisClient: Redis | null } {
+  if (!env.REDIS_URL) {
+    return { store: new InMemoryMagicLinkStore(), redisClient: null };
+  }
+  const redisClient = new Redis(env.REDIS_URL);
+  return { store: new RedisMagicLinkStore(redisClient), redisClient };
 }
 
 function buildEmailSender(env: Env): EmailSender {
@@ -87,7 +99,7 @@ async function main(): Promise<void> {
   const getDashboard = new GetDashboard(repository);
 
   const sessionConfig = { secret: resolveSessionSecret(env), kid: env.SESSION_JWT_KID };
-  const magicLinkStore = new InMemoryMagicLinkStore();
+  const { store: magicLinkStore, redisClient } = buildMagicLinkStore(env);
   const sendEmail = buildEmailSender(env);
   const requestMagicLink = new RequestMagicLink(repository, magicLinkStore, sendEmail, renderMagicLinkEmail, {
     appBaseUrl: env.APP_BASE_URL,
@@ -96,6 +108,11 @@ async function main(): Promise<void> {
   const verifyMagicLink = new VerifyMagicLink(magicLinkStore);
 
   const app = buildServer(env, { getDashboard, requestMagicLink, verifyMagicLink, sessionConfig });
+  if (redisClient) {
+    app.addHook("onClose", async () => {
+      await redisClient.quit();
+    });
+  }
   await app.listen({ port: env.PORT, host: env.HOST });
 }
 

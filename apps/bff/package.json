@@ -16,6 +16,7 @@
     "@salesforce/core": "^8.8.2",
     "@wsc/shared": "workspace:*",
     "fastify": "^5.2.0",
+    "ioredis": "^5.4.2",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^9.0.3",
     "zod": "^3.24.1"

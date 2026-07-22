@@ -48,9 +48,16 @@ Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sug
    (Vercel Edge Middleware framework-agnóstico, `@vercel/edge`), leyendo
    `BASIC_AUTH_USER`/`BASIC_AUTH_PASSWORD` desde las env vars del proyecto en Vercel
    (marcadas Sensitive). Gate confirmado funcionando (prompt nativo del browser).
-7. **Redis para caché de lecturas** (ROADMAP 1.9) — infraestructura pura, no toca SF.
-   También reemplazaría el `InMemoryMagicLinkStore` actual (single-process, se pierde
-   en cada restart) por uno persistente/multi-instancia.
+7. ~~**Redis para el magic-link store**~~ ✅ **Código hecho (2026-07-22)**:
+   `RedisMagicLinkStore` (mismo puerto `MagicLinkStore`, `GETDEL` atómico para el
+   single-use) — se activa solo con `REDIS_URL` seteada, si no sigue cayendo al
+   `InMemoryMagicLinkStore` de siempre (dev sin Redis no se rompe). **Falta**:
+   provisionar el Redis de verdad en Railway y setear `REDIS_URL` ahí (sin eso el
+   código ya existe pero no se está usando en el deploy actual). El **caché de
+   lecturas de Salesforce** (la otra mitad de ROADMAP 1.9) queda deliberadamente
+   fuera de alcance por ahora: no tiene nada que cachear mientras el deploy corra en
+   `PORTAL_DATA_SOURCE=mock` — retomar cuando G3 esté resuelto y `salesforce-jwt`
+   sea el adaptador activo en producción.
 8. **Portar el resto de las 5 vistas del prototipo a React real** (Order/Payments/
    Documents/Profile — hoy solo Login+Dashboard están portados) — trabajo de
    componentes de frontend, reutilizando `packages/shared`.

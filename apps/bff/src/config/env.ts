@@ -47,6 +47,11 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().min(1).optional(),
   SMTP_FROM_EMAIL: z.string().email().optional(),
   SMTP_FROM_NAME: z.string().min(1).default("WSC Client Portal"),
+
+  // Optional. When set, the magic-link store persists to Redis instead of an
+  // in-memory Map — required once more than one BFF instance runs, or to survive
+  // restarts (STATUS.md G6). Falls back to in-memory if unset (single-instance dev).
+  REDIS_URL: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
