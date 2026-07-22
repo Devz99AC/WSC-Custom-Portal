@@ -1,4 +1,4 @@
-# WSC Customer Portal — Action Plan (actualizado 2026-07-22, post-merge a `main`)
+# WSC Customer Portal — Action Plan (actualizado 2026-07-22, deploy Vercel+Railway en vivo)
 
 > Para el historial completo (qué se descubrió, qué falló, por qué) ver
 > [`STATUS.md`](STATUS.md). Este doc es el checklist accionable, **priorizado por
@@ -13,6 +13,11 @@
   `UO1423102`, y ahora el **magic-link real** (login funcional de punta a punta).
 - La rama `phase-0-foundations` sigue existiendo en el mismo commit — puedes seguir
   trabajando directo en `main` o abrir una rama nueva para el próximo bloque.
+- ✅ **Deploy público de staging en vivo (2026-07-22)**: frontend en Vercel
+  (`https://wsc-custom-portal-web.vercel.app`) + backend en Railway
+  (`https://wscbff-production.up.railway.app`), conectados vía rewrite, detrás de
+  un gate de HTTP Basic Auth en el borde. Corre con `PORTAL_DATA_SOURCE=mock` y
+  `EMAIL_SENDER=console` — ver Grupo A #3–6 más abajo para el detalle exacto.
 
 ---
 
@@ -28,16 +33,21 @@ Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sug
    verdad y muestra "revisa tu email"; `App.tsx` decide login/dashboard por la cookie
    de sesión). 12/12 tests, lint/typecheck/build verdes, probado a mano con curl
    (link → token → cookie → dashboard → reuso rechazado → logout → 401).
-3. **Deploy del frontend en Vercel** (`Root Directory = apps/web`). Tu dominio se
-   agrega ahí apuntando DNS desde donde ya lo tengas — no hace falta transferirlo.
-4. **Deploy del backend en Railway** (`Root Directory = apps/bff`). Puede desplegarse
-   incluso antes de tener las credenciales JWT nuevas (arranca en modo `mock` mientras
-   tanto). Recordar setear `SESSION_JWT_SECRET`, `APP_BASE_URL` y `EMAIL_SENDER=smtp`
-   + `SMTP_*` (Google Workspace) como variables de entorno reales — nunca en el repo.
-5. **`vercel.json` con rewrite** de `/api/*` **y `/auth/*`** → la URL de Railway (un
-   solo dominio, sin CORS) — el proxy de Vite en dev ya hace esto mismo.
-6. **HTTP Basic Auth** en el borde (Vercel Edge Middleware o Password Protection) —
-   para que el demo no quede abierto al público.
+3. ~~**Deploy del frontend en Vercel**~~ ✅ **HECHO (2026-07-22)**:
+   `https://wsc-custom-portal-web.vercel.app` (`Root Directory = apps/web`, build vía
+   `pnpm turbo run build --filter=@wsc/web`). Dominio propio aún no agregado (queda para
+   cuando se decida el target final de despliegue, ver Grupo C #14).
+4. ~~**Deploy del backend en Railway**~~ ✅ **HECHO (2026-07-22)**:
+   `https://wscbff-production.up.railway.app` (`/health` verificado), corriendo con
+   `PORTAL_DATA_SOURCE=mock` (aún sin credenciales G3) y `EMAIL_SENDER=console` (el
+   magic-link se imprime en los logs de Railway — falta configurar SMTP real con
+   Google Workspace cuando se quiera probar recepción de correo de verdad).
+5. ~~**`vercel.json` con rewrite**~~ ✅ **HECHO**: `/api/*` y `/auth/*` → Railway,
+   en `apps/web/vercel.json` (mismo dominio desde el browser, sin CORS).
+6. ~~**HTTP Basic Auth en el borde**~~ ✅ **HECHO**: `apps/web/middleware.ts`
+   (Vercel Edge Middleware framework-agnóstico, `@vercel/edge`), leyendo
+   `BASIC_AUTH_USER`/`BASIC_AUTH_PASSWORD` desde las env vars del proyecto en Vercel
+   (marcadas Sensitive). Gate confirmado funcionando (prompt nativo del browser).
 7. **Redis para caché de lecturas** (ROADMAP 1.9) — infraestructura pura, no toca SF.
    También reemplazaría el `InMemoryMagicLinkStore` actual (single-process, se pierde
    en cada restart) por uno persistente/multi-instancia.
