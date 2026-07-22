@@ -105,45 +105,45 @@ Sigue sin requerir Salesforce; quedó deliberadamente pausado durante el Grupo A
 Repetir el mismo runbook de hoy (documentado en `salesforce-sandbox-setup.md` §B-bis),
 con un usuario nuevo en vez del admin:
 
-10. **G3** — integration user de mínimo privilegio + Permission Set propio:
-    1. **Setup → Users → New User**: crear "WSC Integration User", licencia
-       **Salesforce Integration** (confirmar que queda alguna de las 5 disponibles).
-    2. **Profile**: `Minimum Access - API Only Integrations` (o el más restrictivo
-       disponible).
-    3. **Permission Set nuevo**, solo objetos WSC (`FU_User__c`, `Online_Order__c`,
-       `Online_Payment__c`, `SC_Corp__c`), Read-only, filtrado a `Brand__c='WSC'` —
-       sin View/Modify All Data.
-    4. Asignar ese Permission Set al nuevo usuario integration.
-11. **External Client App nueva**, separada de la de hoy (la de hoy quedó ligada al
-    admin y su Consumer Key ya se compartió en este chat — no reusar para nada
-    público). Mismo runbook de `salesforce-sandbox-setup.md` §B-bis: subir el
-    certificado nuevo, JWT Bearer Flow ON, Permitted Users = Admin approved,
-    Policies → el Permission Set nuevo del paso 10.
-12. **Nuevo par de llaves X.509** para esa app (no reusar `~/.wsc-keys/server.key`,
-    que es del admin).
-13. Probar:
-    ```
-    sf org login jwt --username <nuevo-usuario> --jwt-key-file <nueva-key> \
-      --clientid <nuevo-consumer-key> --instance-url <login-url>
-    ```
-    `sf org list` debe mostrar `Connected` para el nuevo alias.
-14. Verificar que este usuario **no ve otras marcas** (query de prueba contra un
-    objeto compartido con `Brand__c≠'WSC'`, si existe alguno).
+10. ~~**G3** — integration user de mínimo privilegio + Permission Set propio~~ ✅
+    **Hecho (2026-07-22)**: usuario `WSC Integration` (licencia Salesforce Integration,
+    profile Minimum Access - API Only Integrations), Permission Set
+    `WSC_Portal_Read_Only` (Read-only, solo `FU_User__c`/`Online_Order__c`/
+    `Online_Payment__c`/`SC_Corp__c`, FLS campo por campo calcada del código real —
+    no "todos los campos"), asignado al usuario. Verificado con script: lee la orden
+    real, `Account` denegado (confirma que el mínimo privilegio es real).
+11. ~~**External Client App nueva**~~ ✅ **Hecho**: app separada de la de hoy, JWT
+    Bearer Flow, Permitted Users = Admin approved, Policies → `WSC_Portal_Read_Only`.
+12. ~~**Llaves X.509**~~ Se reusó el par existente (`~/.wsc-keys/server.key`) —
+    decisión consciente del usuario: lo que estaba expuesto en el chat era el
+    Consumer Key de la app vieja, no el archivo de la llave privada, así que
+    reusarla no reintroduce ese riesgo mientras la app nueva tenga su propio
+    Consumer Key.
+13. ~~**Probar conexión**~~ ✅ `sf org login jwt` → `Successfully authorized`,
+    `sf org list` → alias `wsc-integration` en `Connected`.
+14. ~~**Verificar aislamiento**~~ ✅ confirmado por script (ver #10).
 
 ## 🔴 Grupo C — Depende de que A y B estén listos
 
-15. Cargar las credenciales de G3 en Railway (`SF_CLIENT_ID`, `SF_JWT_PRIVATE_KEY`,
-    `SF_INTEGRATION_USERNAME`, `SF_LOGIN_URL`) — nunca en el repo.
-16. Cambiar `PORTAL_DATA_SOURCE=salesforce-jwt` en Railway y redeployar.
-17. Probar `/api/dashboard` en producción — debe leer la orden real `UO1423102` vía
-    JWT, no ya el mock.
-18. Con esto, `findClientByEmail` también pasa a ser real (`FU_User__c`) — probar el
-    magic-link con el correo real del cliente sembrado, ya no con
-    `m.brown@acmeholdings.com`.
+15. ~~Cargar credenciales G3 en Railway~~ ✅ Hecho.
+16. ~~Cambiar `PORTAL_DATA_SOURCE=salesforce-jwt`~~ ✅ Hecho y redeployado.
+17. ~~Probar `/api/dashboard` en producción~~ ✅ **Confirmado (2026-07-22)**: el
+    dashboard en `https://wsc-custom-portal-web.vercel.app` muestra la orden real
+    `UO1423102` ($8,750, 2 pagos de $6,750+$2,000, "Devin LLC", asesor "Rinkie S.",
+    stage "Verified - Initial Contact") — ya no el mock `OO-1042`.
+18. ~~`findClientByEmail` real~~ ✅ — `m.brown@acmeholdings.com` es el correo real
+    del `FU_User__c` sembrado (mismo valor que el mock, por diseño), así que el login
+    de producción ya lo prueba.
 19. Decidir si el despliegue público final es el **mockup estático** (cero riesgo,
-    ya listo) o la **app React + BFF real** (tiempos de carga reales; con G3 resuelto
-    ya no depende de compartir credenciales admin, así que se vuelve la opción
-    razonable) — ver la tabla comparativa que ya armamos.
+    ya listo) o la **app React + BFF real** (ya funcional end-to-end con datos
+    reales) — ver la tabla comparativa que ya armamos. **Sigue abierto.**
+
+**🟢 Grupo B y Grupo C completos (2026-07-22).** Bugs de despliegue encontrados y
+arreglados en el camino (todos en `apps/bff/src/infrastructure/salesforce/`):
+Node 20→24 (undici de `@jsforce/jsforce-node` necesita una API interna de webidl que
+no existe en Node 20/22), reconstrucción defensiva de la PEM de `SF_JWT_PRIVATE_KEY`
+(el valor pegado en Railway perdió los marcadores BEGIN/END), y el prefijo `v`
+duplicado en `SF_API_VERSION` (jsforce-node ya antepone la "v" él mismo).
 
 ---
 
