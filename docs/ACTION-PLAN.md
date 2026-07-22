@@ -58,9 +58,18 @@ Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sug
    fuera de alcance por ahora: no tiene nada que cachear mientras el deploy corra en
    `PORTAL_DATA_SOURCE=mock` — retomar cuando G3 esté resuelto y `salesforce-jwt`
    sea el adaptador activo en producción.
-8. **Portar el resto de las 5 vistas del prototipo a React real** (Order/Payments/
-   Documents/Profile — hoy solo Login+Dashboard están portados) — trabajo de
-   componentes de frontend, reutilizando `packages/shared`.
+8. ~~**Portar el resto de las vistas del prototipo a React real**~~ ✅ **Hecho (2026-07-22)**:
+   `AppShell` (sidebar con navegación real vía `react-router-dom`, extraído de
+   `Dashboard`) + `OrderPage`/`PaymentsPage`/`DocumentsPage`/`ProfilePage`. Rutas reales
+   (`/`, `/order`, `/payments`, `/documents`, `/profile`) con fallback SPA agregado a
+   `vercel.json`. **Decisión de producto tomada al portar**: a diferencia del prototipo
+   estático, estas vistas NO fabrican datos que no existen todavía — Documents muestra
+   un estado vacío honesto (no hay backend de documentos real aún, Fase 3), Profile
+   describe el sign-in real por magic-link en vez de un toggle de 2FA falso, y el
+   historial de "My Order" solo muestra lo que el dashboard realmente devuelve (stage
+   actual + fecha de la orden), no un timeline inventado. Tests: `AppShell.test.tsx`
+   nuevo, `Dashboard.test.tsx` actualizado al refactor. Typecheck/lint/tests/build
+   verdes — falta revisión visual en browser real (no pude verificarlo yo mismo).
 9. Revisar el mockup pulido en dispositivos reales (ya está publicado y sincronizado
    con la orden real) e iterar si algo no calza visualmente.
 

@@ -49,9 +49,9 @@ const demo: OrderDashboardDto = {
 
 describe("Dashboard", () => {
   it("renders real-shaped Salesforce data (client, order, corp, advisor, stage)", () => {
-    render(<Dashboard dashboard={demo} onSignOut={() => undefined} />);
+    render(<Dashboard dashboard={demo} />);
 
-    expect(screen.getByText("Marcus Brown")).toBeInTheDocument();
+    expect(screen.getByText("Good afternoon, Marcus")).toBeInTheDocument();
     expect(screen.getByText(/OO-1042/)).toBeInTheDocument();
     expect(screen.getByText(/2016 Wyoming LLC/)).toBeInTheDocument();
     expect(screen.getByText("Wyoming")).toBeInTheDocument();

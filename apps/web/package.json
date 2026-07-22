@@ -15,7 +15,8 @@
     "@vercel/edge": "^1.2.1",
     "@wsc/shared": "workspace:*",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
