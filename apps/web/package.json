@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.11",
+    "@vercel/edge": "^1.2.1",
     "@wsc/shared": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
