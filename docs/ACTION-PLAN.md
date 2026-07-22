@@ -51,9 +51,9 @@ Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sug
 7. ~~**Redis para el magic-link store**~~ ✅ **Código hecho (2026-07-22)**:
    `RedisMagicLinkStore` (mismo puerto `MagicLinkStore`, `GETDEL` atómico para el
    single-use) — se activa solo con `REDIS_URL` seteada, si no sigue cayendo al
-   `InMemoryMagicLinkStore` de siempre (dev sin Redis no se rompe). **Falta**:
-   provisionar el Redis de verdad en Railway y setear `REDIS_URL` ahí (sin eso el
-   código ya existe pero no se está usando en el deploy actual). El **caché de
+   `InMemoryMagicLinkStore` de siempre (dev sin Redis no se rompe). **Y provisionado**:
+   Redis agregado en Railway con `REDIS_URL` seteada, confirmado healthy en producción
+   (2026-07-22, ver #9). El **caché de
    lecturas de Salesforce** (la otra mitad de ROADMAP 1.9) queda deliberadamente
    fuera de alcance por ahora: no tiene nada que cachear mientras el deploy corra en
    `PORTAL_DATA_SOURCE=mock` — retomar cuando G3 esté resuelto y `salesforce-jwt`
@@ -77,25 +77,87 @@ Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sug
 
 **🟢 Grupo A completo (2026-07-22).**
 
+## 🟢 Pendiente suelto — SMTP real (Google Workspace)
+
+Sigue sin requerir Salesforce; quedó deliberadamente pausado durante el Grupo A.
+
+1. Entra a [myaccount.google.com/security](https://myaccount.google.com/security) con
+   la cuenta que va a enviar (ej. `support@wholesaleshelfcorporations.com`).
+2. Activa **2-Step Verification** si no está activa (los App Passwords lo requieren).
+3. Busca **"App passwords"** → crea uno nuevo, nombre "WSC Portal" → copia el código
+   de 16 caracteres (solo se muestra una vez).
+4. En Railway → `@wsc/bff` → Variables, agrega/actualiza:
+   - `EMAIL_SENDER=smtp`
+   - `SMTP_USER=support@wholesaleshelfcorporations.com`
+   - `SMTP_PASSWORD=<app password>` (marcar **Sensitive**)
+   - `SMTP_FROM_EMAIL=support@wholesaleshelfcorporations.com`
+   - (`SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_NAME` ya tienen default correcto)
+5. **Decisión pendiente**: en modo `mock`, el único correo que dispara un envío es el
+   hardcodeado `m.brown@acmeholdings.com` (anti-enumeración silencia cualquier otro).
+   Para probar recepción real hay que o bien cambiar temporalmente ese valor en
+   `mock-portal-repository.ts` a un correo real controlado, o esperar a que G3 esté
+   listo y probar con el correo real del `FU_User__c` sembrado.
+6. Redeploy, pedir el link con ese correo, confirmar que llega (revisar spam la
+   primera vez).
+
 ## 🟡 Grupo B — Necesitas Salesforce Setup, pero ya tienes el acceso (no es "el admin", eres tú)
 
 Repetir el mismo runbook de hoy (documentado en `salesforce-sandbox-setup.md` §B-bis),
 con un usuario nuevo en vez del admin:
 
-10. **G3** — integration user de mínimo privilegio + Permission Set propio (solo
-    objetos WSC, `Brand__c='WSC'`).
+10. **G3** — integration user de mínimo privilegio + Permission Set propio:
+    1. **Setup → Users → New User**: crear "WSC Integration User", licencia
+       **Salesforce Integration** (confirmar que queda alguna de las 5 disponibles).
+    2. **Profile**: `Minimum Access - API Only Integrations` (o el más restrictivo
+       disponible).
+    3. **Permission Set nuevo**, solo objetos WSC (`FU_User__c`, `Online_Order__c`,
+       `Online_Payment__c`, `SC_Corp__c`), Read-only, filtrado a `Brand__c='WSC'` —
+       sin View/Modify All Data.
+    4. Asignar ese Permission Set al nuevo usuario integration.
 11. **External Client App nueva**, separada de la de hoy (la de hoy quedó ligada al
-    admin y su Consumer Key ya se compartió en este chat — no reusar para nada público).
+    admin y su Consumer Key ya se compartió en este chat — no reusar para nada
+    público). Mismo runbook de `salesforce-sandbox-setup.md` §B-bis: subir el
+    certificado nuevo, JWT Bearer Flow ON, Permitted Users = Admin approved,
+    Policies → el Permission Set nuevo del paso 10.
 12. **Nuevo par de llaves X.509** para esa app (no reusar `~/.wsc-keys/server.key`,
     que es del admin).
+13. Probar:
+    ```
+    sf org login jwt --username <nuevo-usuario> --jwt-key-file <nueva-key> \
+      --clientid <nuevo-consumer-key> --instance-url <login-url>
+    ```
+    `sf org list` debe mostrar `Connected` para el nuevo alias.
+14. Verificar que este usuario **no ve otras marcas** (query de prueba contra un
+    objeto compartido con `Brand__c≠'WSC'`, si existe alguno).
 
 ## 🔴 Grupo C — Depende de que A y B estén listos
 
-13. Probar `PORTAL_DATA_SOURCE=salesforce-jwt` en producción con las credenciales
-    nuevas del Grupo B, cargadas como variables de entorno en Railway (nunca en el repo).
-14. Decidir si el despliegue público final es el **mockup estático** (cero riesgo,
-    ya listo) o la **app React + BFF real** (tiempos de carga reales, requiere A+B
-    completos) — ver la tabla comparativa que ya armamos.
+15. Cargar las credenciales de G3 en Railway (`SF_CLIENT_ID`, `SF_JWT_PRIVATE_KEY`,
+    `SF_INTEGRATION_USERNAME`, `SF_LOGIN_URL`) — nunca en el repo.
+16. Cambiar `PORTAL_DATA_SOURCE=salesforce-jwt` en Railway y redeployar.
+17. Probar `/api/dashboard` en producción — debe leer la orden real `UO1423102` vía
+    JWT, no ya el mock.
+18. Con esto, `findClientByEmail` también pasa a ser real (`FU_User__c`) — probar el
+    magic-link con el correo real del cliente sembrado, ya no con
+    `m.brown@acmeholdings.com`.
+19. Decidir si el despliegue público final es el **mockup estático** (cero riesgo,
+    ya listo) o la **app React + BFF real** (tiempos de carga reales; con G3 resuelto
+    ya no depende de compartir credenciales admin, así que se vuelve la opción
+    razonable) — ver la tabla comparativa que ya armamos.
+
+---
+
+## Más adelante — Fases 2–5 (`docs/STATUS.md` §5)
+
+- **Fase 2**: contrato OpenAPI del BFF · endpoints reales (`orders/:id`, payments,
+  documents, profile) mapeados a SF · caché Redis de lecturas + invalidación por
+  CDC/Platform Events · realtime Pub/Sub → SSE · reserva atómica anti-doble-venta
+  (invariante #1 del proyecto).
+- **Fase 3**: Stripe (payment intents + webhook idempotente) · firma electrónica
+  (DocuSign/PandaDoc) · vault de documentos en S3 (SSE-KMS, presigned URLs).
+- **Fase 4**: sistema de diseño/componentes completo sobre `theme.css`.
+- **Fase 5**: tests de integración contra sandbox real + e2e (Playwright) ·
+  hardening de seguridad · go-live con feature flags.
 
 ---
 
