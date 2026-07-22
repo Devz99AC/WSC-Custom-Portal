@@ -163,9 +163,12 @@
 > and a BFF→Salesforce read path already works in dev (reusing the CLI session via `@salesforce/core`
 > — no Connected App). Two changes vs. the original plan: **(1.1) the custom objects ALREADY EXIST**
 > in the org (`FU_User__c`/`Online_Order__c`/`SC_Corp__c`/`Online_Payment__c`) → this becomes *map to
-> existing*, not *create*. **(1.4) creating a Connected App is BLOCKED by the org** → production JWT
-> auth needs an admin to enable it or an External Client App. **Customer auth (1.7/1.8) is an OPEN
-> decision** (Auth0 vs BFF-native magic-link) — needs an ADR first.
+> existing*, not *create*. **(1.4) creating a Connected App is BLOCKED by the org**, but a JWT Bearer
+> flow via an **External Client App** works and is implemented (`PORTAL_DATA_SOURCE=salesforce-jwt`)
+> — see `docs/STATUS.md` G2. **Customer auth (1.7/1.8) is DECIDED** by
+> [ADR-0005](docs/adr/0005-customer-identity-magic-link.md): BFF-native magic-link, not Auth0/Cognito.
+> Also: 1.8's "email → `Contact.Id`" is corrected to "email → `FU_User__c.Id`" (no standard Contact
+> in this org).
 
 #### 1.A Salesforce data model / Modelo de datos en Salesforce
 - [ ] **1.1** Create custom objects + fields (`Shelf_Corp__c`, `Document__c`, `Credit_Profile__c`, `Payment__c`, `Portal_Event__c`). — **D3 🟠 · M**

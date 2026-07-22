@@ -42,3 +42,4 @@ mitigation and caching.
   assumes an external IdP (Auth0/Cognito) while docs/ARCHITECTURE.md §3.2 assumes a
   BFF-native magic-link. A follow-up ADR must pick one before Phase 1 auth work. This ADR
   only fixes the *server↔Salesforce* plane and the headless topology.
+  **Resolved by [ADR-0005](0005-customer-identity-magic-link.md): BFF-native magic-link.**

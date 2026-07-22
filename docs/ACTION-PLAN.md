@@ -20,10 +20,10 @@
 
 Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sugerido:
 
-1. **ADR-0005** — decisión de auth del cliente (magic-link nativo del BFF vs
-   Auth0/Cognito). Es la única decisión de arquitectura que sigue abierta (G1);
-   puedo redactarla ahora si me confirmas la dirección (magic-link nativo es mi
-   recomendación — ver el chat anterior).
+1. ~~**ADR-0005**~~ ✅ Escrito y aceptado (2026-07-19): magic-link nativo del BFF, no
+   Auth0/Cognito. G1 resuelto. **Sigue pendiente el código** — BFF `/auth/request-link`
+   + `/auth/verify` per ARCHITECTURE.md §3.2 (ROADMAP 1.7/1.8) — buen candidato para la
+   siguiente tarea del Grupo A.
 2. **Deploy del frontend en Vercel** (`Root Directory = apps/web`). Tu dominio se
    agrega ahí apuntando DNS desde donde ya lo tengas — no hace falta transferirlo.
 3. **Deploy del backend en Railway** (`Root Directory = apps/bff`). Puede desplegarse

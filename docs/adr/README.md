@@ -14,9 +14,9 @@ contract the rest of the build depends on (ROADMAP task 0.1, depth D3).
 | [0002](0002-s3-vs-salesforce-files.md) | Document storage: S3 vs Salesforce Files | Accepted |
 | [0003](0003-platform-events-vs-outbound-messages.md) | Realtime: Pub/Sub API + Platform Events vs Outbound Messages | Accepted |
 | [0004](0004-payments-stripe.md) | Payments: Stripe | Accepted |
+| [0005](0005-customer-identity-magic-link.md) | Customer identity: BFF-native magic-link vs Auth0/Cognito | Accepted |
 
-## Open decisions (deferred to Phase 1)
+## Open decisions
 
-- **Customer identity provider.** ROADMAP Appendix C assumes an external IdP
-  (Auth0/Cognito); `docs/ARCHITECTURE.md` §3.2 assumes a BFF-native magic-link. To be
-  resolved by a new ADR before Phase 1 auth work. Noted in ADR-0001 §Consequences.
+None currently — ADR-0005 (2026-07-19) resolved the last open item (customer identity),
+which had been deferred from ADR-0001 §Consequences.

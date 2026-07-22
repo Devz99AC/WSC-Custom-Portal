@@ -90,7 +90,7 @@ Login demo: `m.brown@acmeholdings.com`. Nota de entorno: pnpm corre vía `corepa
 
 | # | Falta | Severidad | Nota |
 |---|---|:--:|---|
-| G1 | **Decisión de auth del cliente** (Auth0/Cognito vs magic-link nativo del BFF) | 🔴 Bloqueante | ADR abierto (ver `docs/adr/README.md`). Bloquea login real (ROADMAP 1.7/1.8). |
+| G1 | ~~Decisión de auth del cliente~~ | 🟢 Resuelto | [ADR-0005](adr/0005-customer-identity-magic-link.md) (2026-07-19): magic-link nativo del BFF, no Auth0/Cognito. Falta el **código** (BFF `/auth/request-link` + `/auth/verify` per ARCHITECTURE.md §3.2, ROADMAP 1.7/1.8) — la decisión está tomada, la implementación no. |
 | G2 | **Auth servidor→SF de producción (JWT Bearer)** | 🟢 Resuelto (mecanismo) | La org **prohíbe Connected Apps clásicas**, pero **sí permite External Client Apps** — se creó `WSC Customer - Devin Sandbox` y se probó el JWT Bearer Flow completo (`sf org login jwt` ✅, 2026-07-19). **Pendiente real:** (1) el **código** del BFF todavía no usa este flujo, sigue con auth-CLI de dev (ROADMAP 1.6); (2) la prueba usó el usuario **admin**, no un integration user de mínimo privilegio (eso es G3, separado). |
 | G3 | **Integration user + permission set mínimo** (1.5, licencia Salesforce Integration) | 🟠 Alta | Requiere admin. Hoy el demo usa el usuario admin (no es mínimo privilegio). |
 | G4 | **Datos realistas** en un entorno | 🟠 Media | Developer sandbox vacío. Evaluar Partial/Full sandbox. |
@@ -104,7 +104,8 @@ Login demo: `m.brown@acmeholdings.com`. Nota de entorno: pnpm corre vía `corepa
 ## 5. Plan de acción actualizado
 
 ### A. Decisiones primero (requieren humano/admin — desbloquean todo)
-1. **Elegir el modelo de auth del cliente** → escribir **ADR-0005** (Auth0/Cognito vs magic-link BFF). *(G1)*
+1. ~~Elegir el modelo de auth del cliente~~ → **[ADR-0005](adr/0005-customer-identity-magic-link.md)
+   escrito y aceptado (2026-07-19)**: magic-link nativo. *(G1 — decisión resuelta, falta el código.)*
 2. ~~Resolver el auth SF de producción~~ *(G2 — RESUELTO 2026-07-19)*: se creó una **External Client
    App** y se probó el **JWT Bearer Flow** real (certificado + Consumer Key + Permission Set). Sigue
    pendiente en **B.5** escribir el código en el BFF que reemplace el adaptador dev-CLI, y en **G3**
