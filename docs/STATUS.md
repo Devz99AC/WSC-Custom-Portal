@@ -11,8 +11,11 @@
 > **demo funcional** (Login + Dashboard) que ya lee **datos reales de Salesforce** vía un
 > adaptador de solo-lectura. **El auth servidor→SF (JWT Bearer) quedó resuelto, probado e
 > IMPLEMENTADO en el BFF** (`PORTAL_DATA_SOURCE=salesforce-jwt`) vía una **External Client App**
-> (G2 — cerrado). Falta una decisión clave (auth del cliente, G1), el integration user de
-> mínimo privilegio (G3), el despliegue público, y el grueso de las Fases 1–5.
+> (G2 — cerrado). **Grupo A del ACTION-PLAN completo (2026-07-22):** G1 cerrado (ADR-0005 +
+> magic-link real implementado y verificado e2e), las **5 vistas portadas** a React con rutas
+> reales, y **staging público en vivo** (Vercel + Railway + Redis, modo `mock`, tras Basic Auth).
+> Falta: el integration user de mínimo privilegio (G3), datos realistas (G4), el resto de la
+> API de lectura (G5), S3, y el grueso de las Fases 2–5.
 
 ---
 
@@ -86,6 +89,11 @@ Nota CLI (2026-07-22): el alias `wsc-sandbox` **ya no existe** en el CLI; queda 
 (mismo username, `Connected`). `SF_TARGET_USERNAME` sigue funcionando igual — `@salesforce/core`
 resuelve la auth por username, no por alias.
 
+**Staging público (2026-07-22):** frontend `https://wsc-custom-portal-web.vercel.app` (gate de
+HTTP Basic Auth en el borde) → BFF `https://wscbff-production.up.railway.app` vía rewrites de
+`vercel.json` (`/api/*`, `/auth/*`). Corre con `PORTAL_DATA_SOURCE=mock` y `EMAIL_SENDER=console`
+(el magic-link se lee en los logs de Railway); Redis de Railway como magic-link store.
+
 ---
 
 ## 3. Descubrimientos que CAMBIAN el plan original
@@ -106,13 +114,13 @@ resuelve la auth por username, no por alias.
 
 | # | Falta | Severidad | Nota |
 |---|---|:--:|---|
-| G1 | ~~Decisión de auth del cliente~~ | 🟢 Resuelto | [ADR-0005](adr/0005-customer-identity-magic-link.md): magic-link nativo del BFF. **Código también implementado y verificado** (2026-07-22): `/auth/request-link`, `/auth/verify`, `/auth/logout`, cookie de sesión protegiendo `/api/dashboard`, email vía SMTP (Google Workspace) o consola en dev. Falta portar esto a las 4 vistas restantes del prototipo y un test de integración HTTP. |
+| G1 | ~~Decisión de auth del cliente~~ | 🟢 Resuelto | [ADR-0005](adr/0005-customer-identity-magic-link.md): magic-link nativo del BFF. **Código también implementado y verificado** (2026-07-22): `/auth/request-link`, `/auth/verify`, `/auth/logout`, cookie de sesión protegiendo `/api/dashboard`, email vía SMTP (Google Workspace) o consola en dev. Las 5 vistas ya están portadas con rutas reales (`AppShell` + Order/Payments/Documents/Profile). Falta un test de integración HTTP del flujo auth. |
 | G2 | **Auth servidor→SF de producción (JWT Bearer)** | 🟢 Resuelto | La org **prohíbe Connected Apps clásicas**, pero **sí permite External Client Apps** — se creó `WSC Customer - Devin Sandbox`, se probó el flujo completo (`sf org login jwt` ✅, 2026-07-19) **y el BFF ya lo implementa** (`salesforce-jwt-auth.ts` + `createJwtSalesforceQuery()`, `PORTAL_DATA_SOURCE=salesforce-jwt`, en `main` — ROADMAP 1.6: código ✅, faltan sus tests de DoD). **Pendiente real:** la pre-autorización usó el usuario **admin** y ese Consumer Key se compartió en chat → crear credenciales nuevas con el integration user (G3) antes de cualquier despliegue público. |
 | G3 | **Integration user + permission set mínimo** (1.5, licencia Salesforce Integration) | 🟠 Alta | Requiere admin. Hoy el demo usa el usuario admin (no es mínimo privilegio). |
 | G4 | **Datos realistas** en un entorno | 🟠 Media | Developer sandbox vacío. Evaluar Partial/Full sandbox. |
 | G5 | **API de lectura real** (catálogo, orders, payments, documents, profile) | 🟡 | Solo existe `/api/dashboard`. Falta el resto mapeado a los objetos reales + OpenAPI. |
-| G6 | **Infra**: S3 (vault) + Redis (caché) | 🟡 | No provisionados (ROADMAP 1.9/1.10). |
-| G7 | **Fases 2–5**: reserva atómica, realtime (Pub/Sub+SSE), Stripe, firma, vault, 5 vistas UI, tests integración/e2e, hardening | 🟡 | No iniciadas. |
+| G6 | **Infra**: S3 (vault) + Redis (caché) | 🟡 | **Redis ✅ provisionado en Railway** (2026-07-22) como magic-link store (`REDIS_URL`); el caché de lecturas SF queda diferido hasta que G3 active `salesforce-jwt` en prod (nada que cachear en modo `mock`). **S3 sigue pendiente** (ROADMAP 1.9). |
+| G7 | **Fases 2–5**: reserva atómica, realtime (Pub/Sub+SSE), Stripe, firma, vault, tests integración/e2e, hardening | 🟡 | No iniciadas. (Las 5 vistas UI ya se portaron — hoy muestran solo datos del dashboard; se enriquecen cuando exista G5.) |
 | G8 | ~~**`Merchant_Account__c` vacío** bloquea sembrar `Online_Payment__c`~~ | 🟢 Resuelto | Se creó un `Merchant_Account__c` **placeholder** (2026-07-19; `Provider__c` explicita que no es un gateway real, sin credenciales) llenando los campos de "Limits and Supports" que exige su validación — fórmula exacta obtenida vía Tooling API `ValidationRule.Metadata`, no adivinada. Con eso se sembraron los 2 pagos y el trigger `Online_PaymentTrigger` avanzó la orden (ver §1). En un Partial/Full sandbox (G4) existirían registros reales de este objeto. |
 
 ---
@@ -121,7 +129,8 @@ resuelve la auth por username, no por alias.
 
 ### A. Decisiones primero (requieren humano/admin — desbloquean todo)
 1. ~~Elegir el modelo de auth del cliente~~ → **[ADR-0005](adr/0005-customer-identity-magic-link.md)
-   escrito y aceptado (2026-07-19)**: magic-link nativo. *(G1 — decisión resuelta, falta el código.)*
+   escrito y aceptado (2026-07-19)**: magic-link nativo. *(G1 — decisión y código resueltos:
+   implementado y verificado e2e en producción, 2026-07-22.)*
 2. ~~Resolver el auth SF de producción~~ *(G2 — RESUELTO 2026-07-19)*: se creó una **External Client
    App** y se probó el **JWT Bearer Flow** real (certificado + Consumer Key + Permission Set).
    El código del BFF ya lo implementa (**B.5 ✅**); solo queda **G3**: repetir la pre-autorización
@@ -138,8 +147,11 @@ resuelve la auth por username, no por alias.
    caché del token e invalidación reactiva en `INVALID_SESSION_ID`. Activable con
    `PORTAL_DATA_SOURCE=salesforce-jwt`. Para producción solo faltan las credenciales nuevas de
    G3 (las actuales son del admin y su Consumer Key se compartió en chat).
-6. **Middleware de identidad de cliente** (magic-link) → resolver `email → FU_User__c`, **authz por fila**.
-7. Provisionar **S3** (SSE-KMS, Object Lock) y **Redis** (caché) *(G6)*.
+6. **Middleware de identidad de cliente** (magic-link) → ✅ base hecha (2026-07-22: cookie de
+   sesión, `/api/dashboard` ya no acepta `?email=`); **extender la authz por fila a cada
+   endpoint nuevo de G5** al mapear `email → FU_User__c`.
+7. Provisionar **S3** (SSE-KMS, Object Lock) — *pendiente*; ~~Redis~~ ✅ en Railway
+   (magic-link store; el caché de lecturas SF espera a G3) *(G6)*.
 
 ### C. Fase 2 (API de lectura tipada + realtime)
 8. **Contrato OpenAPI** del BFF (fuente de tipos del frontend).
@@ -149,7 +161,8 @@ resuelve la auth por username, no por alias.
 
 ### D. Fases 3–5
 12. Stripe (pagos + webhook idempotente), firma (DocuSign/PandaDoc), vault S3 (presigned + hash).
-13. Portar las **5 vistas** del prototipo a React sobre datos reales.
+13. ~~Portar las **5 vistas** del prototipo a React~~ ✅ (2026-07-22, con rutas reales; hoy sobre
+    datos del dashboard — se enriquecen con los endpoints de G5).
 14. Tests de integración (sandbox) + e2e (Playwright); hardening de seguridad; go-live con feature flags.
 
 ---
