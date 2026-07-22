@@ -38,7 +38,10 @@ export async function createJwtSalesforceQuery(
   return async (soql: string): Promise<SalesforceRecord[]> => {
     const run = async (): Promise<SalesforceRecord[]> => {
       const { accessToken, instanceUrl } = await getJwtAccessToken(config);
-      const connection = new Connection({ accessToken, instanceUrl, version: config.apiVersion });
+      // jsforce-node prepends its own "v" when building /services/data/v{version} —
+      // strip a leading v/V so SF_API_VERSION works whether it's "v67.0" or "67.0".
+      const version = config.apiVersion.replace(/^v/i, "");
+      const connection = new Connection({ accessToken, instanceUrl, version });
       const result = await connection.query(soql);
       return result.records as unknown as SalesforceRecord[];
     };
