@@ -33,12 +33,12 @@ describe("AppShell", () => {
     const onSignOut = vi.fn();
     render(
       <MemoryRouter
-        initialEntries={["/order"]}
+        initialEntries={["/orders"]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
       >
         <Routes>
           <Route element={<AppShell dashboard={demo} onSignOut={onSignOut} />}>
-            <Route path="order" element={<p>Order page content</p>} />
+            <Route path="orders" element={<p>Order page content</p>} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -47,7 +47,7 @@ describe("AppShell", () => {
     expect(screen.getByText("Marcus Brown")).toBeInTheDocument();
     expect(screen.getByText("Acme Holdings LLC")).toBeInTheDocument();
     expect(screen.getByText("Order page content")).toBeInTheDocument();
-    for (const label of ["Dashboard", "My Order", "Payments", "Documents", "Profile"]) {
+    for (const label of ["Dashboard", "My Orders", "Payments", "Documents", "Profile"]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
 

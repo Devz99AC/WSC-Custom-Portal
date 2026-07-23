@@ -1,4 +1,11 @@
-import { orderDashboardSchema, type OrderDashboardDto } from "@wsc/shared";
+import {
+  orderDashboardSchema,
+  orderDetailSchema,
+  ordersListSchema,
+  type OrderDashboardDto,
+  type OrderDetailDto,
+  type OrdersListDto,
+} from "@wsc/shared";
 
 /** Thrown on a 401 — the caller uses this to distinguish "not signed in" from a real error. */
 export class UnauthorizedError extends Error {
@@ -29,6 +36,42 @@ export async function fetchDashboard(): Promise<OrderDashboardDto> {
 
   const payload: unknown = await response.json();
   return orderDashboardSchema.parse(payload);
+}
+
+/** "My Orders" — every order for the signed-in client, newest first. */
+export async function fetchOrders(): Promise<OrdersListDto> {
+  const response = await fetch("/api/orders");
+
+  if (response.status === 401) {
+    throw new UnauthorizedError();
+  }
+  if (response.status === 404) {
+    throw new Error("We couldn't find an account for this login.");
+  }
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}).`);
+  }
+
+  const payload: unknown = await response.json();
+  return ordersListSchema.parse(payload);
+}
+
+/** One order's detail, scoped server-side to the signed-in client (§ server.ts). */
+export async function fetchOrder(orderId: string): Promise<OrderDetailDto> {
+  const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`);
+
+  if (response.status === 401) {
+    throw new UnauthorizedError();
+  }
+  if (response.status === 404) {
+    throw new Error("We couldn't find that order.");
+  }
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}).`);
+  }
+
+  const payload: unknown = await response.json();
+  return orderDetailSchema.parse(payload);
 }
 
 /** Step 1 of the magic-link flow — always resolves, regardless of whether the email

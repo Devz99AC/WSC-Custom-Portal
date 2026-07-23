@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Login } from "./components/Login";
 import { AppShell } from "./components/AppShell";
 import { Dashboard } from "./components/Dashboard";
+import { OrdersListPage } from "./components/OrdersListPage";
 import { OrderPage } from "./components/OrderPage";
 import { PaymentsPage } from "./components/PaymentsPage";
 import { DocumentsPage } from "./components/DocumentsPage";
@@ -50,7 +51,8 @@ export function App() {
       <Routes>
         <Route element={<AppShell dashboard={data} onSignOut={handleSignOut} />}>
           <Route index element={<Dashboard dashboard={data} />} />
-          <Route path="order" element={<OrderPage dashboard={data} />} />
+          <Route path="orders" element={<OrdersListPage />} />
+          <Route path="orders/:id" element={<OrderPage />} />
           <Route path="payments" element={<PaymentsPage dashboard={data} />} />
           <Route path="documents" element={<DocumentsPage />} />
           <Route path="profile" element={<ProfilePage dashboard={data} />} />

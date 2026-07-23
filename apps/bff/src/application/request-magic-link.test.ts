@@ -12,6 +12,14 @@ class FakeRepository implements PortalRepository {
     return Promise.resolve(null);
   }
 
+  listOrdersByEmail(): ReturnType<PortalRepository["listOrdersByEmail"]> {
+    return Promise.resolve(null);
+  }
+
+  getOrderByEmailAndId(): ReturnType<PortalRepository["getOrderByEmailAndId"]> {
+    return Promise.resolve(null);
+  }
+
   findClientByEmail(email: string): ReturnType<PortalRepository["findClientByEmail"]> {
     return Promise.resolve(email === KNOWN_EMAIL ? CLIENT : null);
   }

@@ -70,9 +70,19 @@ export interface Order {
   clientId: string; // Client__c → FU_User__c
 }
 
-/** Aggregate returned by the dashboard endpoint. */
+/** Aggregate returned by the dashboard endpoint (most recent order). */
 export interface OrderDashboard {
   client: Client;
   order: Order;
   payments: Payment[];
+}
+
+/** Aggregate returned by the order-detail endpoint — same shape as the dashboard, one
+ *  per order rather than always the most recent. */
+export type OrderDetail = OrderDashboard;
+
+/** Aggregate returned by the "My Orders" list endpoint. */
+export interface OrdersList {
+  client: Client;
+  orders: Order[];
 }

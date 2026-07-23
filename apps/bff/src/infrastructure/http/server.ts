@@ -4,6 +4,8 @@ import { z } from "zod";
 import { ORDER_PIPELINE } from "@wsc/shared";
 import type { Env } from "../../config/env.js";
 import type { GetDashboard } from "../../application/get-dashboard.js";
+import type { GetOrders } from "../../application/get-orders.js";
+import type { GetOrder } from "../../application/get-order.js";
 import type { RequestMagicLink } from "../../application/request-magic-link.js";
 import type { VerifyMagicLink } from "../../application/verify-magic-link.js";
 import {
@@ -15,6 +17,8 @@ import {
 
 export interface ServerDeps {
   getDashboard: GetDashboard;
+  getOrders: GetOrders;
+  getOrder: GetOrder;
   requestMagicLink: RequestMagicLink;
   verifyMagicLink: VerifyMagicLink;
   sessionConfig: SessionJwtConfig;
@@ -22,6 +26,10 @@ export interface ServerDeps {
 
 const requestLinkBodySchema = z.object({ email: z.string().email() });
 const verifyQuerySchema = z.object({ token: z.string().min(1) });
+// Salesforce record ids are exactly 15 or 18 alphanumeric chars — validating the shape
+// here (not just "non-empty") stops a malformed :id from ever reaching SOQL, where it
+// would surface as a raw Salesforce query error (CLAUDE.md §2: never leak SFDC errors).
+const orderParamsSchema = z.object({ id: z.string().regex(/^[A-Za-z0-9]{15}([A-Za-z0-9]{3})?$/) });
 
 // Always the same response regardless of whether the email matched a client — prevents
 // account enumeration (ARCHITECTURE.md §3.2).
@@ -101,6 +109,37 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
       return reply.code(404).send({ error: "No order found for this account" });
     }
     return dashboard;
+  });
+
+  // "My Orders" — every order for the signed-in client, newest first.
+  app.get("/api/orders", async (request, reply) => {
+    const session = readSession(request, deps.sessionConfig);
+    if (!session) {
+      return reply.code(401).send({ error: "Not signed in" });
+    }
+    const orders = await deps.getOrders.execute(session.email);
+    if (!orders) {
+      return reply.code(404).send({ error: "No client found for this account" });
+    }
+    return orders;
+  });
+
+  // One order's detail, scoped to the signed-in client's own email (row-level authz —
+  // the :id param can never select another client's order, CLAUDE.md §1).
+  app.get("/api/orders/:id", async (request, reply) => {
+    const session = readSession(request, deps.sessionConfig);
+    if (!session) {
+      return reply.code(401).send({ error: "Not signed in" });
+    }
+    const parsed = orderParamsSchema.safeParse(request.params);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: "A valid order id is required" });
+    }
+    const order = await deps.getOrder.execute(session.email, parsed.data.id);
+    if (!order) {
+      return reply.code(404).send({ error: "Order not found" });
+    }
+    return order;
   });
 
   return app;

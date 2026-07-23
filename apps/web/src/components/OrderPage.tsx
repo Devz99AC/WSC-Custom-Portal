@@ -1,31 +1,49 @@
-import { orderStageLabel, type OrderDashboardDto } from "@wsc/shared";
+import { Link, useParams } from "react-router-dom";
+import { orderStageLabel } from "@wsc/shared";
+import { useOrder } from "../hooks/useOrder";
+import { UnauthorizedError } from "../api/client";
 
 const formatDate = (iso: string | null): string =>
   iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—";
 
-interface OrderPageProps {
-  dashboard: OrderDashboardDto;
-}
-
 /**
- * "My Order" — ported from apps/web/public/prototype.html. The status history below
- * shows only what the dashboard endpoint actually returns (current stage + when the
- * order was placed) rather than the prototype's fabricated multi-step timeline —
- * CLAUDE.md §Prime directive 1: never invent business records for a real client.
+ * Order detail — one order, resolved from the `:id` route param and scoped server-side
+ * to the signed-in client (row-level authz, server.ts). The status history below shows
+ * only what the endpoint actually returns (current stage + when the order was placed)
+ * rather than a fabricated multi-step timeline — CLAUDE.md §Prime directive 1.
  */
-export function OrderPage({ dashboard }: OrderPageProps) {
-  const { order } = dashboard;
+export function OrderPage() {
+  const { id } = useParams<{ id: string }>();
+  const { data, isPending, isError, error } = useOrder(id);
+
+  if (isPending) {
+    return <p className="statusnote">Loading order…</p>;
+  }
+
+  if (isError) {
+    return (
+      <p className="err">
+        {error instanceof UnauthorizedError
+          ? "Your session has expired — refresh the page to sign in again."
+          : error instanceof Error
+            ? error.message
+            : "Something went wrong."}
+      </p>
+    );
+  }
+
+  const { order } = data;
   const corp = order.shelfCorp;
 
   return (
     <>
       <div className="topbar">
         <div>
-          <h2 className="disp">My Order</h2>
-          <p>
-            Order {order.orderNumber}
-            {order.placedAt ? ` · Placed ${formatDate(order.placedAt)}` : ""}
-          </p>
+          <Link to="/orders" className="statusnote">
+            ← My Orders
+          </Link>
+          <h2 className="disp">Order {order.orderNumber}</h2>
+          <p>{order.placedAt ? `Placed ${formatDate(order.placedAt)}` : ""}</p>
         </div>
         <span className="badge b-ok">{orderStageLabel(order.statusSf)}</span>
       </div>

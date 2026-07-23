@@ -38,8 +38,8 @@ export function AppShell({ dashboard, onSignOut }: AppShellProps) {
         <NavLink to="/" end className={navClass}>
           Dashboard
         </NavLink>
-        <NavLink to="/order" className={navClass}>
-          My Order
+        <NavLink to="/orders" className={navClass}>
+          My Orders
         </NavLink>
         <NavLink to="/payments" className={navClass}>
           Payments

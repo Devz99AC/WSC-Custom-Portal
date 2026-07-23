@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { orderStageLabel, type OrderDashboardDto } from "@wsc/shared";
 import { OrderTracker } from "./OrderTracker";
 
@@ -21,7 +22,10 @@ export function Dashboard({ dashboard }: DashboardProps) {
       <div className="topbar">
         <div>
           <h2 className="disp">Good afternoon, {firstName}</h2>
-          <p>Here&apos;s where your order stands today.</p>
+          <p>
+            Here&apos;s where your most recent order stands today —{" "}
+            <Link to="/orders">view all my orders</Link>.
+          </p>
         </div>
         <button className="help-btn">Contact advisor</button>
       </div>
@@ -30,7 +34,9 @@ export function Dashboard({ dashboard }: DashboardProps) {
         <div className="stat">
           <div className="lab">Order total</div>
           <div className="val">{money(order.amount)}</div>
-          <div className="sub2">Order {order.orderNumber}</div>
+          <div className="sub2">
+            <Link to={`/orders/${order.id}`}>Order {order.orderNumber}</Link>
+          </div>
         </div>
         <div className="stat">
           <div className="lab">Paid to date</div>

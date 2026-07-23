@@ -66,3 +66,14 @@ export const orderDashboardSchema = z.object({
 });
 
 export type OrderDashboardDto = z.infer<typeof orderDashboardSchema>;
+
+/** Same shape as the dashboard — one specific order instead of always the most recent. */
+export const orderDetailSchema = orderDashboardSchema;
+export type OrderDetailDto = OrderDashboardDto;
+
+export const ordersListSchema = z.object({
+  client: clientSchema,
+  orders: z.array(orderSchema),
+});
+
+export type OrdersListDto = z.infer<typeof ordersListSchema>;

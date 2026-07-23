@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import type { OrderDashboardDto } from "@wsc/shared";
 import { Dashboard } from "./Dashboard";
@@ -49,7 +50,11 @@ const demo: OrderDashboardDto = {
 
 describe("Dashboard", () => {
   it("renders real-shaped Salesforce data (client, order, corp, advisor, stage)", () => {
-    render(<Dashboard dashboard={demo} />);
+    render(
+      <MemoryRouter>
+        <Dashboard dashboard={demo} />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText("Good afternoon, Marcus")).toBeInTheDocument();
     expect(screen.getByText(/OO-1042/)).toBeInTheDocument();
