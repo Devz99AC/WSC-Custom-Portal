@@ -5,7 +5,7 @@
 > Architecture details live in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). When code and that doc disagree, fix one and say so — do not silently diverge.
 
 ## 0. What this project is
-A **Customer Portal** for **Wholesale Shelf Corporations (WSC)** where a client (e.g. *Marcus Brown / Acme Holdings LLC*) tracks their purchase of an **aged shelf corporation**, makes payments, signs documents, and follows order status. **Salesforce (SFDC) is the Single Source of Truth.** The backend is a **BFF/API Gateway**; the frontend is a **read-mostly** SPA. Third parties: **Stripe** (payments), **AWS S3 / Azure Blob** (documents), **DocuSign/PandaDoc** (e-sign).
+A **post-sale Customer Portal** for **Wholesale Shelf Corporations (WSC)** where a client (e.g. *Marcus Brown / Acme Holdings LLC*) tracks their orders for **aged shelf corporations**: multi-order status, payment history & balance (**read-only** — payments are collected by the sales team, not the portal), documents shared by the team (view/download + **e-sign via Formstack Documents** — never DocuSign/PandaDoc), support (tickets/WhatsApp/chat), a referral program, and a learning center. **Salesforce (SFDC) is the Single Source of Truth.** The backend is a **BFF/API Gateway**; the frontend is a **read-mostly** SPA with narrow write paths only (support tickets, referral submissions, e-sign envelope events). New purchases go through the human Sales rep — **no in-portal checkout, no Stripe** ([ADR-0006](docs/adr/0006-post-sale-scope-descope-payments.md), 2026-07-22).
 
 **Prime directives**
 1. **SFDC is authoritative.** Never treat portal/local state as the source of truth for business data. Write to SFDC, then reflect back.
@@ -27,7 +27,7 @@ Build all SFDC access through a single **`SalesforceClient` service** (dependenc
   - Filter on **indexed/external-id** fields; avoid leading-wildcard `LIKE`.
   - Use relationship subqueries to fetch children in one query instead of a second call.
   - Read the `Sforce-Limit-Info` response header and surface remaining API budget; back off toward cache as it nears the limit.
-- **Idempotent writes:** upsert on **external-id** fields (e.g. `Payment__c.Stripe_PaymentIntent_Id__c`), never blind `create`. Every mutating call carries an idempotency key so retries can't double-write.
+- **Idempotent writes:** upsert on **external-id** fields, never blind `create`. The portal's only mutating paths (support tickets, referral submissions — ADR-0006) each carry an idempotency key so retries can't double-write.
 - **Parse SFDC/APEX errors correctly.** SFDC returns an **array** of `{ errorCode, message, fields[] }`. Map them to typed domain errors — do **not** string-match or bubble raw payloads to the client:
   | SFDC `errorCode` | Meaning | Portal response |
   | --- | --- | --- |
@@ -80,9 +80,12 @@ Use these exact terms in identifiers, types, and comments. Consistent naming acr
 | **State of Formation** | US state where the entity was formed (e.g. Wyoming). | `stateOfFormation`. |
 | **Advisor** | WSC staff member assigned to guide the client's order (e.g. *Rinkie S.*). | `advisor` / `Assigned_Advisor__c`. |
 | **Order** | A client's purchase engagement. **Maps to SFDC `Opportunity`** (`OO-####`), not a literal "Order" object. | `Order` DTO ↔ `Opportunity`. |
-| **Order Status / Stage** | Pipeline position: `To Verify Payment → Pending Balance → Initial Contact → Work Started → Waiting to Ship → Shipped → Delivered → Complete`. Maps to `Opportunity.StageName`. | `orderStage`; resolve labels via mapping table. |
+| **Order Status / Stage** | Real SFDC pipeline: `To Verify Payment → Pending Balance → Verified - Initial Contact → Verified - Work Started → Verified - Waiting to Ship → Verified - Shipped → Verified - Delivered → Verified - Complete` (+ `Cancelled - *`, `ON HOLD - *`). A client-facing **6-step grouping** (Unpaid → Initial Onboarding → Corp docs shipped → Onboarding call → Credit ready setup → Complete/ready for funding) is **pending stakeholder alignment — those steps do not exist in SFDC yet** (ACTION-PLAN Q1/C1). | `orderStage`; resolve labels via mapping table, never hardcode. |
 | **Balance Due** | Remaining unpaid amount before the corp ships. | `balanceDue` = `Amount − sum(verified Payments)`. |
-| **Verified Payment** | A payment confirmed (Stripe webhook for card; advisor confirmation for wire). | `Payment__c.Status__c = Verified`. |
+| **Verified Payment** | A payment confirmed by the finance/ops team. The portal **displays** payments; it never collects them (ADR-0006). | Real org value: `Online_Payment__c.Status__c = 'Cleared'`. |
+| **Support Rep / Implementation Manager** | WSC staff who takes over from the Sales rep **after** purchase (e.g. *Lua*, *Rinki*); shown with direct contact info. | Candidate SFDC field `QC_Agent__c` on `Online_Order__c` — confirm before wiring (ACTION-PLAN Q2/C2). |
+| **Supporting Lead (Referral)** | A lead referred by an existing client via **Refer a Friend**; earns a bonus (**$500 per CP match**; **10% of a shelf-corp sale** — rules pending C3). Already modeled in the org. | `Supporting_Lead__c` (→ `SEOX3_Client__c`) + `Supporting_Lead_Allocation__c` / `_Cur__c`. |
+| **Learning Center** | Portal section with explainer videos about the client process. | `learningCenter` section/route. |
 | **Articles of Incorporation** | Founding legal document proving entity formation. | Document `Type__c`. |
 
 > When unsure whether "Order" means the SFDC object or the domain concept: **it is an `Opportunity`.** WSC has no standard `Order` object.

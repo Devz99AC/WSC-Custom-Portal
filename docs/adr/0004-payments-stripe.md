@@ -1,6 +1,6 @@
 # ADR-0004: Payments — Stripe
 
-- **Status:** Accepted
+- **Status:** ~~Accepted~~ **Superseded by [ADR-0006](0006-post-sale-scope-descope-payments.md)** (2026-07-22 — portal is post-sale; no in-portal payments)
 - **Date:** 2026-07-13
 - **Deciders:** Platform Engineering
 - **Related:** ROADMAP Pillar 2 (checkout), 3.1/3.2; docs/ARCHITECTURE-AND-ROADMAP.md §2.2; docs/ARCHITECTURE.md §1.3C, §4.2

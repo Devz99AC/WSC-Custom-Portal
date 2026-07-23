@@ -1,8 +1,15 @@
 # WSC Customer Portal — Análisis Arquitectónico y Roadmap de Ejecución
 
 > **Fuente de verdad (SSOT):** Salesforce.
-> **Estado del repo (auditoría 2026-07-13):** un único `index.html` estático (mockup de UI, datos ficticios, sin backend, sin build, sin auth real).
+> **Estado del repo (auditoría 2026-07-13):** un único `index.html` estático (mockup de UI, datos ficticios, sin backend, sin auth real).
 > **Naturaleza real del proyecto:** *greenfield con prototipo de diseño*, no una app parcialmente construida.
+>
+> ⚠️ **RE-ALCANCE 2026-07-22 ([ADR-0006](adr/0006-post-sale-scope-descope-payments.md)):** el
+> stakeholder definió el **alcance final** — portal **post-venta** (las compras pasan por el
+> Sales rep humano). Las secciones de este documento sobre **checkout/reserva atómica, Stripe,
+> e-firma y upload de documentos por el cliente quedan DESCOPEADAS** (referencia histórica).
+> Se agregan: estructura multi-orden, Support multicanal, Refer a Friend y Learning Center.
+> Plan vigente: [`ACTION-PLAN.md`](ACTION-PLAN.md) (fases P1–P6); estado: [`STATUS.md`](STATUS.md).
 
 ---
 

@@ -112,3 +112,34 @@ cuenta como **verificado** cuando `Status__c ∈ { Cleared, Paid }`.
   — filtrado a `Brand__c='WSC'` donde aplique. Mínimo privilegio sobre un CRM compartido enorme
   es **crítico** (no debe ver otras marcas).
 - `packages/shared` se actualiza a estos valores/enums reales (pipeline, métodos y estados de pago).
+
+## Descubrimientos 2026-07-22 (describe de `Online_Order__c` + paquetes instalados)
+
+Relevantes para el feedback del stakeholder (multi-orden, staff, referidos, multicanal):
+
+**Campos de staff en `Online_Order__c`:**
+- `Sales_Rep__c` → lookup a **`SEOX3_Team_Member__c`** (el Advisor/Sales rep YA está modelado),
+  con derivados de contacto: `Sales_Rep_E_Mail__c`, `Sales_Rep_Email_Text__c`, `Lead_s_Sales_Rep__c`.
+- `QC_Agent__c` → lookup a `SEOX3_Team_Member__c`, con `QC_Agent_Name__c` /
+  `QC_Agent_Telephone__c` / `QC_Agent_E_Mail__c` — **candidato** al Support Rep /
+  Implementation Manager del feedback (confirmar con el negocio, ACTION-PLAN Q2).
+
+**Programa de referidos — probablemente YA modelado** (mapear, no crear):
+- `Supporting_Lead__c` → lookup a **`SEOX3_Client__c`** (el lead referido),
+  `Supporting_Lead_Allocation__c` (%), `Supporting_Lead_Allocation_Cur__c` ($),
+  `Supporting_Lead_Expert__c` (team member), `Supporting_Lead_Marketing_Source__c`,
+  `Supporting_Lead_Date__c`.
+
+**Status__c completo (16 valores activos):** los 8 del pipeline (`To Verify Payment`,
+`Pending Balance`, `Verified - Initial Contact/Work Started/Waiting to Ship/Shipped/
+Delivered/Complete`) + 5 `Cancelled - *` (Payment Failed / Client Requested / Duplicate
+Order / Chargeback Received / Refunded) + 3 `ON HOLD - *` (Client's Unresponsive / Other
+Reasons / Waiting for Client). Los 6 pasos client-facing del stakeholder **no existen** como
+valores — mapping pendiente de C1.
+
+**Otros:** `AI_Agent_Purchase_Link__c` (+ `_Short__c`) — la org ya opera algún agente AI.
+
+**Paquetes instalados** (Tooling API `InstalledSubscriberPackage`): incluyen
+**`LiveChat-Salesforce Integration`** y **`TwilioSalesforce`** (candidatos ya-pagados para
+live chat y WhatsApp/SMS — fase multicanal) · **NO hay paquete de Formstack** → la e-firma
+vía Formstack Documents (ADR-0006) iría por la API de Formstack desde el BFF.

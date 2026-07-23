@@ -1,8 +1,10 @@
 # WSC Client Portal — Hand-Off: Architecture & Integrations
 
 > **Status:** Living document · **Owner:** Platform Engineering · **Audience:** Backend, Frontend, DevOps, Salesforce Admins
-> **Source of Truth:** Salesforce (SFDC). The portal is a **read-mostly projection** of SFDC with a narrow set of write paths (payments, e-sign events, profile edits).
+> **Source of Truth:** Salesforce (SFDC). The portal is a **read-mostly projection** of SFDC with a narrow set of write paths (support tickets, referral submissions, profile edits).
 > **Scope note:** The repository currently ships a static prototype (`index.html`). This document specifies the production system that prototype represents. Where a value is illustrative, it is drawn from the prototype's sample order `#OO-1042`.
+>
+> ⚠️ **RE-SCOPE 2026-07-22 ([ADR-0006](adr/0006-post-sale-scope-descope-payments.md)) — the stakeholder defined the FINAL scope: a post-sale service portal.** New purchases go through the human Sales rep; there is **no in-portal checkout**. Accordingly: Stripe payments are **DESCOPED and kept only as reference** (§1.1 row, §1.3 flow C, §4.2 Stripe row, §5.1 Stripe secrets — only payment *display* remains), and any client-upload document path is descoped (Documents is view/download + sign; storage TBD pending discovery of where documents live in the org — likely Salesforce Files). **E-signature STAYS** with a provider swap: **Formstack Documents** replaces DocuSign/PandaDoc (already-paid-tools rule; conditional on the Formstack plan covering signing — no Formstack package is installed in the org, so the BFF talks to Formstack's own API). Flow D / §4.2 / §5.1 apply with Formstack endpoints via the same `IESignProvider` port. Added to scope: multi-order structure, Support (tickets/WhatsApp/chat — org already has LiveChat + Twilio packages installed), Refer-a-Friend, Learning Center — see `ACTION-PLAN.md` fases P1–P6.
 
 ---
 
@@ -93,10 +95,10 @@ flowchart TB
 **B. Read order dashboard**
 `SPA GET /me/order → BFF checks Redis → on miss, SOQL against Opportunity + child objects → shape DTO → cache (TTL) → return`.
 
-**C. Pay balance (Stripe)**
+**C. Pay balance (Stripe)** — ❌ *DESCOPED (ADR-0006): payments are collected by the sales team outside the portal; kept as reference only*
 `SPA POST /payments/checkout → BFF creates Stripe Checkout Session (idempotency key = Opportunity Id + amount + attempt) → SPA redirects → Stripe → webhook payment_intent.succeeded → BFF verifies HMAC → enqueue → worker upserts Payment__c + advances Opportunity stage → invalidate cache`.
 
-**D. Document sign (DocuSign)**
+**D. Document sign** — 🔁 *provider re-scoped (ADR-0006): **Formstack Documents** replaces DocuSign/PandaDoc; same generate → sign → webhook shape behind the `IESignProvider` port*
 `Advisor generates Purchase Agreement in SFDC → BFF creates envelope → client signs → DocuSign webhook envelope-completed → worker stores signed PDF in S3 → writes Document__c metadata → advances stage`.
 
 **E. Status push (Salesforce → Portal)**

@@ -11,11 +11,16 @@
 > **demo funcional** (Login + Dashboard) que ya lee **datos reales de Salesforce** vía un
 > adaptador de solo-lectura. **El auth servidor→SF (JWT Bearer) quedó resuelto, probado e
 > IMPLEMENTADO en el BFF** (`PORTAL_DATA_SOURCE=salesforce-jwt`) vía una **External Client App**
-> (G2 — cerrado). **Grupo A del ACTION-PLAN completo (2026-07-22):** G1 cerrado (ADR-0005 +
-> magic-link real implementado y verificado e2e), las **5 vistas portadas** a React con rutas
-> reales, y **staging público en vivo** (Vercel + Railway + Redis, modo `mock`, tras Basic Auth).
-> Falta: el integration user de mínimo privilegio (G3), datos realistas (G4), el resto de la
-> API de lectura (G5), S3, y el grueso de las Fases 2–5.
+> (G2 — cerrado). **Grupos A+B+C del ACTION-PLAN completos (2026-07-22):** G1 cerrado (ADR-0005 +
+> magic-link real verificado e2e), las **5 vistas portadas** a React, **staging público en vivo**
+> (Vercel + Railway + Redis tras Basic Auth) y **`salesforce-jwt` VIVO en producción** con el
+> integration user de mínimo privilegio (G3 ✅) — el portal lee la orden real `UO1423102`.
+> **2026-07-22 (tarde): feedback del stakeholder** — es el **alcance final** del producto: plan
+> nuevo por fases en [`ACTION-PLAN.md`](ACTION-PLAN.md) (multi-orden, nav de 7 secciones,
+> support/referidos/learning center) con **re-alcance**: Stripe/checkout en el portal, la
+> reserva anti-doble-venta y la e-firma **quedan fuera** (portal post-venta; las compras pasan
+> por el Sales rep). Falta: G4 (datos realistas), G5 (resto de la API de lectura) y las fases
+> P1–P6 del plan nuevo.
 
 ---
 
@@ -115,17 +120,21 @@ HTTP Basic Auth en el borde) → BFF `https://wscbff-production.up.railway.app` 
 | # | Falta | Severidad | Nota |
 |---|---|:--:|---|
 | G1 | ~~Decisión de auth del cliente~~ | 🟢 Resuelto | [ADR-0005](adr/0005-customer-identity-magic-link.md): magic-link nativo del BFF. **Código también implementado y verificado** (2026-07-22): `/auth/request-link`, `/auth/verify`, `/auth/logout`, cookie de sesión protegiendo `/api/dashboard`, email vía SMTP (Google Workspace) o consola en dev. Las 5 vistas ya están portadas con rutas reales (`AppShell` + Order/Payments/Documents/Profile). Falta un test de integración HTTP del flujo auth. |
-| G2 | **Auth servidor→SF de producción (JWT Bearer)** | 🟢 Resuelto | La org **prohíbe Connected Apps clásicas**, pero **sí permite External Client Apps** — se creó `WSC Customer - Devin Sandbox`, se probó el flujo completo (`sf org login jwt` ✅, 2026-07-19) **y el BFF ya lo implementa** (`salesforce-jwt-auth.ts` + `createJwtSalesforceQuery()`, `PORTAL_DATA_SOURCE=salesforce-jwt`, en `main` — ROADMAP 1.6: código ✅, faltan sus tests de DoD). **Pendiente real:** la pre-autorización usó el usuario **admin** y ese Consumer Key se compartió en chat → crear credenciales nuevas con el integration user (G3) antes de cualquier despliegue público. |
-| G3 | **Integration user + permission set mínimo** (1.5, licencia Salesforce Integration) | 🟠 Alta | Requiere admin. Hoy el demo usa el usuario admin (no es mínimo privilegio). |
+| G2 | **Auth servidor→SF de producción (JWT Bearer)** | 🟢 Resuelto | La org **prohíbe Connected Apps clásicas**, pero **sí permite External Client Apps** — se creó `WSC Customer - Devin Sandbox`, se probó el flujo completo (`sf org login jwt` ✅, 2026-07-19) **y el BFF ya lo implementa** (`salesforce-jwt-auth.ts` + `createJwtSalesforceQuery()`, `PORTAL_DATA_SOURCE=salesforce-jwt`, en `main` — ROADMAP 1.6: código ✅, faltan sus tests de DoD). **Cerrado del todo (2026-07-22):** credenciales nuevas creadas con el integration user (G3 ✅) y cargadas en Railway — `salesforce-jwt` corre en producción con ellas. |
+| G3 | ~~Integration user + permission set mínimo~~ | 🟢 Resuelto | **Hecho (2026-07-22)**: usuario `WSC Integration` (licencia Salesforce Integration, perfil Minimum Access - API Only Integrations) + Permission Set `WSC_Portal_Read_Only` (solo los 4 objetos WSC, FLS campo a campo calcada del SOQL real — `Online_Order__c` tiene ~698 campos, no se dio acceso blanket). Verificado positivo (lee la orden real) y negativo (`Account` denegado). External Client App nueva + credenciales en Railway → **`salesforce-jwt` corre en producción con ellas**. |
 | G4 | **Datos realistas** en un entorno | 🟠 Media | Developer sandbox vacío. Evaluar Partial/Full sandbox. |
 | G5 | **API de lectura real** (catálogo, orders, payments, documents, profile) | 🟡 | Solo existe `/api/dashboard`. Falta el resto mapeado a los objetos reales + OpenAPI. |
 | G6 | **Infra**: S3 (vault) + Redis (caché) | 🟡 | **Redis ✅ provisionado en Railway** (2026-07-22) como magic-link store (`REDIS_URL`); el caché de lecturas SF queda diferido hasta que G3 active `salesforce-jwt` en prod (nada que cachear en modo `mock`). **S3 sigue pendiente** (ROADMAP 1.9). |
-| G7 | **Fases 2–5**: reserva atómica, realtime (Pub/Sub+SSE), Stripe, firma, vault, tests integración/e2e, hardening | 🟡 | No iniciadas. (Las 5 vistas UI ya se portaron — hoy muestran solo datos del dashboard; se enriquecen cuando exista G5.) |
+| G7 | **Fases futuras — RE-ALCANCE (2026-07-22, ADR-0006)**: realtime (Pub/Sub+SSE) opcional, tests integración/e2e, hardening. **Stripe, reserva atómica y upload-vault quedan FUERA**; la **e-firma SIGUE pero vía Formstack Documents** (condicional a la suscripción — Q5), no DocuSign/PandaDoc. Portal post-venta: las compras pasan por el Sales rep | 🟡 | Plan por fases P1–P6 en `ACTION-PLAN.md`. Las vistas se reestructuran según el feedback (multi-orden + nav de 7 secciones). |
 | G8 | ~~**`Merchant_Account__c` vacío** bloquea sembrar `Online_Payment__c`~~ | 🟢 Resuelto | Se creó un `Merchant_Account__c` **placeholder** (2026-07-19; `Provider__c` explicita que no es un gateway real, sin credenciales) llenando los campos de "Limits and Supports" que exige su validación — fórmula exacta obtenida vía Tooling API `ValidationRule.Metadata`, no adivinada. Con eso se sembraron los 2 pagos y el trigger `Online_PaymentTrigger` avanzó la orden (ver §1). En un Partial/Full sandbox (G4) existirían registros reales de este objeto. |
 
 ---
 
 ## 5. Plan de acción actualizado
+
+> ⚠️ **Superseded (2026-07-22):** el plan vivo está en [`ACTION-PLAN.md`](ACTION-PLAN.md)
+> (post-feedback del stakeholder, con re-alcance: Stripe/reserva/e-firma fuera). Lo de
+> abajo se conserva solo como registro de lo que se completó de este plan.
 
 ### A. Decisiones primero (requieren humano/admin — desbloquean todo)
 1. ~~Elegir el modelo de auth del cliente~~ → **[ADR-0005](adr/0005-customer-identity-magic-link.md)

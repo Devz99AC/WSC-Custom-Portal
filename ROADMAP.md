@@ -7,9 +7,21 @@
 >
 > **SSOT:** Salesforce · **Companion doc:** [`docs/ARCHITECTURE-AND-ROADMAP.md`](docs/ARCHITECTURE-AND-ROADMAP.md) (deep rationale / justificación profunda).
 >
-> 📌 **Live status (2026-07-16):** Phase 0 **done**; a working demo (Login + Dashboard reading
-> real Salesforce) exists ahead of plan. Current state, gaps & the updated action plan live in
-> [`docs/STATUS.md`](docs/STATUS.md) — read that for "where we are / what's missing / what's next".
+> 📌 **Live status (2026-07-22):** Phase 0 done; magic-link auth (ADR-0005), 5 views in React,
+> staging live (Vercel + Railway + Redis behind Basic Auth) and **`salesforce-jwt` in PRODUCTION**
+> with a least-privilege integration user. Current state: [`docs/STATUS.md`](docs/STATUS.md);
+> actionable plan: [`docs/ACTION-PLAN.md`](docs/ACTION-PLAN.md).
+>
+> ⚠️ **RE-SCOPE (2026-07-22) — stakeholder feedback defines the FINAL product scope.** The portal
+> is **post-sale** (order tracking, support, referrals, learning); new purchases go through the
+> human Sales rep, not a self-service checkout. **Descoped: Stripe/checkout (3.1–3.3), atomic
+> reservation + TTL sweeper (2.5–2.6), client-upload vault (3.5)** — Documents becomes
+> view/download + sign. **E-signature (3.4) STAYS with a provider change: Formstack Documents**
+> instead of DocuSign/PandaDoc (already-paid-tools rule; conditional on the Formstack plan
+> covering signing — Q5). **Added: multi-order structure, 7-section
+> nav, multichannel Support, Refer a Friend, Learning Center** — see `ACTION-PLAN.md` (fases P1–P6).
+> The task list below is kept as the historical baseline until a ROADMAP v2 is written after the
+> pending boss discussions (pipeline steps, support channel, referral rules).
 
 ---
 
@@ -183,11 +195,13 @@
   - *DoD:* catalog query returns ≥5 `Available` corps; the prototype's demo order reproducible.
 
 #### 1.B Server-to-Salesforce auth (JWT Bearer) / Auth servidor-a-Salesforce
-- [ ] **1.4** Generate X.509 keypair; create **Connected App** (digital signatures, upload cert). — **D3 🟠 · S**
+- [x] **1.4** Generate X.509 keypair; create **Connected App** (digital signatures, upload cert). — **D3 🟠 · S**
   - *DoD:* Connected App exists; consumer key recorded in secrets manager; cert uploaded.
-- [ ] **1.5** Create **integration user** + least-privilege **Permission Set** (only portal objects/fields). — **D4 🔴 · S**
+  - *Done 2026-07-22:* via **External Client App** (org blocks classic Connected Apps — same JWT Bearer capability); cert uploaded, Consumer Key stored only in Railway env vars.
+- [x] **1.5** Create **integration user** + least-privilege **Permission Set** (only portal objects/fields). — **D4 🔴 · S**
   - *EN DoD:* integration user cannot read anything beyond portal scope; verified by attempting an out-of-scope query (must fail).
   - *ES DoD:* el integration user no puede leer nada fuera del alcance del portal; verificado intentando una query fuera de alcance (debe fallar).
+  - *Done 2026-07-22:* `WSC Integration` user (Salesforce Integration license, Minimum Access - API Only profile) + `WSC_Portal_Read_Only` Permission Set (4 WSC objects, per-field FLS matching the actual SOQL). DoD verified: positive query reads the real order; out-of-scope `Account` query **fails**. Live in production via `salesforce-jwt`.
 - [ ] **1.6** Implement JWT Bearer flow in BFF: sign JWT, exchange for access token, cache + auto re-mint on expiry. — **D4 🔴 · M**
   - *EN DoD:* BFF obtains a token on boot; a `GET` to SF REST succeeds; token auto-refreshes after forced expiry; **token never leaves the server** (asserted in a test).
   - *ES DoD:* el BFF obtiene token al arrancar; un `GET` a SF REST funciona; el token se re-emite tras expiración forzada; **el token nunca sale del servidor** (aseverado en test).
@@ -207,8 +221,9 @@
 #### 1.D Infra services / Servicios de infraestructura
 - [ ] **1.9** Provision S3 bucket (private, versioning, SSE-KMS, Object Lock=compliance). — **D3 🟠 · S**
   - *DoD:* bucket blocks public access; a legal-doc object cannot be deleted before retention; KMS key rotation enabled.
-- [ ] **1.10** Provision managed Redis (encryption at rest + in transit). — **D2 🟡 · XS**
+- [x] **1.10** Provision managed Redis (encryption at rest + in transit). — **D2 🟡 · XS**
   - *DoD:* BFF connects; a set/get round-trips.
+  - *Done 2026-07-22:* Railway managed Redis, `REDIS_URL` via service reference; DoD met in production (magic-link store round-trips live). Caveat: at-rest encryption is whatever Railway's managed tier provides — revisit if compliance requires explicit guarantees.
 
 **Phase 1 exit criteria / Criterios de salida de Fase 1:** an authenticated customer request reaches Salesforce and returns *their own* data only. / una petición autenticada de cliente llega a Salesforce y devuelve *solo sus propios* datos.
 
@@ -281,13 +296,15 @@
 
 - [ ] **4.1** Extract prototype design tokens (navy/red/gold CSS vars) into a theme; set up component library. — **D2 🟡 · S**
   - *DoD:* the 5 views render with the prototype's exact look from a shared theme, not inline styles.
-- [ ] **4.2** Routing + auth gate: magic-link callback, session, protected routes. — **D2 🟡 · S**
+- [x] **4.2** Routing + auth gate: magic-link callback, session, protected routes. — **D2 🟡 · S**
   - *DoD:* unauthenticated users hit login; authenticated users land on the dashboard.
-- [ ] **4.3** Server-state layer with **TanStack Query** against the typed BFF client. — **D2 🟡 · S**
+  - *Done 2026-07-22:* session-driven `App.tsx` (fetch-first, 401 → Login), real routes via `react-router-dom`, verified live in production (#9 device check).
+- [x] **4.3** Server-state layer with **TanStack Query** against the typed BFF client. — **D2 🟡 · S** *(done since the first demo; no Redux/Zustand anywhere — session/UI state is component-local)*
   - *EN DoD:* SF data is fetched via Query (cache/retry/invalidation); **no SF data in Redux/Zustand**; Zustand holds only session/UI state.
   - *ES DoD:* los datos de SF se traen vía Query (caché/reintento/invalidación); **nada de datos de SF en Redux/Zustand**; Zustand solo guarda sesión/estado de UI.
-- [ ] **4.4** Port the 5 views: Dashboard, My Order, Payments, Documents, Profile. — **D2 🟡 · M**
+- [x] **4.4** Port the 5 views: Dashboard, My Order, Payments, Documents, Profile. — **D2 🟡 · M**
   - *DoD:* each view renders real BFF data; progress bar derives from `Order_Status__c`; loading/empty/error states exist for each.
+  - *Done 2026-07-22* (verified live). Note: the 2026-07-22 stakeholder feedback **restructures** this IA (multi-order `/orders` list + 7-section nav) — see `ACTION-PLAN.md` P1; this task remains "done" as the baseline it was scoped to be.
 - [ ] **4.5** Live notifications via SSE (status change, payment verified, new doc, advisor reply). — **D3 🟠 · S**
   - *DoD:* a status change in SF updates the open portal without refresh; reconnects after network drop.
 - [ ] **4.6** Support portal: create Case + view comment thread. — **D2 🟡 · S**

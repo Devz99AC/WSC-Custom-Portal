@@ -1,172 +1,224 @@
-# WSC Customer Portal — Action Plan (actualizado 2026-07-22, deploy Vercel+Railway en vivo)
+# WSC Customer Portal — Action Plan (actualizado 2026-07-22, post-feedback del stakeholder)
 
 > Para el historial completo (qué se descubrió, qué falló, por qué) ver
 > [`STATUS.md`](STATUS.md). Este doc es el checklist accionable, **priorizado por
-> qué se puede hacer AHORA sin depender de Salesforce ni de acceso de admin**, que es
-> justo lo que pediste.
+> qué se puede hacer AHORA sin depender de Salesforce ni de acceso de admin**.
 
 ## Estado
 
-- ✅ Todo mergeado a **`main`** (fast-forward limpio, sin conflictos) y pusheado a origin.
-  `main` ya tiene: Fase 0 completa, demo con datos reales de Salesforce, JWT Bearer
-  real implementado en el BFF, mockup rediseñado y sincronizado con la orden real
-  `UO1423102`, y ahora el **magic-link real** (login funcional de punta a punta).
-- La rama `phase-0-foundations` sigue existiendo en el mismo commit — puedes seguir
-  trabajando directo en `main` o abrir una rama nueva para el próximo bloque.
-- ✅ **Deploy público de staging en vivo (2026-07-22)**: frontend en Vercel
-  (`https://wsc-custom-portal-web.vercel.app`) + backend en Railway
-  (`https://wscbff-production.up.railway.app`), conectados vía rewrite, detrás de
-  un gate de HTTP Basic Auth en el borde. Corre con `PORTAL_DATA_SOURCE=mock` y
-  `EMAIL_SENDER=console` — ver Grupo A #3–6 más abajo para el detalle exacto.
+- ✅ **Grupos A + B + C del plan anterior: COMPLETOS (2026-07-22).** Resumen: staging
+  Vercel + Railway + Redis en vivo tras Basic Auth; magic-link real (ADR-0005); 5 vistas
+  en React; integration user de mínimo privilegio (`WSC_Portal_Read_Only`); y
+  **`PORTAL_DATA_SOURCE=salesforce-jwt` VIVO en producción** leyendo la orden real
+  `UO1423102`. Detalle en `STATUS.md` y el historial de git de este archivo.
+- 🆕 **2026-07-22: llegó el feedback del stakeholder** (revisión del portal desplegado).
+  Veredicto general positivo ("está chévere") pero con **errores de concepto a corregir**
+  y features nuevas. Este plan lo separa en **HACER YA** + fases.
 
 ---
 
-## 🟢 Grupo A — Se puede hacer YA, cero dependencia de Salesforce/admin
+## Feedback del stakeholder (2026-07-22) — resumen fiel
 
-Nada de esto requiere volver a Setup de Salesforce ni esperar a nadie. Orden sugerido:
+**Estructura:** un cliente puede tener **múltiples órdenes** — la vista actual es una
+vista de orden, no un dashboard; falta una lista "My Orders". Navegación sugerida:
+**Orders, Payments, Documents, Profile, Support, Refer a Friend, Learning Center**
+(el dashboard general puede quedar como resumen o eliminarse). "My order" tal como está
+es redundante frente al dashboard.
 
-1. ~~**ADR-0005**~~ ✅ Escrito y aceptado: magic-link nativo del BFF, no Auth0/Cognito.
-2. ~~**Código del magic-link**~~ ✅ Implementado y verificado end-to-end (2026-07-22):
-   `/auth/request-link`, `/auth/verify`, `/auth/logout`, cookie de sesión protegiendo
-   `/api/dashboard` (ya no acepta `?email=`), envío por SMTP (Google Workspace, cero
-   costo nuevo) o consola en dev. Frontend actualizado (`Login.tsx` pide el link de
-   verdad y muestra "revisa tu email"; `App.tsx` decide login/dashboard por la cookie
-   de sesión). 12/12 tests, lint/typecheck/build verdes, probado a mano con curl
-   (link → token → cookie → dashboard → reuso rechazado → logout → 401).
-3. ~~**Deploy del frontend en Vercel**~~ ✅ **HECHO (2026-07-22)**:
-   `https://wsc-custom-portal-web.vercel.app` (`Root Directory = apps/web`, build vía
-   `pnpm turbo run build --filter=@wsc/web`). Dominio propio aún no agregado (queda para
-   cuando se decida el target final de despliegue, ver Grupo C #14).
-4. ~~**Deploy del backend en Railway**~~ ✅ **HECHO (2026-07-22)**:
-   `https://wscbff-production.up.railway.app` (`/health` verificado), corriendo con
-   `PORTAL_DATA_SOURCE=mock` (aún sin credenciales G3) y `EMAIL_SENDER=console` (el
-   magic-link se imprime en los logs de Railway — falta configurar SMTP real con
-   Google Workspace cuando se quiera probar recepción de correo de verdad).
-5. ~~**`vercel.json` con rewrite**~~ ✅ **HECHO**: `/api/*` y `/auth/*` → Railway,
-   en `apps/web/vercel.json` (mismo dominio desde el browser, sin CORS).
-6. ~~**HTTP Basic Auth en el borde**~~ ✅ **HECHO**: `apps/web/middleware.ts`
-   (Vercel Edge Middleware framework-agnóstico, `@vercel/edge`), leyendo
-   `BASIC_AUTH_USER`/`BASIC_AUTH_PASSWORD` desde las env vars del proyecto en Vercel
-   (marcadas Sensitive). Gate confirmado funcionando (prompt nativo del browser).
-7. ~~**Redis para el magic-link store**~~ ✅ **Código hecho (2026-07-22)**:
-   `RedisMagicLinkStore` (mismo puerto `MagicLinkStore`, `GETDEL` atómico para el
-   single-use) — se activa solo con `REDIS_URL` seteada, si no sigue cayendo al
-   `InMemoryMagicLinkStore` de siempre (dev sin Redis no se rompe). **Y provisionado**:
-   Redis agregado en Railway con `REDIS_URL` seteada, confirmado healthy en producción
-   (2026-07-22, ver #9). El **caché de
-   lecturas de Salesforce** (la otra mitad de ROADMAP 1.9) queda deliberadamente
-   fuera de alcance por ahora: no tiene nada que cachear mientras el deploy corra en
-   `PORTAL_DATA_SOURCE=mock` — retomar cuando G3 esté resuelto y `salesforce-jwt`
-   sea el adaptador activo en producción.
-8. ~~**Portar el resto de las vistas del prototipo a React real**~~ ✅ **Hecho (2026-07-22)**:
-   `AppShell` (sidebar con navegación real vía `react-router-dom`, extraído de
-   `Dashboard`) + `OrderPage`/`PaymentsPage`/`DocumentsPage`/`ProfilePage`. Rutas reales
-   (`/`, `/order`, `/payments`, `/documents`, `/profile`) con fallback SPA agregado a
-   `vercel.json`. **Decisión de producto tomada al portar**: a diferencia del prototipo
-   estático, estas vistas NO fabrican datos que no existen todavía — Documents muestra
-   un estado vacío honesto (no hay backend de documentos real aún, Fase 3), Profile
-   describe el sign-in real por magic-link en vez de un toggle de 2FA falso, y el
-   historial de "My Order" solo muestra lo que el dashboard realmente devuelve (stage
-   actual + fecha de la orden), no un timeline inventado. Tests: `AppShell.test.tsx`
-   nuevo, `Dashboard.test.tsx` actualizado al refactor. Typecheck/lint/tests/build
-   verdes — falta revisión visual en browser real (no pude verificarlo yo mismo).
-9. ~~**Revisar en un dispositivo/browser real**~~ ✅ **Confirmado (2026-07-22)**: login
-   con `m.brown@acmeholdings.com` end-to-end en producción (Vercel + Railway + Redis +
-   magic-link real, link recuperado de los logs de consola de Railway ya que
-   `EMAIL_SENDER=console`) y las 5 vistas navegadas sin problemas visuales.
+**Corrección del pipeline (pasos actuales incorrectos)** — reemplazar por:
+1. Unpaid (pendiente de pago / verificación) · 2. Initial Onboarding · 3. Corp docs
+shipped/sent (correo certificado + email) · 4. Onboarding call · 5. Credit ready
+feature setup · 6. Complete, ready for funding.
 
-**🟢 Grupo A completo (2026-07-22).**
+**Personal:** mostrar el **Advisor/Sales rep** (solo compras/órdenes nuevas) y un
+**Support Representative / Implementation Manager** asignado post-compra (ej. Lua o
+Rinki) con datos de contacto directos.
 
-## 🟢 Pendiente suelto — SMTP real (Google Workspace)
+**Features:** soporte multicanal (tickets, WhatsApp, agente AI, live chat) ·
+**Refer a Friend / Affiliate** (enviar leads, rastrear estado y ganancias; **$500 por
+match de "CPs"**, **10% del total en shelf corps**) · **Learning Center** (videos).
 
-Sigue sin requerir Salesforce; quedó deliberadamente pausado durante el Grupo A.
-
-1. Entra a [myaccount.google.com/security](https://myaccount.google.com/security) con
-   la cuenta que va a enviar (ej. `support@wholesaleshelfcorporations.com`).
-2. Activa **2-Step Verification** si no está activa (los App Passwords lo requieren).
-3. Busca **"App passwords"** → crea uno nuevo, nombre "WSC Portal" → copia el código
-   de 16 caracteres (solo se muestra una vez).
-4. En Railway → `@wsc/bff` → Variables, agrega/actualiza:
-   - `EMAIL_SENDER=smtp`
-   - `SMTP_USER=support@wholesaleshelfcorporations.com`
-   - `SMTP_PASSWORD=<app password>` (marcar **Sensitive**)
-   - `SMTP_FROM_EMAIL=support@wholesaleshelfcorporations.com`
-   - (`SMTP_HOST`, `SMTP_PORT`, `SMTP_FROM_NAME` ya tienen default correcto)
-5. **Decisión pendiente**: en modo `mock`, el único correo que dispara un envío es el
-   hardcodeado `m.brown@acmeholdings.com` (anti-enumeración silencia cualquier otro).
-   Para probar recepción real hay que o bien cambiar temporalmente ese valor en
-   `mock-portal-repository.ts` a un correo real controlado, o esperar a que G3 esté
-   listo y probar con el correo real del `FU_User__c` sembrado.
-6. Redeploy, pedir el link con ese correo, confirmar que llega (revisar spam la
-   primera vez).
-
-## 🟡 Grupo B — Necesitas Salesforce Setup, pero ya tienes el acceso (no es "el admin", eres tú)
-
-Repetir el mismo runbook de hoy (documentado en `salesforce-sandbox-setup.md` §B-bis),
-con un usuario nuevo en vez del admin:
-
-10. ~~**G3** — integration user de mínimo privilegio + Permission Set propio~~ ✅
-    **Hecho (2026-07-22)**: usuario `WSC Integration` (licencia Salesforce Integration,
-    profile Minimum Access - API Only Integrations), Permission Set
-    `WSC_Portal_Read_Only` (Read-only, solo `FU_User__c`/`Online_Order__c`/
-    `Online_Payment__c`/`SC_Corp__c`, FLS campo por campo calcada del código real —
-    no "todos los campos"), asignado al usuario. Verificado con script: lee la orden
-    real, `Account` denegado (confirma que el mínimo privilegio es real).
-11. ~~**External Client App nueva**~~ ✅ **Hecho**: app separada de la de hoy, JWT
-    Bearer Flow, Permitted Users = Admin approved, Policies → `WSC_Portal_Read_Only`.
-12. ~~**Llaves X.509**~~ Se reusó el par existente (`~/.wsc-keys/server.key`) —
-    decisión consciente del usuario: lo que estaba expuesto en el chat era el
-    Consumer Key de la app vieja, no el archivo de la llave privada, así que
-    reusarla no reintroduce ese riesgo mientras la app nueva tenga su propio
-    Consumer Key.
-13. ~~**Probar conexión**~~ ✅ `sf org login jwt` → `Successfully authorized`,
-    `sf org list` → alias `wsc-integration` en `Connected`.
-14. ~~**Verificar aislamiento**~~ ✅ confirmado por script (ver #10).
-
-## 🔴 Grupo C — Depende de que A y B estén listos
-
-15. ~~Cargar credenciales G3 en Railway~~ ✅ Hecho.
-16. ~~Cambiar `PORTAL_DATA_SOURCE=salesforce-jwt`~~ ✅ Hecho y redeployado.
-17. ~~Probar `/api/dashboard` en producción~~ ✅ **Confirmado (2026-07-22)**: el
-    dashboard en `https://wsc-custom-portal-web.vercel.app` muestra la orden real
-    `UO1423102` ($8,750, 2 pagos de $6,750+$2,000, "Devin LLC", asesor "Rinkie S.",
-    stage "Verified - Initial Contact") — ya no el mock `OO-1042`.
-18. ~~`findClientByEmail` real~~ ✅ — `m.brown@acmeholdings.com` es el correo real
-    del `FU_User__c` sembrado (mismo valor que el mock, por diseño), así que el login
-    de producción ya lo prueba.
-19. Decidir si el despliegue público final es el **mockup estático** (cero riesgo,
-    ya listo) o la **app React + BFF real** (ya funcional end-to-end con datos
-    reales) — ver la tabla comparativa que ya armamos. **Sigue abierto.**
-
-**🟢 Grupo B y Grupo C completos (2026-07-22).** Bugs de despliegue encontrados y
-arreglados en el camino (todos en `apps/bff/src/infrastructure/salesforce/`):
-Node 20→24 (undici de `@jsforce/jsforce-node` necesita una API interna de webidl que
-no existe en Node 20/22), reconstrucción defensiva de la PEM de `SF_JWT_PRIVATE_KEY`
-(el valor pegado en Railway perdió los marcadores BEGIN/END), y el prefijo `v`
-duplicado en `SF_API_VERSION` (jsforce-node ya antepone la "v" él mismo).
+**Costos:** evitar herramientas de $25/mes si hay alternativa gratis con la
+infraestructura ya pagada; aprobada solo como último recurso.
 
 ---
 
-## Más adelante — Fases 2–5 (`docs/STATUS.md` §5)
+## Realidad de Salesforce verificada ANTES de planificar (describe 2026-07-22)
 
-- **Fase 2**: contrato OpenAPI del BFF · endpoints reales (`orders/:id`, payments,
-  documents, profile) mapeados a SF · caché Redis de lecturas + invalidación por
-  CDC/Platform Events · realtime Pub/Sub → SSE · reserva atómica anti-doble-venta
-  (invariante #1 del proyecto).
-- **Fase 3**: Stripe (payment intents + webhook idempotente) · firma electrónica
-  (DocuSign/PandaDoc) · vault de documentos en S3 (SSE-KMS, presigned URLs).
-- **Fase 4**: sistema de diseño/componentes completo sobre `theme.css`.
-- **Fase 5**: tests de integración contra sandbox real + e2e (Playwright) ·
-  hardening de seguridad · go-live con feature flags.
+- **`Status__c` real (activos):** pipeline `To Verify Payment → Pending Balance →
+  Verified - Initial Contact → Verified - Work Started → Verified - Waiting to Ship →
+  Verified - Shipped → Verified - Delivered → Verified - Complete`, más 5 `Cancelled - *`
+  y 3 `ON HOLD - *` (16 valores). **Los 6 pasos del stakeholder NO mapean 1:1** — ver
+  pregunta Q1.
+- **`Sales_Rep__c` ya existe** en `Online_Order__c` (lookup → `SEOX3_Team_Member__c`) con
+  campos derivados de contacto (`Sales_Rep_E_Mail__c`, etc.). Candidato natural para el
+  rol post-venta: **`QC_Agent__c`** (mismo objeto, con `QC_Agent_Name__c`/`_Telephone__c`/
+  `_E_Mail__c`) — confirmar con el negocio (Q2).
+- **El programa de referidos parece YA modelado**: `Supporting_Lead__c` (→
+  `SEOX3_Client__c`), `Supporting_Lead_Allocation__c` (%), `Supporting_Lead_Allocation_Cur__c`
+  ($), `Supporting_Lead_Expert__c`, `Supporting_Lead_Marketing_Source__c`. **Mapear, no
+  crear** (patrón ya establecido del proyecto) — descubrimiento pendiente (F2).
+- **La org ya tiene un agente AI** (`AI_Agent_Purchase_Link__c`) — investigar qué es
+  antes de evaluar herramientas de chat/AI externas (F3, y conecta con la regla de costos).
+- **Paquetes instalados relevantes** (Tooling API, 2026-07-22): **`LiveChat-Salesforce
+  Integration`** y **`TwilioSalesforce`** ya están en la org — candidatos "ya
+  integrados/pagados" para live chat y WhatsApp/SMS (F3) antes de pagar nada nuevo.
+  **NO hay paquete de Formstack instalado** → la e-firma vía Formstack Documents iría
+  por la API de Formstack desde el BFF (puerto `IESignProvider`), no por un paquete SF.
+
+---
+
+## 🔴 HACER YA — correcciones de concepto (cero SF admin, puro código)
+
+Arreglan los "errores de concepto" señalados; todo es frontend + BFF + `packages/shared`:
+
+1. **My Orders**: nueva ruta `/orders` con la lista de TODAS las órdenes del cliente
+   (el SOQL ya filtra por `FU_User__c`; quitar el "primera orden" implícito, agregar
+   `ORDER BY` + `LIMIT` con paginación keyset per CLAUDE.md §1). El detalle pasa a
+   `/orders/:id`. El BFF gana `GET /api/orders` y `GET /api/orders/:id`.
+2. **Navegación nueva** (7 secciones): Orders · Payments · Documents · Profile ·
+   Support · Refer a Friend · Learning Center. Las 3 nuevas nacen como páginas con
+   **estado vacío honesto** (precedente del Grupo A #8: nunca fabricar datos) para
+   aterrizar la arquitectura de información ya. Decidir en el camino: dashboard como
+   "Overview" resumido o eliminarlo (el stakeholder acepta ambas).
+3. **Dashboard vs Order detail sin redundancia**: dashboard (si queda) = resumen
+   agregado multi-orden (balance total, órdenes activas, próxima acción); TODO lo
+   específico de una orden vive solo en `/orders/:id`. Mientras la discusión del
+   pipeline (sección siguiente) no se resuelva, el tracker sigue mostrando los
+   `Status__c` reales tal como hoy.
+
+**Y las features nuevas, en su mitad SIN Salesforce** (corrección 2026-07-22: ser
+features nuevas las hace MENOS dependientes de SF, no más — el mismo patrón hexagonal
+de `PortalRepository`: UI + endpoint + puerto con adaptador mock YA, adaptador SF
+cuando toque):
+
+4. **Learning Center completo**: página de la nueva sección con grid de videos
+   embebidos (YouTube unlisted/Vimeo = $0). Cero SF — lo único externo es el contenido,
+   que produce WSC (placeholder honesto mientras llega).
+5. **WhatsApp**: deep link `wa.me/<número de soporte>` como botón en la sección Support
+   (y donde hoy dice "Contact advisor"). Gratis, inmediato, cero SF.
+6. **Support — UI + puerto**: página de Support con formulario de ticket +
+   `POST /api/support/tickets` tras un puerto `SupportTicketRepository`. Adaptador
+   inicial **email** (reusa el sender SMTP que ya construimos: el ticket llega a
+   `support@…`) o mock — funcional para el cliente desde el día 1. El adaptador SF
+   (Case u objeto propio de la org) llega en F1 tras Q2.
+7. **Refer a Friend — UI + puerto**: formulario "enviar lead" + lista "mis referidos"
+   (estado + ganancias) tras un puerto `ReferralRepository` con adaptador mock cuya
+   forma anticipa lo descubierto (`Supporting_Lead_*`: lead + allocation % y $). El
+   adaptador SF real llega en F2.
+8. **Componente de staff** (Advisor / Support rep): card con nombre + contacto directo,
+   alimentada por el mock (que ya modela un advisor). La regla de transición
+   (pre-pago = Sales rep, post-pago = Implementation Manager) se implementa contra el
+   mock; los campos reales (`Sales_Rep__c`/`QC_Agent__c`) llegan en F1.
+
+## ⏸️ Pipeline de 6 pasos — REQUIERE discusión preliminar con el jefe (NO va en "YA")
+
+**Por qué está bloqueado:** los 6 pasos que pidió **no existen en Salesforce** hoy.
+Hay que decírselo antes de implementar nada — la conversación define si es (a) un
+**mapping de display** (el portal agrupa los `Status__c` existentes bajo los 6 nombres
+nuevos, SF no cambia) o (b) un **cambio del pipeline real en SF** (nuevos valores de
+picklist — no trivial: `Online_Order__c` tiene 126 validation rules + triggers Apex que
+dependen de los valores actuales).
+
+**Material para esa conversación** (esto es lo que existe vs. lo que pidió):
+
+| Paso que pidió | `Status__c` real que le correspondería |
+|---|---|
+| 1. Unpaid | `To Verify Payment`, `Pending Balance` |
+| 2. Initial Onboarding | `Verified - Initial Contact` |
+| 3. Corp docs shipped | `Verified - Waiting to Ship`, `Verified - Shipped`, `Verified - Delivered` |
+| 4. Onboarding call | ❌ **no existe ningún status para esto** |
+| 5. Credit ready feature setup | `Verified - Work Started` ⚠️ (en SF ocurre **antes** del envío de docs, no después) |
+| 6. Complete, ready for funding | `Verified - Complete` |
+
+Más los estados fuera del happy path que su lista no contempla: 5 `Cancelled - *` y
+3 `ON HOLD - *` (propuesta: badge excepcional sobre el tracker, no pasos).
+
+**Recomendación a llevar:** opción (a) — mapping de display, sin tocar el SSOT. Cubre
+4 de los 6 pasos ya; los dos conflictos ("Onboarding call" inexistente, orden invertido
+del paso 5) son justamente lo que el jefe tiene que decidir: o ajusta su lista, o
+aprueba agregar status nuevos en SF (con su admin/proceso).
+
+**Cuando se resuelva:** implementar como mapping table en `packages/shared` (labels =
+data, no constantes en componentes — CLAUDE.md §1).
+
+## 🟡 Fase F1 — Personal y soporte básico (SF Setup — lo haces tú, con Q1/Q2 respondidas)
+
+5. **Advisor visible con contacto real**: agregar `Sales_Rep__c` (+ campos de contacto)
+   al SOQL y al Permission Set `WSC_Portal_Read_Only` (FLS campo por campo, como en G3).
+   Regla de transición: pre-pago (Unpaid) se muestra el Sales Rep; post-pago se muestra
+   el Support/Implementation Manager.
+6. **Identificar el campo del Implementation Manager** (¿`QC_Agent__c`? ¿campo nuevo?) —
+   depende de Q2. Mismo tratamiento FLS + SOQL.
+7. **Tickets de soporte**: descubrir qué usa la org (¿`Case` estándar? ¿objeto propio?)
+   y diseñar `POST /api/support/tickets` (primera escritura del portal → aplica
+   idempotencia CLAUDE.md §1).
+
+## 🟠 Fase F2 — Refer a Friend / Affiliate (descubrimiento SF primero)
+
+8. **Descubrir el modelo existente** de referidos (`Supporting_Lead_*`, `SEOX3_Client__c`,
+   allocations) antes de diseñar nada — es muy probable que el negocio YA rastree esto.
+9. UI: enviar lead + lista con estado y ganancias. Reglas de bono: **$500 por match (CP)**,
+   **10% del total (shelf corp)** — confirmar Q3 y dónde vive el cálculo (¿fórmula SF?).
+
+## 🟠 Fase F3 — Learning Center y soporte multicanal
+
+10. **Learning Center**: página de videos embebidos (YouTube unlisted/Vimeo = $0);
+    el contenido lo produce WSC. Puro frontend cuando haya videos.
+11. **WhatsApp**: deep link `wa.me` al número de soporte = gratis e inmediato (puede
+    adelantarse al grupo YA si se quiere). WhatsApp Business API = evaluar después.
+12. **Live chat / agente AI**: primero investigar el agente AI que la org ya tiene
+    (`AI_Agent_Purchase_Link__c`) y alternativas gratis (p.ej. Tawk.to); la herramienta
+    de $25/mes queda **aprobada solo si no hay alternativa viable** (palabras del
+    stakeholder).
+
+## ❓ Preguntas abiertas al stakeholder (bloquean lo marcado)
+
+- **Q1 — pipeline de 6 pasos:** es la **discusión preliminar con el jefe** de la sección
+  "⏸️" de arriba: informarle que esos pasos **no existen en Salesforce aún** y decidir
+  display-mapping (recomendado) vs cambio del picklist real. La tabla de esa sección es
+  el material para la conversación.
+- **Q2:** ¿el Support Representative / Implementation Manager es el `QC_Agent__c`
+  existente, u otro campo/rol? ¿"Lua" y "Rinki" existen como `SEOX3_Team_Member__c`?
+- **Q3:** ¿"CP" = Credit Partner? ¿El programa de referidos del feedback es el mismo
+  "Supporting Lead" que ya existe en SF?
+- **Q4:** ¿cuál es la herramienta de $25/mes mencionada? (para evaluar la alternativa
+  gratis con conocimiento de causa — nota: la org ya tiene LiveChat y Twilio instalados)
+- **Q5 — Formstack (condición de la e-firma):** ¿la suscripción de Formstack de WSC
+  incluye firma electrónica (Formstack Sign / delivery a e-sign) y qué documentos se
+  firman en el flujo del cliente? No hay paquete Formstack en la org — la integración
+  sería vía API de Formstack.
+
+## Pendientes previos que siguen vivos
+
+- **SMTP real (Google Workspace)** — runbook: App Password en
+  myaccount.google.com/security → Railway `EMAIL_SENDER=smtp`, `SMTP_USER`,
+  `SMTP_PASSWORD` (Sensitive), `SMTP_FROM_EMAIL`. Nota: con `salesforce-jwt` vivo, el
+  caveat del `DEMO_EMAIL` de mock ya no aplica en producción — se prueba directo con el
+  email real del `FU_User__c`.
+- **Deuda de tests**: DoD de ROADMAP 1.6 (re-mint forzado + token nunca sale del server)
+  y tests HTTP de auth (destraban 1.7/1.8).
+- **Decidir el deploy público final** (dominio propio; quitar/ajustar Basic Auth).
+- **Fases técnicas — RE-ALCANCE (2026-07-22, ADR-0006):** el feedback del stakeholder
+  es el **alcance final** del producto. **Quedan FUERA**: Stripe/checkout en el portal,
+  la **reserva anti-doble-venta** (era parte del flujo de compra self-service, que ya
+  no existe — las compras nuevas pasan por el Sales rep humano) y el **upload de
+  documentos por el cliente** (Documents = ver/descargar/firmar, nunca subir). La
+  **e-firma SIGUE** (corrección del mismo día): vía **Formstack Documents** — nunca
+  DocuSign/PandaDoc — **condicionada** a confirmar que la suscripción de WSC cubre
+  firma (Q5). **Siguen vivas**: contrato OpenAPI, endpoints de lectura, caché Redis +
+  invalidación CDC, realtime SSE (opcional), tests/hardening/observabilidad/go-live.
+  "Payments" del nav es **historial + balance**, sin botón de pago. Plan completo por
+  fases: P1–P6 (ver ROADMAP/mensaje de planificación 2026-07-22).
 
 ---
 
 ## Por qué este orden
 
-El Grupo A es donde vale la pena empezar: son tareas de puro código/infraestructura/
-decisión que no requieren volver a tocar Salesforce ni esperar nada externo. El Grupo B
-es Salesforce, pero es exactamente el mismo procedimiento que ya hiciste hoy — no hay
-nada nuevo que aprender, solo repetirlo con un usuario distinto. El Grupo C es la
-integración final entre ambos.
+El grupo **YA** corrige los errores de concepto señalados por el stakeholder sin tocar
+Salesforce ni esperar respuestas — puro código sobre lo que ya está vivo. F1–F3 dependen
+de las preguntas Q1–Q4 y de descubrimiento en la org (que puedes hacer tú mismo, como
+todo el Grupo B anterior). Las preguntas están listadas para resolverlas en una sola
+conversación con el stakeholder en vez de bloquear pieza por pieza.
 
-¿Por cuál del Grupo A seguimos?
+¿Arrancamos con el grupo YA (#1 My Orders es el primero natural)?
