@@ -4,6 +4,7 @@ import {
   orderStageIndex,
   orderStageLabel,
   isTerminalStatus,
+  isPostPaymentStage,
   orderDetailSchema,
 } from "./index.js";
 
@@ -23,6 +24,13 @@ describe("order pipeline", () => {
   it("flags terminal states outside the progress bar", () => {
     expect(isTerminalStatus("ON HOLD - Other Reasons")).toBe(true);
     expect(isTerminalStatus("Verified - Shipped")).toBe(false);
+  });
+
+  it("flags post-payment stages for the staff hand-off rule (Sales Advisor -> Implementation Manager)", () => {
+    expect(isPostPaymentStage("To Verify Payment")).toBe(false);
+    expect(isPostPaymentStage("Pending Balance")).toBe(false);
+    expect(isPostPaymentStage("Verified - Initial Contact")).toBe(true);
+    expect(isPostPaymentStage("Verified - Complete")).toBe(true);
   });
 });
 

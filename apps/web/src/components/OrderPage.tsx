@@ -3,6 +3,7 @@ import { orderStageLabel } from "@wsc/shared";
 import { useOrder } from "../hooks/useOrder";
 import { UnauthorizedError } from "../api/client";
 import { OrderTracker } from "./OrderTracker";
+import { StaffCard } from "./StaffCard";
 
 const money = (n: number): string => `$${n.toLocaleString("en-US")}`;
 
@@ -76,6 +77,8 @@ export function OrderPage() {
         </div>
       </div>
 
+      <StaffCard order={order} />
+
       <div className="card">
         <div className="card-h">Product purchased</div>
         {corp ? (
@@ -103,10 +106,6 @@ export function OrderPage() {
               <div>
                 <div className="k">Incorporated</div>
                 <div className="v">{formatDate(corp.incorporationDate)}</div>
-              </div>
-              <div>
-                <div className="k">Assigned advisor</div>
-                <div className="v">{order.advisorName ?? "Not yet assigned"}</div>
               </div>
             </div>
           </>

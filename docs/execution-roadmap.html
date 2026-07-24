@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WSC Portal — Ruta de ejecución</title>
+<style>
+  :root {
+    --navy: #16223f;
+    --navy-d: #0f1830;
+    --navy-700: #26365c;
+    --navy-300: #5a6b8c;
+    --red: #c8102e;
+    --red-d: #a50d26;
+    --red-bg: #fbe7ea;
+    --gold: #c4a259;
+    --gold-d: #a3863d;
+    --gold-bg: #f6efdf;
+    --ok: #2e7d52;
+    --ok-d: #235f3f;
+    --ok-bg: #e6f2eb;
+    --bg: #f3f5f8;
+    --surface: #ffffff;
+    --ink: #1c2331;
+    --mut: #6a7689;
+    --line: #dde2ea;
+    --heading: var(--navy);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1524;
+      --surface: #161f33;
+      --ink: #e7ebf3;
+      --mut: #93a0b8;
+      --line: #2a3550;
+      --red-bg: #3a1620;
+      --gold-bg: #362c17;
+      --ok-bg: #123526;
+      --heading: #f2f4f9;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+  header {
+    margin-bottom: 28px;
+  }
+  .kicker {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--heading);
+    margin: 0 0 6px;
+  }
+  header p.sub {
+    font-size: 13.5px;
+    color: var(--mut);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 26px;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 5px 11px;
+    border-radius: 20px;
+    letter-spacing: 0.02em;
+  }
+  .pill.ya { background: var(--ok-bg); color: var(--ok-d); }
+  .pill.ceo { background: var(--red-bg); color: var(--red-d); }
+  .pill.extra { background: var(--gold-bg); color: var(--gold-d); }
+
+  .done-strip {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 30px;
+  }
+  .done-strip .dh {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 800;
+    color: var(--ok-d);
+    margin-bottom: 10px;
+  }
+  .done-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .done-chip {
+    font-size: 11.5px;
+    padding: 6px 11px;
+    border-radius: 8px;
+    background: var(--ok-bg);
+    color: var(--ok-d);
+    font-weight: 700;
+  }
+  .done-chip::before { content: "✓ "; }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 30px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    border-radius: 6px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ok), var(--gold));
+    border-radius: 6px;
+  }
+  .progress-label {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--mut);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sequence {
+    position: relative;
+  }
+  .step {
+    display: flex;
+    gap: 16px;
+    position: relative;
+    padding-bottom: 22px;
+  }
+  .step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    left: 17px;
+    top: 38px;
+    bottom: -4px;
+    width: 2px;
+    background: var(--line);
+  }
+  .step.done:not(:last-child)::before {
+    background: var(--ok);
+  }
+  .num {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--mut);
+    font-variant-numeric: tabular-nums;
+    z-index: 1;
+  }
+  .step.done .num {
+    background: var(--ok);
+    border-color: var(--ok);
+    color: #fff;
+  }
+  .card {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .step.done .card {
+    opacity: 0.6;
+  }
+  .check {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    border: 2px solid var(--line);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #fff;
+  }
+  .step.done .check {
+    background: var(--ok);
+    border-color: var(--ok);
+  }
+  .step.done .check::after { content: "✓"; }
+  .body { flex: 1; min-width: 0; }
+  .body .top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .body .title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--heading);
+  }
+  .body .desc {
+    font-size: 12px;
+    color: var(--mut);
+    line-height: 1.5;
+  }
+  .body .desc code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--ink);
+  }
+  .tag {
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tag.ya { background: var(--ok-bg); color: var(--ok-d); }
+  .tag.extra { background: var(--gold-bg); color: var(--gold-d); }
+
+  .checkpoint {
+    position: relative;
+    margin: 6px 0 28px;
+    padding-left: 52px;
+  }
+  .checkpoint::before {
+    content: "";
+    position: absolute;
+    left: 17px;
+    top: -14px;
+    height: 14px;
+    width: 2px;
+    background: var(--red);
+  }
+  .checkpoint .box {
+    background: var(--red-bg);
+    border: 1px solid rgba(200, 16, 46, 0.25);
+    border-radius: 11px;
+    padding: 14px 16px;
+  }
+  .checkpoint .flag {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--red);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .checkpoint .ct {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 800;
+    color: var(--red-d);
+    margin-bottom: 4px;
+  }
+  .checkpoint .cd {
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .checkpoint .cd b { color: var(--red-d); }
+  .checkpoint .cd code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: 11px;
+    background: var(--surface);
+    border: 1px solid rgba(200, 16, 46, 0.25);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--ink);
+  }
+
+  footer {
+    margin-top: 36px;
+    font-size: 11px;
+    color: var(--mut);
+    text-align: center;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">WSC Customer Portal</div>
+    <h1>Ruta de ejecución</h1>
+    <p class="sub">
+      Un solo orden de trabajo — mezclando lo que se puede hacer ya, lo que espera una
+      conversación con el CEO, y los extras. Marca <code>class="step done"</code> en el paso
+      correspondiente (en el HTML) cada vez que se complete — la barra de progreso se
+      recalcula sola al abrir el archivo.
+    </p>
+    <div class="legend">
+      <span class="pill ya">🟢 Se puede hacer ya</span>
+      <span class="pill ceo">🔴 Depende del CEO</span>
+      <span class="pill extra">🎁 Extra</span>
+    </div>
+  </header>
+
+  <div class="done-strip">
+    <div class="dh">✅ Ya completado (2026-07-24)</div>
+    <div class="done-list">
+      <span class="done-chip">My Orders (lista + detalle)</span>
+      <span class="done-chip">Dashboard eliminado</span>
+      <span class="done-chip">Documents por producto</span>
+      <span class="done-chip">Payments agregado cross-order</span>
+    </div>
+  </div>
+
+  <div class="progress-row">
+    <div class="progress-track"><div class="progress-fill" style="width: 0%"></div></div>
+    <div class="progress-label">0 / 14</div>
+  </div>
+
+  <div class="sequence">
+    <div class="step done">
+      <div class="num">1</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Staff card (Advisor / Support rep)</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Card con nombre + contacto directo, alimentada por mock. Regla de transición pre/post-pago implementada contra el mock.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">2</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">SMTP real (Google Workspace)</span><span class="tag ya">Ya</span></div>
+          <div class="desc">App Password en myaccount.google.com/security → Railway <code>EMAIL_SENDER=smtp</code>, <code>SMTP_USER</code>, <code>SMTP_PASSWORD</code>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">3</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Dominio propio en Vercel</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Settings → Domains + registro DNS. Actualizar <code>APP_BASE_URL</code> en Railway al terminar.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">4</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">WhatsApp — deep link</span><span class="tag extra">Extra</span></div>
+          <div class="desc"><code>wa.me/&lt;número&gt;</code> como botón en Support (y donde hoy dice "Contact advisor"). Gratis, inmediato.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">5</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Learning Center — contenido de video</span><span class="tag extra">Extra</span></div>
+          <div class="desc">La sección ya nace como placeholder honesto; falta el contenido real (YouTube unlisted/Vimeo, $0) que produce WSC.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">6</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Support — pendiente de definición</span><span class="tag extra">Extra</span></div>
+          <div class="desc">Bajado de "Ya" a "Extra" (2026-07-24): el objeto que se asumía para tickets (<code>Case</code>) no se usa en Salesforce en producción hoy, así que probablemente el CEO pide otra cosa distinta a un sistema de tickets. No construir la UI hasta aclarar qué es "soporte" realmente.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="flag">💬</div>
+      <div class="box">
+        <div class="ct">Checkpoint — Conversación 1 con el CEO</div>
+        <div class="cd">
+          <b>Q1</b> pipeline de 6 pasos (mapping de display vs. cambiar el picklist real) ·
+          <b>Q2</b> ¿Implementation Manager = <code>QC_Agent__c</code>? ·
+          <b>Q3</b> (a fondo) Refer a Friend / "CP" — no es solo confirmar el objeto: hay que
+          discutir la lógica de negocio completa (qué es un "CP", montos/porcentajes exactos,
+          cuándo se paga, cómo se rastrea) antes de construir ni siquiera la versión con mock ·
+          <b>Q4</b> herramienta de chat/AI (la org ya tiene LiveChat + Twilio instalados) ·
+          <b>Q5</b> ¿qué es "soporte" en concreto? el objeto asumido no está en uso en producción
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">7</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Pipeline corregido — mapping table</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Implementar en <code>packages/shared</code> según lo acordado en el checkpoint — labels como data, nunca hardcoded.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">8</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Advisor / Support rep — contacto real</span><span class="tag ya">Ya</span></div>
+          <div class="desc"><code>Sales_Rep__c</code> / <code>QC_Agent__c</code> al SOQL + Permission Set (FLS campo por campo, como en G3).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">9</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Refer a Friend — UI + adaptador (mock, luego SF real)</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Movido a después del checkpoint (2026-07-24): la lógica completa se discute a fondo con el CEO en Q3 antes de construir nada, ni siquiera la versión con mock. Una vez confirmada: formulario "enviar lead" + lista "mis referidos" tras un puerto <code>ReferralRepository</code>, luego el adaptador real contra <code>Supporting_Lead__c</code>/<code>Supporting_Lead_Allocation__c</code>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">10</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Chat / AI — integrar la herramienta elegida</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Según lo decidido en Q4 (LiveChat-Salesforce Integration, TwilioSalesforce, u otra).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">11</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">E-firma vía Formstack</span><span class="tag extra">Extra</span></div>
+          <div class="desc">Integración con la API de Formstack desde el BFF, detrás del puerto <code>IESignProvider</code>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">12</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Realtime (SSE)</span><span class="tag extra">Extra</span></div>
+          <div class="desc">Salesforce Pub/Sub API → Server-Sent Events, para ver cambios de estado sin refrescar.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="flag">🚦</div>
+      <div class="box">
+        <div class="ct">Checkpoint — Luz verde final (C5)</div>
+        <div class="cd">
+          Dominio propio confirmado · contenido de Learning Center listo · aprobación
+          explícita del CEO para abrir el portal al público.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">13</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Quitar Basic Auth → público real</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Borrar <code>apps/web/middleware.ts</code> o simplemente remover las variables de Vercel.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">14</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Deuda de tests</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Tests de integración contra un sandbox real + Playwright e2e. Puede avanzar en paralelo en cualquier punto.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Ábrelo directamente en el navegador (doble click) — no depende de ningún servidor.
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var steps = document.querySelectorAll(".step");
+    var doneCount = 0;
+    steps.forEach(function (step) {
+      if (step.classList.contains("done")) doneCount++;
+    });
+    var fill = document.querySelector(".progress-fill");
+    var label = document.querySelector(".progress-label");
+    var pct = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+    fill.style.width = pct + "%";
+    label.textContent = doneCount + " / " + steps.length;
+  })();
+</script>
+</body>
+</html>

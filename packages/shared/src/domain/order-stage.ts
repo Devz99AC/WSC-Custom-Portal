@@ -62,3 +62,10 @@ export function isTerminalStatus(sfValue: string): boolean {
     (ON_HOLD_STATES as readonly string[]).includes(sfValue)
   );
 }
+
+/** True once payment has been verified (the `Verified - *` progressive stages) — the
+ *  point at which staff ownership hands off from the Sales Advisor to the post-purchase
+ *  Support Representative / Implementation Manager (stakeholder feedback, ACTION-PLAN F1). */
+export function isPostPaymentStage(sfValue: string): boolean {
+  return sfValue.startsWith("Verified");
+}
