@@ -1,9 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { Redis } from "ioredis";
 import { loadEnv, type Env } from "./config/env.js";
-import { GetDashboard } from "./application/get-dashboard.js";
 import { GetOrders } from "./application/get-orders.js";
 import { GetOrder } from "./application/get-order.js";
+import { GetPayments } from "./application/get-payments.js";
 import { RequestMagicLink } from "./application/request-magic-link.js";
 import { VerifyMagicLink } from "./application/verify-magic-link.js";
 import type { PortalRepository } from "./application/ports/portal-repository.js";
@@ -98,9 +98,9 @@ async function main(): Promise<void> {
     repository = new MockPortalRepository();
   }
 
-  const getDashboard = new GetDashboard(repository);
   const getOrders = new GetOrders(repository);
   const getOrder = new GetOrder(repository);
+  const getPayments = new GetPayments(repository);
 
   const sessionConfig = { secret: resolveSessionSecret(env), kid: env.SESSION_JWT_KID };
   const { store: magicLinkStore, redisClient } = buildMagicLinkStore(env);
@@ -111,7 +111,14 @@ async function main(): Promise<void> {
   });
   const verifyMagicLink = new VerifyMagicLink(magicLinkStore);
 
-  const app = buildServer(env, { getDashboard, getOrders, getOrder, requestMagicLink, verifyMagicLink, sessionConfig });
+  const app = buildServer(env, {
+    getOrders,
+    getOrder,
+    getPayments,
+    requestMagicLink,
+    verifyMagicLink,
+    sessionConfig,
+  });
   if (redisClient) {
     app.addHook("onClose", async () => {
       await redisClient.quit();

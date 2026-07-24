@@ -38,6 +38,8 @@ export const shelfCorpSchema = z.object({
 export const paymentSchema = z.object({
   id: z.string().min(1),
   orderId: z.string().min(1),
+  orderNumber: z.string().min(1),
+  productName: z.string().nullable(),
   amount: z.number(),
   method: paymentMethodSchema,
   statusSf: z.string(),
@@ -59,17 +61,13 @@ export const orderSchema = z.object({
   clientId: z.string().min(1),
 });
 
-export const orderDashboardSchema = z.object({
+export const orderDetailSchema = z.object({
   client: clientSchema,
   order: orderSchema,
   payments: z.array(paymentSchema),
 });
 
-export type OrderDashboardDto = z.infer<typeof orderDashboardSchema>;
-
-/** Same shape as the dashboard — one specific order instead of always the most recent. */
-export const orderDetailSchema = orderDashboardSchema;
-export type OrderDetailDto = OrderDashboardDto;
+export type OrderDetailDto = z.infer<typeof orderDetailSchema>;
 
 export const ordersListSchema = z.object({
   client: clientSchema,
@@ -77,3 +75,9 @@ export const ordersListSchema = z.object({
 });
 
 export type OrdersListDto = z.infer<typeof ordersListSchema>;
+
+export const paymentsListSchema = z.object({
+  payments: z.array(paymentSchema),
+});
+
+export type PaymentsListDto = z.infer<typeof paymentsListSchema>;

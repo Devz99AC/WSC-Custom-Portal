@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchOrder } from "../api/client";
 
-/** One order's detail, keyed by id — same pattern as useDashboard. */
+/** One order's detail, keyed by id — same pattern as useOrders. */
 export function useOrder(orderId: string | undefined) {
   return useQuery({
     queryKey: ["order", orderId],

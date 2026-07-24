@@ -4,7 +4,7 @@ import {
   orderStageIndex,
   orderStageLabel,
   isTerminalStatus,
-  orderDashboardSchema,
+  orderDetailSchema,
 } from "./index.js";
 
 describe("order pipeline", () => {
@@ -26,8 +26,8 @@ describe("order pipeline", () => {
   });
 });
 
-describe("orderDashboardSchema", () => {
-  it("accepts a well-formed dashboard payload and rejects a bad email", () => {
+describe("orderDetailSchema", () => {
+  it("accepts a well-formed order-detail payload and rejects a bad email", () => {
     const payload = {
       client: { id: "a01", email: "m.brown@acme.com", name: "Marcus", phone: null, businessName: "Acme" },
       order: {
@@ -45,9 +45,9 @@ describe("orderDashboardSchema", () => {
       },
       payments: [],
     };
-    expect(orderDashboardSchema.safeParse(payload).success).toBe(true);
+    expect(orderDetailSchema.safeParse(payload).success).toBe(true);
 
     const bad = { ...payload, client: { ...payload.client, email: "not-an-email" } };
-    expect(orderDashboardSchema.safeParse(bad).success).toBe(false);
+    expect(orderDetailSchema.safeParse(bad).success).toBe(false);
   });
 });

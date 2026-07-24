@@ -8,15 +8,15 @@ const KNOWN_EMAIL = "m.brown@acmeholdings.com";
 const CLIENT: ClientIdentity = { id: "client-1", email: KNOWN_EMAIL, name: "Marcus Brown" };
 
 class FakeRepository implements PortalRepository {
-  getDashboardByEmail(): ReturnType<PortalRepository["getDashboardByEmail"]> {
-    return Promise.resolve(null);
-  }
-
   listOrdersByEmail(): ReturnType<PortalRepository["listOrdersByEmail"]> {
     return Promise.resolve(null);
   }
 
   getOrderByEmailAndId(): ReturnType<PortalRepository["getOrderByEmailAndId"]> {
+    return Promise.resolve(null);
+  }
+
+  listPaymentsByEmail(): ReturnType<PortalRepository["listPaymentsByEmail"]> {
     return Promise.resolve(null);
   }
 

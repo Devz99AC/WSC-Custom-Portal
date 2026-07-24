@@ -48,6 +48,8 @@ export const VERIFIED_PAYMENT_STATUSES = ["Cleared", "Paid"] as const;
 export interface Payment {
   id: string; // Online_Payment__c.Id
   orderId: string; // Online_Order__c
+  orderNumber: string; // Online_Order__c.Name — which order this belongs to (cross-order views)
+  productName: string | null; // Online_Order__c.Corp__r.Name — which product this belongs to (null if no corp assigned to the order yet)
   amount: number; // Amount__c
   method: PaymentMethod; // Payment_Method__c
   statusSf: string; // Status__c (raw SF value)
@@ -70,19 +72,21 @@ export interface Order {
   clientId: string; // Client__c → FU_User__c
 }
 
-/** Aggregate returned by the dashboard endpoint (most recent order). */
-export interface OrderDashboard {
+/** Aggregate returned by the order-detail endpoint — one specific order + its payments. */
+export interface OrderDetail {
   client: Client;
   order: Order;
   payments: Payment[];
 }
 
-/** Aggregate returned by the order-detail endpoint — same shape as the dashboard, one
- *  per order rather than always the most recent. */
-export type OrderDetail = OrderDashboard;
-
 /** Aggregate returned by the "My Orders" list endpoint. */
 export interface OrdersList {
   client: Client;
   orders: Order[];
+}
+
+/** Aggregate returned by the cross-order payments endpoint — every payment across every
+ *  one of the client's orders (not scoped to a single order, unlike OrderDetail.payments). */
+export interface PaymentsList {
+  payments: Payment[];
 }

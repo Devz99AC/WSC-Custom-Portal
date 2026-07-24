@@ -3,9 +3,9 @@ import fastifyCookie from "@fastify/cookie";
 import { z } from "zod";
 import { ORDER_PIPELINE } from "@wsc/shared";
 import type { Env } from "../../config/env.js";
-import type { GetDashboard } from "../../application/get-dashboard.js";
 import type { GetOrders } from "../../application/get-orders.js";
 import type { GetOrder } from "../../application/get-order.js";
+import type { GetPayments } from "../../application/get-payments.js";
 import type { RequestMagicLink } from "../../application/request-magic-link.js";
 import type { VerifyMagicLink } from "../../application/verify-magic-link.js";
 import {
@@ -16,9 +16,9 @@ import {
 } from "../auth/session-jwt.js";
 
 export interface ServerDeps {
-  getDashboard: GetDashboard;
   getOrders: GetOrders;
   getOrder: GetOrder;
+  getPayments: GetPayments;
   requestMagicLink: RequestMagicLink;
   verifyMagicLink: VerifyMagicLink;
   sessionConfig: SessionJwtConfig;
@@ -97,21 +97,9 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     return { ok: true };
   });
 
-  // Resolved from the session cookie only — never a client-supplied id/email
-  // (CLAUDE.md §Security). 401 if the cookie is missing/invalid/expired.
-  app.get("/api/dashboard", async (request, reply) => {
-    const session = readSession(request, deps.sessionConfig);
-    if (!session) {
-      return reply.code(401).send({ error: "Not signed in" });
-    }
-    const dashboard = await deps.getDashboard.execute(session.email);
-    if (!dashboard) {
-      return reply.code(404).send({ error: "No order found for this account" });
-    }
-    return dashboard;
-  });
-
-  // "My Orders" — every order for the signed-in client, newest first.
+  // "My Orders" — every order for the signed-in client, newest first. This also doubles
+  // as the app's "who am I" check (AppShell sidebar identity), so a client with a valid
+  // session but zero orders gets an honest empty list, not a hard error.
   app.get("/api/orders", async (request, reply) => {
     const session = readSession(request, deps.sessionConfig);
     if (!session) {
@@ -140,6 +128,19 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
       return reply.code(404).send({ error: "Order not found" });
     }
     return order;
+  });
+
+  // "Payments" — every payment across every one of the signed-in client's orders.
+  app.get("/api/payments", async (request, reply) => {
+    const session = readSession(request, deps.sessionConfig);
+    if (!session) {
+      return reply.code(401).send({ error: "Not signed in" });
+    }
+    const payments = await deps.getPayments.execute(session.email);
+    if (!payments) {
+      return reply.code(404).send({ error: "No client found for this account" });
+    }
+    return payments;
   });
 
   return app;

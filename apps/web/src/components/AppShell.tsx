@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import type { OrderDashboardDto } from "@wsc/shared";
+import type { Client } from "@wsc/shared";
 
 const initials = (name: string): string =>
   name
@@ -10,7 +10,7 @@ const initials = (name: string): string =>
     .toUpperCase();
 
 interface AppShellProps {
-  dashboard: OrderDashboardDto;
+  client: Client;
   onSignOut: () => void;
 }
 
@@ -19,11 +19,9 @@ const navClass = ({ isActive }: { isActive: boolean }): string => `nav-i${isActi
 /**
  * Shell shared by every authenticated view (ADR-0005 session-driven layout, ported from
  * apps/web/public/prototype.html) — sidebar nav + signed-in client, with routed pages
- * rendered via <Outlet/>. Extracted out of Dashboard so all 5 prototype views can share it.
+ * rendered via <Outlet/>. "My Orders" is the home view (there is no separate dashboard).
  */
-export function AppShell({ dashboard, onSignOut }: AppShellProps) {
-  const { client } = dashboard;
-
+export function AppShell({ client, onSignOut }: AppShellProps) {
   return (
     <div className="shell">
       <aside className="side">
@@ -35,9 +33,6 @@ export function AppShell({ dashboard, onSignOut }: AppShellProps) {
             <b>W</b>HOLESALE<b>S</b>HELF<b>C</b>ORP
           </div>
         </div>
-        <NavLink to="/" end className={navClass}>
-          Dashboard
-        </NavLink>
         <NavLink to="/orders" className={navClass}>
           My Orders
         </NavLink>

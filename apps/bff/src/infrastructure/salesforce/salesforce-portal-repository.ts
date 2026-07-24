@@ -2,11 +2,11 @@ import {
   VERIFIED_PAYMENT_STATUSES,
   type Client,
   type Order,
-  type OrderDashboard,
   type OrderDetail,
   type OrdersList,
   type Payment,
   type PaymentMethod,
+  type PaymentsList,
   type ShelfCorp,
 } from "@wsc/shared";
 import type { ClientIdentity, PortalRepository } from "../../application/ports/portal-repository.js";
@@ -45,9 +45,10 @@ const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Order_D
               Corp__r.Name, Corp__r.Type__c, Corp__r.Jurisdiction__c, Corp__r.Incorporation_Date__c,
               Corp__r.Age__c, Corp__r.Client_Price__c, Corp__r.DUNS__c`;
 
-// List queries stay bounded per CLAUDE.md §1 — a client with more orders than this only
-// sees the most recent MAX_ORDERS in the "My Orders" list.
+// List queries stay bounded per CLAUDE.md §1 — a client with more orders/payments than
+// these only sees the most recent MAX_* in the relevant list.
 const MAX_ORDERS = 50;
+const MAX_PAYMENTS = 100;
 
 /**
  * Live Salesforce adapter for the portal read model. Maps the fat SF objects
@@ -57,25 +58,6 @@ const MAX_ORDERS = 50;
  */
 export class SalesforcePortalRepository implements PortalRepository {
   constructor(private readonly query: SalesforceQuery) {}
-
-  async getDashboardByEmail(email: string): Promise<OrderDashboard | null> {
-    const safeEmail = soqlEscape(email);
-    const orders = await this.query(
-      `SELECT ${ORDER_SELECT}
-       FROM Online_Order__c
-       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}'
-       ORDER BY Order_Date__c DESC NULLS LAST
-       LIMIT 1`,
-    );
-
-    const orderRecord = orders[0];
-    if (!orderRecord) {
-      return null;
-    }
-
-    const paymentRecords = await this.paymentsFor(orderRecord);
-    return this.toOrderDetail(email, orderRecord, paymentRecords);
-  }
 
   async listOrdersByEmail(email: string): Promise<OrdersList | null> {
     const safeEmail = soqlEscape(email);
@@ -120,6 +102,34 @@ export class SalesforcePortalRepository implements PortalRepository {
     return this.toOrderDetail(email, orderRecord, paymentRecords);
   }
 
+  async listPaymentsByEmail(email: string): Promise<PaymentsList | null> {
+    const safeEmail = soqlEscape(email);
+    const records = await this.query(
+      `SELECT Id, Amount__c, Payment_Method__c, Status__c, Status_Date__c,
+              Online_Order__c, Online_Order__r.Name, Online_Order__r.Corp_Name__c,
+              Online_Order__r.Corp__r.Name
+       FROM Online_Payment__c
+       WHERE Online_Order__r.Brand__c = 'WSC' AND Online_Order__r.Client__r.E_Mail__c = '${safeEmail}'
+       ORDER BY Status_Date__c DESC NULLS LAST
+       LIMIT ${MAX_PAYMENTS}`,
+    );
+
+    if (records.length === 0) {
+      // Zero payments could mean "client with no verified payments yet" (honest empty
+      // state) or "no such client" — only the latter should look like an error.
+      const client = await this.findClientByEmail(email);
+      return client ? { payments: [] } : null;
+    }
+
+    const payments = records.map((record) => {
+      const orderRel = obj(record.Online_Order__r);
+      const corpRel = obj(orderRel?.Corp__r);
+      const productName = str(corpRel?.Name) ?? str(orderRel?.Corp_Name__c);
+      return this.mapPayment(str(record.Online_Order__c) ?? "", str(orderRel?.Name) ?? "—", productName, record);
+    });
+    return { payments };
+  }
+
   /** email → FU_User__c (ADR-0005). Brand-scoped isn't needed here: FU_User__c isn't
    *  brand-specific, unlike Online_Order__c — the row-level scoping happens at the
    *  order/payment read above, keyed off this resolved client id. */
@@ -161,8 +171,8 @@ export class SalesforcePortalRepository implements PortalRepository {
 
   /** Maps one order record. `paymentRecords` is optional — the list endpoint omits it
    *  (never one SOQL call per row, CLAUDE.md §1) and relies on the `Total_Payments__c`
-   *  rollup instead; the dashboard/detail endpoints pass the real payments for a
-   *  same-transaction reconciliation of `paidToDate`. */
+   *  rollup instead; the detail endpoint passes the real payments for a same-transaction
+   *  reconciliation of `paidToDate`. */
   private mapOrder(orderRecord: SalesforceRecord, paymentRecords: SalesforceRecord[]): Order {
     const corpRel = obj(orderRecord.Corp__r);
 
@@ -185,7 +195,10 @@ export class SalesforcePortalRepository implements PortalRepository {
         }
       : null;
 
-    const payments = paymentRecords.map((record) => this.mapPayment(orderRecord, record));
+    const orderId = str(orderRecord.Id) ?? "";
+    const orderNumber = str(orderRecord.Name) ?? "—";
+    const productName = shelfCorp?.name ?? null;
+    const payments = paymentRecords.map((record) => this.mapPayment(orderId, orderNumber, productName, record));
 
     const amount = num(orderRecord.Amount__c);
     const paidFromField = num(orderRecord.Total_Payments__c);
@@ -195,8 +208,8 @@ export class SalesforcePortalRepository implements PortalRepository {
     const paidToDate = paidFromField > 0 ? paidFromField : paidFromPayments;
 
     return {
-      id: str(orderRecord.Id) ?? "",
-      orderNumber: str(orderRecord.Name) ?? "—",
+      id: orderId,
+      orderNumber,
       amount,
       paidToDate,
       balanceDue: Math.max(amount - paidToDate, 0),
@@ -209,11 +222,18 @@ export class SalesforcePortalRepository implements PortalRepository {
     };
   }
 
-  private mapPayment(orderRecord: SalesforceRecord, record: SalesforceRecord): Payment {
+  private mapPayment(
+    orderId: string,
+    orderNumber: string,
+    productName: string | null,
+    record: SalesforceRecord,
+  ): Payment {
     const statusSf = str(record.Status__c) ?? "";
     return {
       id: str(record.Id) ?? "",
-      orderId: str(orderRecord.Id) ?? "",
+      orderId,
+      orderNumber,
+      productName,
       amount: num(record.Amount__c),
       method: toMethod(record.Payment_Method__c),
       statusSf,
@@ -229,7 +249,10 @@ export class SalesforcePortalRepository implements PortalRepository {
   ): OrderDetail {
     const client = this.mapClient(email, obj(orderRecord.Client__r), orderRecord);
     const order = this.mapOrder(orderRecord, paymentRecords);
-    const payments = paymentRecords.map((record) => this.mapPayment(orderRecord, record));
+    const orderId = str(orderRecord.Id) ?? "";
+    const orderNumber = str(orderRecord.Name) ?? "—";
+    const productName = order.shelfCorp?.name ?? null;
+    const payments = paymentRecords.map((record) => this.mapPayment(orderId, orderNumber, productName, record));
     return { client, order, payments };
   }
 }

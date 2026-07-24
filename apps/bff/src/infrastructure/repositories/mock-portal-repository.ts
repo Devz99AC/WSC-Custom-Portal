@@ -1,4 +1,4 @@
-import type { Client, Order, OrderDashboard, OrderDetail, OrdersList, Payment } from "@wsc/shared";
+import type { Client, Order, OrderDetail, OrdersList, Payment, PaymentsList } from "@wsc/shared";
 import type { ClientIdentity, PortalRepository } from "../../application/ports/portal-repository.js";
 
 /**
@@ -67,6 +67,8 @@ const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
     {
       id: "a0Pdemo0000000001",
       orderId: "a0Odemo0000000001",
+      orderNumber: "UO1423102",
+      productName: "2016 Wyoming LLC",
       amount: 2500,
       method: "Wire Transfer",
       statusSf: "Cleared",
@@ -76,6 +78,8 @@ const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
     {
       id: "a0Pdemo0000000002",
       orderId: "a0Odemo0000000001",
+      orderNumber: "UO1423102",
+      productName: "2016 Wyoming LLC",
       amount: 6250,
       method: "Credit Card",
       statusSf: "Cleared",
@@ -87,17 +91,6 @@ const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
 };
 
 export class MockPortalRepository implements PortalRepository {
-  getDashboardByEmail(email: string): Promise<OrderDashboard | null> {
-    if (email !== DEMO_EMAIL) {
-      return Promise.resolve(null);
-    }
-    const order = DEMO_ORDERS[0];
-    if (!order) {
-      return Promise.resolve(null);
-    }
-    return Promise.resolve({ client: DEMO_CLIENT, order, payments: DEMO_PAYMENTS_BY_ORDER[order.id] ?? [] });
-  }
-
   listOrdersByEmail(email: string): Promise<OrdersList | null> {
     if (email !== DEMO_EMAIL) {
       return Promise.resolve(null);
@@ -114,6 +107,14 @@ export class MockPortalRepository implements PortalRepository {
       return Promise.resolve(null);
     }
     return Promise.resolve({ client: DEMO_CLIENT, order, payments: DEMO_PAYMENTS_BY_ORDER[order.id] ?? [] });
+  }
+
+  listPaymentsByEmail(email: string): Promise<PaymentsList | null> {
+    if (email !== DEMO_EMAIL) {
+      return Promise.resolve(null);
+    }
+    const payments = DEMO_ORDERS.flatMap((order) => DEMO_PAYMENTS_BY_ORDER[order.id] ?? []);
+    return Promise.resolve({ payments });
   }
 
   findClientByEmail(email: string): Promise<ClientIdentity | null> {

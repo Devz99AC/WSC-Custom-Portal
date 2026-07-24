@@ -1,4 +1,5 @@
-import type { OrderDashboardDto } from "@wsc/shared";
+import { useOrders } from "../hooks/useOrders";
+import { UnauthorizedError } from "../api/client";
 
 const formatDate = (iso: string | null): string | null =>
   iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null;
@@ -11,19 +12,39 @@ const initials = (name: string): string =>
     .slice(0, 2)
     .toUpperCase();
 
-interface ProfilePageProps {
-  dashboard: OrderDashboardDto;
-}
-
 /**
  * "Profile" — ported from apps/web/public/prototype.html, minus its fake "Preferred
  * language" / "Notifications" fields and non-functional 2FA toggle (no settings API
  * backs those yet). The security card instead describes the REAL sign-in mechanism
  * (ADR-0005 magic-link) rather than a button that would do nothing when clicked.
+ * Self-fetches (rather than taking a single-order dashboard prop) since a client can
+ * have multiple orders — "client since" is derived from the earliest one.
  */
-export function ProfilePage({ dashboard }: ProfilePageProps) {
-  const { client, order } = dashboard;
-  const since = formatDate(order.placedAt);
+export function ProfilePage() {
+  const { data, isPending, isError, error } = useOrders();
+
+  if (isPending) {
+    return <p className="statusnote">Loading your profile…</p>;
+  }
+
+  if (isError) {
+    return (
+      <p className="err">
+        {error instanceof UnauthorizedError
+          ? "Your session has expired — refresh the page to sign in again."
+          : error instanceof Error
+            ? error.message
+            : "Something went wrong."}
+      </p>
+    );
+  }
+
+  const { client, orders } = data;
+  const earliestPlacedAt = orders
+    .map((order) => order.placedAt)
+    .filter((placedAt): placedAt is string => placedAt !== null)
+    .sort()[0];
+  const since = earliestPlacedAt ? formatDate(earliestPlacedAt) : null;
 
   return (
     <>
