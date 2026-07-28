@@ -1,7 +1,9 @@
 import {
+  documentsListSchema,
   orderDetailSchema,
   ordersListSchema,
   paymentsListSchema,
+  type DocumentsListDto,
   type OrderDetailDto,
   type OrdersListDto,
   type PaymentsListDto,
@@ -75,6 +77,32 @@ export async function fetchPayments(): Promise<PaymentsListDto> {
 
   const payload: unknown = await response.json();
   return paymentsListSchema.parse(payload);
+}
+
+/** "Documents" — every attachment on the signed-in client's orders, tagged with the
+ *  product its order points at. */
+export async function fetchDocuments(): Promise<DocumentsListDto> {
+  const response = await fetch("/api/documents");
+
+  if (response.status === 401) {
+    throw new UnauthorizedError();
+  }
+  if (response.status === 404) {
+    throw new Error("We couldn't find an account for this login.");
+  }
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}).`);
+  }
+
+  const payload: unknown = await response.json();
+  return documentsListSchema.parse(payload);
+}
+
+/** Download URL for one document. A plain same-origin link: the browser sends the
+ *  session cookie and the BFF streams the bytes back, so no Salesforce URL or token
+ *  ever reaches the page. */
+export function documentDownloadUrl(documentId: string): string {
+  return `/api/documents/${encodeURIComponent(documentId)}/download`;
 }
 
 /** Step 1 of the magic-link flow — always resolves, regardless of whether the email

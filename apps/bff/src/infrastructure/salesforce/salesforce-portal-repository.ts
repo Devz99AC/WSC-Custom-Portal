@@ -1,16 +1,26 @@
 import {
   VERIFIED_PAYMENT_STATUSES,
   type Client,
+  type DocumentsList,
   type Order,
   type OrderDetail,
   type OrdersList,
   type Payment,
   type PaymentMethod,
   type PaymentsList,
+  type PortalDocument,
   type ShelfCorp,
 } from "@wsc/shared";
-import type { ClientIdentity, PortalRepository } from "../../application/ports/portal-repository.js";
-import type { SalesforceQuery, SalesforceRecord } from "./salesforce-query.js";
+import type {
+  ClientIdentity,
+  DocumentDownload,
+  PortalRepository,
+} from "../../application/ports/portal-repository.js";
+import type {
+  SalesforceAttachmentBody,
+  SalesforceQuery,
+  SalesforceRecord,
+} from "./salesforce-query.js";
 
 const str = (value: unknown): string | null =>
   typeof value === "string" && value.length > 0 ? value : null;
@@ -68,6 +78,13 @@ const ORDER_DETAIL_SELECT = `${ORDER_SELECT}, EIN__c, EIN_Date_Issued__c`;
 // these only sees the most recent MAX_* in the relevant list.
 const MAX_ORDERS = 50;
 const MAX_PAYMENTS = 100;
+const MAX_DOCUMENTS = 200;
+
+/** Renders ids as a SOQL `IN` list. Ids come from Salesforce itself (never from the
+ *  caller), but they're escaped anyway so this can't become an injection point if a
+ *  future caller passes one through. */
+const soqlIdList = (ids: readonly string[]): string =>
+  ids.map((id) => `'${soqlEscape(id)}'`).join(", ");
 
 /**
  * Live Salesforce adapter for the portal read model. Maps the fat SF objects
@@ -76,7 +93,10 @@ const MAX_PAYMENTS = 100;
  * and to the caller's own client record (row-level authz — docs/salesforce-data-model.md).
  */
 export class SalesforcePortalRepository implements PortalRepository {
-  constructor(private readonly query: SalesforceQuery) {}
+  constructor(
+    private readonly query: SalesforceQuery,
+    private readonly attachmentBody: SalesforceAttachmentBody,
+  ) {}
 
   async listOrdersByEmail(email: string): Promise<OrdersList | null> {
     const safeEmail = soqlEscape(email);
@@ -147,6 +167,97 @@ export class SalesforcePortalRepository implements PortalRepository {
       return this.mapPayment(str(record.Online_Order__c) ?? "", str(orderRel?.Name) ?? "—", productName, record);
     });
     return { payments };
+  }
+
+  /**
+   * Documents for the client. **Attachments always hang off `Online_Order__c`** — never
+   * off the corp (stakeholder rule, 2026-07-28) — so the parent set is exactly the
+   * client's own orders, which is also what makes this row-level safe: an Attachment
+   * outside that set is simply never selected. Each file is then filed under the parent
+   * order's `Corp__c`, because the portal groups by the product the client recognizes
+   * ("Devin LLC"), not by order number.
+   */
+  async listDocumentsByEmail(email: string): Promise<DocumentsList | null> {
+    const orders = await this.clientOrderIndex(email);
+    if (!orders) {
+      return null;
+    }
+    if (orders.size === 0) {
+      return { documents: [] };
+    }
+
+    const records = await this.query(
+      `SELECT Id, Name, ContentType, BodyLength, Description, CreatedDate, ParentId
+       FROM Attachment
+       WHERE ParentId IN (${soqlIdList([...orders.keys()])})
+       ORDER BY CreatedDate DESC
+       LIMIT ${MAX_DOCUMENTS}`,
+    );
+
+    const documents = records.flatMap((record) => {
+      const parent = orders.get(str(record.ParentId) ?? "");
+      // Defensive: the IN clause already guarantees a hit, so a miss would mean the
+      // parent set and the result drifted — drop it rather than emit a half-mapped row.
+      return parent ? [this.mapDocument(record, parent)] : [];
+    });
+    return { documents };
+  }
+
+  async getDocumentForDownload(email: string, documentId: string): Promise<DocumentDownload | null> {
+    // Authorization first: re-derive what this client is allowed to see and refuse
+    // anything outside it. The id from the URL is never trusted on its own.
+    const list = await this.listDocumentsByEmail(email);
+    const document = list?.documents.find((candidate) => candidate.id === documentId);
+    if (!document) {
+      return null;
+    }
+    const body = await this.attachmentBody(document.id);
+    return body ? { document, body } : null;
+  }
+
+  /** The client's own orders as `orderId → { orderNumber, shelfCorpId }`. Null when the
+   *  email doesn't resolve to a client at all (vs. a client with no orders → empty map). */
+  private async clientOrderIndex(
+    email: string,
+  ): Promise<Map<string, { orderNumber: string; shelfCorpId: string | null }> | null> {
+    const safeEmail = soqlEscape(email);
+    const records = await this.query(
+      `SELECT Id, Name, Corp__c
+       FROM Online_Order__c
+       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}'
+       ORDER BY Order_Date__c DESC NULLS LAST
+       LIMIT ${MAX_ORDERS}`,
+    );
+
+    if (records.length === 0) {
+      return (await this.findClientByEmail(email)) ? new Map() : null;
+    }
+
+    const index = new Map<string, { orderNumber: string; shelfCorpId: string | null }>();
+    for (const record of records) {
+      const id = str(record.Id);
+      if (id) {
+        index.set(id, { orderNumber: str(record.Name) ?? "—", shelfCorpId: str(record.Corp__c) });
+      }
+    }
+    return index;
+  }
+
+  private mapDocument(
+    record: SalesforceRecord,
+    parent: { orderNumber: string; shelfCorpId: string | null },
+  ): PortalDocument {
+    return {
+      id: str(record.Id) ?? "",
+      name: str(record.Name) ?? "Untitled",
+      contentType: str(record.ContentType),
+      sizeBytes: num(record.BodyLength),
+      description: str(record.Description),
+      sharedAt: str(record.CreatedDate),
+      shelfCorpId: parent.shelfCorpId,
+      orderId: str(record.ParentId) ?? "",
+      orderNumber: parent.orderNumber,
+    };
   }
 
   /** email → FU_User__c (ADR-0005). Brand-scoped isn't needed here: FU_User__c isn't

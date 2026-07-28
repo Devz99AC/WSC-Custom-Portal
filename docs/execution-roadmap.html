@@ -296,14 +296,14 @@
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">2</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Documents — Notes &amp; Attachments reales</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Leer los adjuntos de la orden (<code>Attachment</code> / <code>Note</code>) y listarlos por producto, con descarga servida a través del BFF (nunca exponiendo credenciales de Salesforce al navegador).</div>
-          <div class="warn">✅ <strong>Desbloqueado el 2026-07-28.</strong> Estaba en 0 registros; se sembraron datos de prueba en el sandbox vía Apex anónimo: <strong>5 <code>Attachment</code></strong> (PDFs válidos — Articles of Organization, carta EIN CP-575, Certificate of Good Standing, Operating Agreement, Wire Transfer Instructions) y <strong>2 <code>Note</code></strong>, repartidos entre las dos órdenes y el <code>SC_Corp__c</code> para cubrir los tres tipos de padre. Ojo: el org tiene <code>AttachmentTrigger</code> y <code>NoteTrigger</code> propios que se disparan al insertar.</div>
+          <div class="desc">Leer los adjuntos de la orden (<code>Attachment</code>) y listarlos por producto, con descarga servida a través del BFF (nunca exponiendo credenciales de Salesforce al navegador).</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Regla del stakeholder: <strong>los documentos SIEMPRE cuelgan de <code>Online_Order__c</code></strong>, nunca del corp; lo que se muestra como agrupador es el nombre del producto, resuelto vía <code>Corp__c</code> de esa orden. Endpoints nuevos: <code>GET /api/documents</code> y <code>GET /api/documents/:id/download</code>. La descarga pasa por el BFF (el navegador nunca ve una URL ni un token de Salesforce) y <strong>reautoriza en el servidor</strong>: se rederiva el set de documentos del cliente y se rechaza cualquier id fuera de él — verificado en vivo, un id adivinado y otro email devuelven 404. Los archivos de una orden sin corp asignado caen en un grupo aparte en vez de desaparecer.<br>Datos de prueba sembrados vía Apex anónimo (estaba en 0 registros): <strong>5 <code>Attachment</code></strong> con PDFs válidos. El org tiene <code>AttachmentTrigger</code>/<code>NoteTrigger</code> propios y un validation rule <em>"Deletion is prohibited"</em> también sobre <code>Attachment</code>.<br>⚠️ <strong>Los registros <code>Note</code> NO se muestran todavía</strong> — son texto libre del staff y no hay ningún campo que marque cuáles son aptos para el cliente. Decisión pendiente (ver Q6).</div>
         </div>
       </div>
     </div>
@@ -351,7 +351,8 @@
           <b>Q2</b> ¿el Implementation Manager es <code>QC_Agent__c</code> u otro campo? ·
           <b>Q3</b> Refer a Friend: lógica de negocio completa (qué es un "CP", montos, cuándo se paga, cómo se rastrea) ·
           <b>Q4</b> herramienta de chat/AI (la org ya tiene LiveChat + Twilio instalados) ·
-          <b>Q5</b> ¿qué es "soporte" en concreto? el objeto que se asumía no está en uso en producción
+          <b>Q5</b> ¿qué es "soporte" en concreto? el objeto que se asumía no está en uso en producción ·
+          <b>Q6</b> ¿los registros <code>Note</code> de la orden se le muestran al cliente? hoy solo se muestran los <code>Attachment</code> (archivos). Las Notes son texto libre que escribe el staff y <b>no hay ningún campo que distinga una nota interna de una apta para el cliente</b> — mostrarlas todas podría filtrar comentarios internos. Si el CEO las quiere visibles, hace falta acordar un criterio (¿un prefijo en el título? ¿un campo nuevo?)
         </div>
       </div>
     </div>

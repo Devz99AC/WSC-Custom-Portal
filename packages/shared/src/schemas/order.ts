@@ -93,3 +93,21 @@ export const paymentsListSchema = z.object({
 });
 
 export type PaymentsListDto = z.infer<typeof paymentsListSchema>;
+
+export const portalDocumentSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  contentType: z.string().nullable(),
+  sizeBytes: z.number().nonnegative(),
+  description: z.string().nullable(),
+  sharedAt: z.string().nullable(),
+  shelfCorpId: z.string().nullable(),
+  orderId: z.string().min(1),
+  orderNumber: z.string().min(1),
+});
+
+export const documentsListSchema = z.object({
+  documents: z.array(portalDocumentSchema),
+});
+
+export type DocumentsListDto = z.infer<typeof documentsListSchema>;

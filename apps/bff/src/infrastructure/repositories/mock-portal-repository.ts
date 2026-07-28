@@ -1,5 +1,18 @@
-import type { Client, Order, OrderDetail, OrdersList, Payment, PaymentsList } from "@wsc/shared";
-import type { ClientIdentity, PortalRepository } from "../../application/ports/portal-repository.js";
+import type {
+  Client,
+  DocumentsList,
+  Order,
+  OrderDetail,
+  OrdersList,
+  Payment,
+  PaymentsList,
+  PortalDocument,
+} from "@wsc/shared";
+import type {
+  ClientIdentity,
+  DocumentDownload,
+  PortalRepository,
+} from "../../application/ports/portal-repository.js";
 
 /**
  * In-memory adapter for the demo. The data has the EXACT shape the Salesforce adapter
@@ -107,6 +120,39 @@ const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
   "a0Odemo0000000002": [],
 };
 
+/** Mirrors the real model: attachments hang off the ORDER, filed under that order's corp. */
+const DEMO_DOCUMENTS: PortalDocument[] = [
+  {
+    id: "00Pdemo0000000001",
+    name: "Articles of Organization - 2016 Wyoming LLC.pdf",
+    contentType: "application/pdf",
+    sizeBytes: 148_204,
+    description: "Filed formation document issued by the Wyoming Secretary of State.",
+    sharedAt: "2026-05-10T15:12:00.000Z",
+    shelfCorpId: "a0Cdemo0000000001",
+    orderId: "a0Odemo0000000001",
+    orderNumber: "UO1423102",
+  },
+  {
+    id: "00Pdemo0000000002",
+    name: "EIN Confirmation Letter (CP-575).pdf",
+    contentType: "application/pdf",
+    sizeBytes: 96_130,
+    description: "IRS notice confirming the entity's Employer Identification Number.",
+    sharedAt: "2026-05-14T09:41:00.000Z",
+    shelfCorpId: "a0Cdemo0000000001",
+    orderId: "a0Odemo0000000001",
+    orderNumber: "UO1423102",
+  },
+];
+
+/** Demo mode has no document vault behind it — the bytes are a readable stand-in rather
+ *  than a fake PDF that would fail to open. */
+const DEMO_BODY = Buffer.from(
+  "This is demo data. Connect the portal to Salesforce to download the real document.\n",
+  "utf8",
+);
+
 export class MockPortalRepository implements PortalRepository {
   listOrdersByEmail(email: string): Promise<OrdersList | null> {
     if (email !== DEMO_EMAIL) {
@@ -132,6 +178,21 @@ export class MockPortalRepository implements PortalRepository {
     }
     const payments = DEMO_ORDERS.flatMap((order) => DEMO_PAYMENTS_BY_ORDER[order.id] ?? []);
     return Promise.resolve({ payments });
+  }
+
+  listDocumentsByEmail(email: string): Promise<DocumentsList | null> {
+    if (email !== DEMO_EMAIL) {
+      return Promise.resolve(null);
+    }
+    return Promise.resolve({ documents: DEMO_DOCUMENTS });
+  }
+
+  getDocumentForDownload(email: string, documentId: string): Promise<DocumentDownload | null> {
+    if (email !== DEMO_EMAIL) {
+      return Promise.resolve(null);
+    }
+    const document = DEMO_DOCUMENTS.find((candidate) => candidate.id === documentId);
+    return Promise.resolve(document ? { document, body: DEMO_BODY } : null);
   }
 
   findClientByEmail(email: string): Promise<ClientIdentity | null> {

@@ -1,4 +1,4 @@
-import type { Client, Order, Payment, ShelfCorp } from "@wsc/shared";
+import type { Client, Order, Payment, PortalDocument, ShelfCorp } from "@wsc/shared";
 
 /**
  * Canonical test payloads, typed against the domain entities.
@@ -79,6 +79,21 @@ export const makePendingOrder = (overrides: Partial<Order> = {}): Order =>
     shelfCorp: null,
     ...overrides,
   });
+
+/** An attachment on the paid order, filed under that order's corp — the real model:
+ *  documents always hang off `Online_Order__c`, never off the corp. */
+export const makeDocument = (overrides: Partial<PortalDocument> = {}): PortalDocument => ({
+  id: "00P1",
+  name: "Articles of Organization.pdf",
+  contentType: "application/pdf",
+  sizeBytes: 148_204,
+  description: "Filed formation document.",
+  sharedAt: "2026-05-10T15:12:00.000Z",
+  shelfCorpId: "s1",
+  orderId: "o2",
+  orderNumber: "UO1423102",
+  ...overrides,
+});
 
 export const makePayment = (overrides: Partial<Payment> = {}): Payment => ({
   id: "p1",

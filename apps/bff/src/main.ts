@@ -4,6 +4,7 @@ import { loadEnv, type Env } from "./config/env.js";
 import { GetOrders } from "./application/get-orders.js";
 import { GetOrder } from "./application/get-order.js";
 import { GetPayments } from "./application/get-payments.js";
+import { GetDocuments } from "./application/get-documents.js";
 import { RequestMagicLink } from "./application/request-magic-link.js";
 import { VerifyMagicLink } from "./application/verify-magic-link.js";
 import type { PortalRepository } from "./application/ports/portal-repository.js";
@@ -107,22 +108,22 @@ async function main(): Promise<void> {
     if (!env.SF_TARGET_USERNAME) {
       throw new Error("SF_TARGET_USERNAME is required when PORTAL_DATA_SOURCE=salesforce");
     }
-    const query = await createDevSalesforceQuery(env.SF_TARGET_USERNAME);
-    repository = new SalesforcePortalRepository(query);
+    const { query, attachmentBody } = await createDevSalesforceQuery(env.SF_TARGET_USERNAME);
+    repository = new SalesforcePortalRepository(query, attachmentBody);
   } else if (env.PORTAL_DATA_SOURCE === "salesforce-jwt") {
     if (!env.SF_CLIENT_ID || !env.SF_JWT_PRIVATE_KEY || !env.SF_INTEGRATION_USERNAME || !env.SF_LOGIN_URL) {
       throw new Error(
         "SF_CLIENT_ID, SF_JWT_PRIVATE_KEY, SF_INTEGRATION_USERNAME and SF_LOGIN_URL are required when PORTAL_DATA_SOURCE=salesforce-jwt"
       );
     }
-    const query = await createJwtSalesforceQuery({
+    const { query, attachmentBody } = await createJwtSalesforceQuery({
       clientId: env.SF_CLIENT_ID,
       privateKey: env.SF_JWT_PRIVATE_KEY,
       username: env.SF_INTEGRATION_USERNAME,
       loginUrl: env.SF_LOGIN_URL,
       apiVersion: env.SF_API_VERSION,
     });
-    repository = new SalesforcePortalRepository(query);
+    repository = new SalesforcePortalRepository(query, attachmentBody);
   } else {
     repository = new MockPortalRepository();
   }
@@ -130,6 +131,7 @@ async function main(): Promise<void> {
   const getOrders = new GetOrders(repository);
   const getOrder = new GetOrder(repository);
   const getPayments = new GetPayments(repository);
+  const getDocuments = new GetDocuments(repository);
 
   const sessionConfig = { secret: resolveSessionSecret(env), kid: env.SESSION_JWT_KID };
   const { store: magicLinkStore, redisClient } = buildMagicLinkStore(env);
@@ -144,6 +146,7 @@ async function main(): Promise<void> {
     getOrders,
     getOrder,
     getPayments,
+    getDocuments,
     requestMagicLink,
     verifyMagicLink,
     sessionConfig,

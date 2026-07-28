@@ -112,3 +112,33 @@ export interface OrdersList {
 export interface PaymentsList {
   payments: Payment[];
 }
+
+/**
+ * A file shared with the client — Salesforce's classic `Attachment`, i.e. the
+ * "Notes & Attachments" related list. Deliberately NOT `ContentDocument`/Salesforce
+ * Files: the stakeholder confirmed Notes & Attachments is where WSC's client paperwork
+ * actually lives (docs/salesforce-data-model.md).
+ *
+ * **Documents always hang off `Online_Order__c`, never off the corp** (stakeholder,
+ * 2026-07-28). The portal still presents them under the *product* the client
+ * recognizes, so the adapter resolves the parent order's `Corp__c` into `shelfCorpId` —
+ * that mapping is the only reason this field exists. An order with no corp assigned yet
+ * keeps `shelfCorpId: null` so its files stay reachable instead of vanishing.
+ */
+export interface PortalDocument {
+  id: string; // Attachment.Id
+  name: string; // Attachment.Name (includes the file extension)
+  contentType: string | null; // Attachment.ContentType
+  sizeBytes: number; // Attachment.BodyLength
+  description: string | null; // Attachment.Description
+  sharedAt: string | null; // Attachment.CreatedDate (ISO-8601)
+  shelfCorpId: string | null; // parent order's Corp__c — the product this is filed under
+  orderId: string; // Attachment.ParentId — always an Online_Order__c
+  orderNumber: string;
+}
+
+/** Aggregate returned by the documents endpoint — every document across all of the
+ *  client's orders and their shelf corps. */
+export interface DocumentsList {
+  documents: PortalDocument[];
+}

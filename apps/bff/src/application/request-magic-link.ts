@@ -24,7 +24,10 @@ export interface RenderMagicLinkEmail {
  */
 export class RequestMagicLink {
   constructor(
-    private readonly repository: PortalRepository,
+    // Narrowed to the one method this use-case actually calls: sign-in resolves an
+    // identity and nothing more, so growing PortalRepository with new read methods can't
+    // ripple into this use-case or its test doubles.
+    private readonly repository: Pick<PortalRepository, "findClientByEmail">,
     private readonly store: MagicLinkStore,
     private readonly sendEmail: EmailSender,
     private readonly renderEmail: RenderMagicLinkEmail,

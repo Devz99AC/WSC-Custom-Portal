@@ -6,6 +6,7 @@ import type { Env } from "../../config/env.js";
 import type { GetOrders } from "../../application/get-orders.js";
 import type { GetOrder } from "../../application/get-order.js";
 import type { GetPayments } from "../../application/get-payments.js";
+import type { GetDocuments } from "../../application/get-documents.js";
 import type { RequestMagicLink } from "../../application/request-magic-link.js";
 import type { VerifyMagicLink } from "../../application/verify-magic-link.js";
 import {
@@ -19,6 +20,7 @@ export interface ServerDeps {
   getOrders: GetOrders;
   getOrder: GetOrder;
   getPayments: GetPayments;
+  getDocuments: GetDocuments;
   requestMagicLink: RequestMagicLink;
   verifyMagicLink: VerifyMagicLink;
   sessionConfig: SessionJwtConfig;
@@ -29,7 +31,18 @@ const verifyQuerySchema = z.object({ token: z.string().min(1) });
 // Salesforce record ids are exactly 15 or 18 alphanumeric chars — validating the shape
 // here (not just "non-empty") stops a malformed :id from ever reaching SOQL, where it
 // would surface as a raw Salesforce query error (CLAUDE.md §2: never leak SFDC errors).
-const orderParamsSchema = z.object({ id: z.string().regex(/^[A-Za-z0-9]{15}([A-Za-z0-9]{3})?$/) });
+const SALESFORCE_ID = /^[A-Za-z0-9]{15}([A-Za-z0-9]{3})?$/;
+const orderParamsSchema = z.object({ id: z.string().regex(SALESFORCE_ID) });
+const documentParamsSchema = z.object({ id: z.string().regex(SALESFORCE_ID) });
+
+/** Quotes a filename for `Content-Disposition`. Salesforce attachment names are free
+ *  text, so quotes/backslashes are escaped and control characters (including the CR/LF
+ *  that would let a name inject extra response headers) are dropped. */
+function contentDisposition(filename: string): string {
+  // eslint-disable-next-line no-control-regex -- stripping control chars is the point
+  const safe = filename.replace(/[\u0000-\u001f\u007f]/g, "").replace(/["\\]/g, "\\$&");
+  return `attachment; filename="${safe || "document"}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
+}
 
 // Always the same response regardless of whether the email matched a client — prevents
 // account enumeration (ARCHITECTURE.md §3.2).
@@ -151,6 +164,46 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
       return reply.code(404).send({ error: "No client found for this account" });
     }
     return payments;
+  });
+
+  // "Documents" — every attachment on the signed-in client's orders, each tagged with
+  // the product (shelf corp) its order points at so the UI can group by what the client
+  // recognizes.
+  app.get("/api/documents", async (request, reply) => {
+    const session = readSession(request, deps.sessionConfig);
+    if (!session) {
+      return reply.code(401).send({ error: "Not signed in" });
+    }
+    const documents = await deps.getDocuments.list(session.email);
+    if (!documents) {
+      return reply.code(404).send({ error: "No client found for this account" });
+    }
+    return documents;
+  });
+
+  // File download, proxied through the BFF — the browser never talks to Salesforce and
+  // never sees a Salesforce token (CLAUDE.md §0). Ownership is re-checked server-side, so
+  // a guessed attachment id yields 404, not someone else's file.
+  app.get("/api/documents/:id/download", async (request, reply) => {
+    const session = readSession(request, deps.sessionConfig);
+    if (!session) {
+      return reply.code(401).send({ error: "Not signed in" });
+    }
+    const parsed = documentParamsSchema.safeParse(request.params);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: "A valid document id is required" });
+    }
+    const download = await deps.getDocuments.download(session.email, parsed.data.id);
+    if (!download) {
+      return reply.code(404).send({ error: "Document not found" });
+    }
+    return reply
+      .header("Content-Type", download.document.contentType ?? "application/octet-stream")
+      .header("Content-Disposition", contentDisposition(download.document.name))
+      .header("Content-Length", download.body.byteLength)
+      // Client paperwork is private to one client — keep it out of shared caches.
+      .header("Cache-Control", "private, no-store")
+      .send(download.body);
   });
 
   return app;
