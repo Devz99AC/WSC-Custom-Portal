@@ -2,11 +2,12 @@ import { Link } from "react-router-dom";
 import { orderStageLabel } from "@wsc/shared";
 import { useOrders } from "../hooks/useOrders";
 import { UnauthorizedError } from "../api/client";
+import { formatSalesforceDate } from "../lib/date";
 
 const money = (n: number): string => `$${n.toLocaleString("en-US")}`;
 
 const formatDate = (iso: string | null): string =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  formatSalesforceDate(iso, { month: "short", day: "numeric", year: "numeric" }) ?? "—";
 
 /** "My Orders" — the list companion to the per-order detail page (OrderPage). Fetches
  *  its own data (every order for the signed-in client) rather than reusing the

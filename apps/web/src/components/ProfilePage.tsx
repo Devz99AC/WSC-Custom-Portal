@@ -1,8 +1,9 @@
 import { useOrders } from "../hooks/useOrders";
 import { UnauthorizedError } from "../api/client";
+import { formatSalesforceDate } from "../lib/date";
 
 const formatDate = (iso: string | null): string | null =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : null;
+  formatSalesforceDate(iso, { month: "long", year: "numeric" });
 
 const initials = (name: string): string =>
   name

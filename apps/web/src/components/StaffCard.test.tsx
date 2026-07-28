@@ -1,21 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import type { Order } from "@wsc/shared";
+import { makePendingOrder } from "../test/fixtures";
 import { StaffCard } from "./StaffCard";
 
-const baseOrder: Order = {
-  id: "o1",
-  orderNumber: "UO1423103",
-  amount: 6200,
-  paidToDate: 0,
-  balanceDue: 6200,
-  statusSf: "Pending Balance",
-  placedAt: "2026-07-20",
-  advisorName: "Rinkie S.",
-  paymentMethod: "Credit Card",
-  shelfCorp: null,
-  clientId: "c1",
-};
+const baseOrder = makePendingOrder();
 
 describe("StaffCard", () => {
   it("shows the real Sales Advisor before payment is verified", () => {

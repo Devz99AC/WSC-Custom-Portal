@@ -301,20 +301,21 @@
       <div class="card">
         <div class="check"></div>
         <div class="body">
-          <div class="top"><span class="title">Documents — Notes &amp; Attachments reales</span><span class="tag blocked">Bloqueado por datos</span></div>
+          <div class="top"><span class="title">Documents — Notes &amp; Attachments reales</span><span class="tag ya">Ya</span></div>
           <div class="desc">Leer los adjuntos de la orden (<code>Attachment</code> / <code>Note</code>) y listarlos por producto, con descarga servida a través del BFF (nunca exponiendo credenciales de Salesforce al navegador).</div>
-          <div class="warn">⚠️ Verificado el 2026-07-24: hay <strong>0 registros</strong> de <code>Attachment</code> y <code>Note</code> en el sandbox. Hace falta adjuntar un archivo de prueba a una orden (o confirmar que viven en producción) antes de poder construir y verificar esto.</div>
+          <div class="warn">✅ <strong>Desbloqueado el 2026-07-28.</strong> Estaba en 0 registros; se sembraron datos de prueba en el sandbox vía Apex anónimo: <strong>5 <code>Attachment</code></strong> (PDFs válidos — Articles of Organization, carta EIN CP-575, Certificate of Good Standing, Operating Agreement, Wire Transfer Instructions) y <strong>2 <code>Note</code></strong>, repartidos entre las dos órdenes y el <code>SC_Corp__c</code> para cubrir los tres tipos de padre. Ojo: el org tiene <code>AttachmentTrigger</code> y <code>NoteTrigger</code> propios que se disparan al insertar.</div>
         </div>
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">3</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Detalle de orden enriquecido</span><span class="tag ya">Ya</span></div>
           <div class="desc">Mostrar campos que <em>ya existen</em> en Salesforce y hoy no se muestran (envío/tracking, features credit-ready, más datos del corp). Es puro agregar campos al SOQL y al Permission Set — cero lógica nueva.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Del corp (<code>SC_Corp__c</code>): Corp #, Registration #, credit score, funding capacity, estado del registered agent, último annual report y próxima renovación. De la orden (<code>Online_Order__c</code>): EIN + fecha de emisión, forma de pago, fecha de pago total y última actualización de estado. El <strong>EIN sale enmascarado</strong> con un botón «Show» y <strong>no viaja en el endpoint de lista</strong> (proyección aparte, es PII — CLAUDE.md §3). Las filas sin dato no se pintan en vez de mostrar «—». Quedan fuera a propósito los campos internos del corp (márgenes, payback, reseller, credenciales WP). <strong>Envío/tracking no se incluyó</strong>: los campos existen pero están vacíos en el sandbox, así que no hay cómo verificarlo.<br>De paso se arregló un bug real: las fechas <em>date-only</em> de Salesforce se renderizaban <strong>un día antes</strong> para cualquier cliente al oeste de UTC (una orden del 2 de mayo salía «May 1»). Estaba duplicado en cuatro componentes; ahora vive en <code>lib/date.ts</code> con test de regresión.</div>
         </div>
       </div>
     </div>
@@ -404,13 +405,14 @@
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">9</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
-          <div class="top"><span class="title">SMTP real (Google Workspace)</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Hoy el link de acceso se imprime en los logs de Railway en vez de llegar por correo. App Password → Railway <code>EMAIL_SENDER=smtp</code>, <code>SMTP_USER</code>, <code>SMTP_PASSWORD</code>.</div>
+          <div class="top"><span class="title">Envío de correo real (Resend)</span><span class="tag ya">Ya</span></div>
+          <div class="desc">El link de acceso ya llega por correo en vez de imprimirse en los logs. <strong>No se pudo por SMTP:</strong> Railway bloquea la salida SMTP (verificado — TCP a smtp.gmail.com expira en 587 y en 465, mientras HTTPS funciona), así que se implementó un adaptador de API HTTP. Runbook: <code>docs/resend-setup.md</code>.</div>
+          <div class="desc">⚠️ Pendiente para el go-live: hoy envía desde <code>onboarding@resend.dev</code>, que <strong>solo entrega al correo dueño de la cuenta de Resend</strong>. Ver paso 10.</div>
         </div>
       </div>
     </div>
@@ -420,8 +422,11 @@
       <div class="card">
         <div class="check"></div>
         <div class="body">
-          <div class="top"><span class="title">Dominio propio en Vercel</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Settings → Domains + registro DNS. Actualizar <code>APP_BASE_URL</code> en Railway al terminar (es lo que arma la URL del link de acceso).</div>
+          <div class="top"><span class="title">DNS — dominio propio + remitente real</span><span class="tag ya">Ya</span></div>
+          <div class="desc"><strong>Dos cambios de DNS que conviene hacer juntos:</strong></div>
+          <div class="desc">a) <strong>Vercel</strong>: Settings → Domains + registro DNS. Actualizar <code>APP_BASE_URL</code> en Railway al terminar (es lo que arma la URL del link de acceso).</div>
+          <div class="desc">b) <strong>Resend</strong>: verificar <code>wholesaleshelfcorporations.com</code> para poder enviar desde <code>support@…</code> en vez de <code>onboarding@resend.dev</code> — sin esto solo llega correo al dueño de la cuenta de Resend, o sea ningún cliente real. Luego cambiar <code>SMTP_FROM_EMAIL</code> en Railway.</div>
+          <div class="desc">⚠️ Cuidado al agregar el SPF de Resend: el dominio ya tiene SPF de Google Workspace. <strong>Hay que fusionarlos en un solo registro</strong> — dos registros SPF invalidan ambos y tumban la entregabilidad de todo el correo del dominio, incluido el normal del equipo.</div>
         </div>
       </div>
     </div>

@@ -1,14 +1,54 @@
+import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { orderStageLabel } from "@wsc/shared";
 import { useOrder } from "../hooks/useOrder";
 import { UnauthorizedError } from "../api/client";
+import { formatSalesforceDate } from "../lib/date";
 import { OrderTracker } from "./OrderTracker";
 import { StaffCard } from "./StaffCard";
 
 const money = (n: number): string => `$${n.toLocaleString("en-US")}`;
 
 const formatDate = (iso: string | null): string =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—";
+  formatSalesforceDate(iso, { month: "long", day: "numeric", year: "numeric" }) ?? "—";
+
+type Detail = { k: string; v: ReactNode };
+
+/** Renders only the rows that actually carry a value — a half-populated Salesforce record
+ *  should show a shorter card, not a grid of em-dashes. */
+function DetailGrid({ items }: { items: (Detail | null)[] }) {
+  const present = items.filter((item): item is Detail => item !== null);
+  if (present.length === 0) {
+    return null;
+  }
+  return (
+    <div className="kv">
+      {present.map((item) => (
+        <div key={item.k}>
+          <div className="k">{item.k}</div>
+          <div className="v">{item.v}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const MASKED_EIN = "••-•••••••";
+
+/** The EIN is the corporation's federal tax ID — the client genuinely needs it (their bank
+ *  asks for it when opening the business account), but it is PII that shouldn't sit in
+ *  plain view during a screen share, so it starts masked behind an explicit reveal. */
+function EinValue({ ein }: { ein: string }) {
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <>
+      {revealed ? ein : MASKED_EIN}
+      <button type="button" className="reveal" onClick={() => setRevealed(!revealed)}>
+        {revealed ? "Hide" : "Show"}
+      </button>
+    </>
+  );
+}
 
 /**
  * Order detail — one order, resolved from the `:id` route param and scoped server-side
@@ -94,24 +134,53 @@ export function OrderPage() {
                 </div>
               </div>
             </div>
-            <div className="kv">
-              <div>
-                <div className="k">Entity type</div>
-                <div className="v">{corp.entityType}</div>
-              </div>
-              <div>
-                <div className="k">State of formation</div>
-                <div className="v">{corp.stateOfFormation}</div>
-              </div>
-              <div>
-                <div className="k">Incorporated</div>
-                <div className="v">{formatDate(corp.incorporationDate)}</div>
-              </div>
-            </div>
+            <DetailGrid
+              items={[
+                { k: "Entity type", v: corp.entityType },
+                { k: "State of formation", v: corp.stateOfFormation },
+                { k: "Incorporated", v: formatDate(corp.incorporationDate) },
+                corp.corpNumber ? { k: "Corp #", v: corp.corpNumber } : null,
+                corp.registrationNumber ? { k: "Registration #", v: corp.registrationNumber } : null,
+                // EIN lives on Online_Order__c, but it identifies the corporation — this is
+                // where a client looks for "my company's tax ID".
+                order.ein ? { k: "EIN", v: <EinValue ein={order.ein} /> } : null,
+                order.einIssuedAt ? { k: "EIN issued", v: formatDate(order.einIssuedAt) } : null,
+                corp.duns ? { k: "D-U-N-S", v: corp.duns } : null,
+                corp.creditScore ? { k: "Credit score", v: corp.creditScore } : null,
+                corp.fundingCapacity !== null
+                  ? { k: "Funding capacity", v: money(corp.fundingCapacity) }
+                  : null,
+                corp.registeredAgentStatus
+                  ? { k: "Registered agent", v: corp.registeredAgentStatus }
+                  : null,
+                corp.lastAnnualReportDate
+                  ? { k: "Last annual report", v: formatDate(corp.lastAnnualReportDate) }
+                  : null,
+                corp.nextRenewalDate
+                  ? { k: "Next renewal", v: formatDate(corp.nextRenewalDate) }
+                  : null,
+              ]}
+            />
           </>
         ) : (
           <p className="statusnote">No shelf corporation is linked to this order yet.</p>
         )}
+      </div>
+
+      <div className="card">
+        <div className="card-h">Order details</div>
+        <DetailGrid
+          items={[
+            { k: "Order number", v: order.orderNumber },
+            order.placedAt ? { k: "Order date", v: formatDate(order.placedAt) } : null,
+            order.paymentMethod ? { k: "Payment method", v: order.paymentMethod } : null,
+            order.paymentFrequency ? { k: "Payment schedule", v: order.paymentFrequency } : null,
+            order.fullyPaidAt ? { k: "Paid in full", v: formatDate(order.fullyPaidAt) } : null,
+            order.statusUpdatedAt
+              ? { k: "Status last updated", v: formatDate(order.statusUpdatedAt) }
+              : null,
+          ]}
+        />
       </div>
 
       <div className="card">

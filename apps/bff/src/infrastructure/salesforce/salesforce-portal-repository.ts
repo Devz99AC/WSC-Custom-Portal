@@ -38,12 +38,31 @@ const isVerified = (statusSf: string | null): boolean =>
 
 const soqlEscape = (value: string): string => value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 
-const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Order_Date__c, SR_Name__c,
-              Payment_Method__c, Paid_Features_Selected__c, Client__c, Corp__c, Corp_Name__c,
+/** `Online_Order__c.EIN__c` is a NUMBER in Salesforce, so a leading zero is lost — pad back
+ *  to the 9 digits an EIN always has before formatting `XX-XXXXXXX`. Anything that isn't a
+ *  clean 9-digit value is dropped rather than shown half-formatted. */
+const formatEin = (value: unknown): string | null => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  const digits = String(Math.trunc(value)).padStart(9, "0");
+  return digits.length === 9 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : null;
+};
+
+const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Status_Date__c,
+              Order_Date__c, Fully_Paid_Date__c, SR_Name__c, Payment_Method__c,
+              Payment_Frequency__c, Paid_Features_Selected__c, Client__c, Corp__c, Corp_Name__c,
               Client__r.Name, Client__r.E_Mail__c, Client__r.Phone__c, Client__r.Cell_Phone__c,
               Client__r.Legal_Name_of_Business__c, Client__r.Trade_Name__c,
               Corp__r.Name, Corp__r.Type__c, Corp__r.Jurisdiction__c, Corp__r.Incorporation_Date__c,
-              Corp__r.Age__c, Corp__r.Client_Price__c, Corp__r.DUNS__c`;
+              Corp__r.Age__c, Corp__r.Client_Price__c, Corp__r.DUNS__c, Corp__r.Corp__c,
+              Corp__r.Registration__c, Corp__r.Credit_Score__c, Corp__r.Funding_Capacity__c,
+              Corp__r.Last_Annual_Report__c, Corp__r.Next_Annual_Report__c, Corp__r.RA_Status__c`;
+
+/** Detail-only projection. The EIN is sensitive PII (CLAUDE.md §3), so it is fetched only
+ *  for the single-order view that actually displays it and never travels in the list
+ *  payload — `Order.ein` is therefore always `null` on orders returned by `listOrders*`. */
+const ORDER_DETAIL_SELECT = `${ORDER_SELECT}, EIN__c, EIN_Date_Issued__c`;
 
 // List queries stay bounded per CLAUDE.md §1 — a client with more orders/payments than
 // these only sees the most recent MAX_* in the relevant list.
@@ -87,7 +106,7 @@ export class SalesforcePortalRepository implements PortalRepository {
     const safeEmail = soqlEscape(email);
     const safeOrderId = soqlEscape(orderId);
     const orders = await this.query(
-      `SELECT ${ORDER_SELECT}
+      `SELECT ${ORDER_DETAIL_SELECT}
        FROM Online_Order__c
        WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}' AND Id = '${safeOrderId}'
        LIMIT 1`,
@@ -192,6 +211,14 @@ export class SalesforcePortalRepository implements PortalRepository {
           price: typeof corpRel.Client_Price__c === "number" ? corpRel.Client_Price__c : null,
           duns: str(corpRel.DUNS__c),
           creditReadyFeatures: features,
+          corpNumber: str(corpRel.Corp__c),
+          registrationNumber: str(corpRel.Registration__c),
+          creditScore: str(corpRel.Credit_Score__c),
+          fundingCapacity:
+            typeof corpRel.Funding_Capacity__c === "number" ? corpRel.Funding_Capacity__c : null,
+          lastAnnualReportDate: str(corpRel.Last_Annual_Report__c),
+          nextRenewalDate: str(corpRel.Next_Annual_Report__c),
+          registeredAgentStatus: str(corpRel.RA_Status__c),
         }
       : null;
 
@@ -214,9 +241,15 @@ export class SalesforcePortalRepository implements PortalRepository {
       paidToDate,
       balanceDue: Math.max(amount - paidToDate, 0),
       statusSf: str(orderRecord.Status__c) ?? "",
+      statusUpdatedAt: str(orderRecord.Status_Date__c),
       placedAt: str(orderRecord.Order_Date__c),
+      fullyPaidAt: str(orderRecord.Fully_Paid_Date__c),
       advisorName: str(orderRecord.SR_Name__c),
       paymentMethod: str(orderRecord.Payment_Method__c) ? toMethod(orderRecord.Payment_Method__c) : null,
+      paymentFrequency: str(orderRecord.Payment_Frequency__c),
+      // Absent from the list projection by design (ORDER_DETAIL_SELECT) — resolves to null there.
+      ein: formatEin(orderRecord.EIN__c),
+      einIssuedAt: str(orderRecord.EIN_Date_Issued__c),
       shelfCorp,
       clientId: str(orderRecord.Client__c) ?? "",
     };

@@ -2,11 +2,12 @@ import { Link } from "react-router-dom";
 import { useOrders } from "../hooks/useOrders";
 import { usePayments } from "../hooks/usePayments";
 import { UnauthorizedError } from "../api/client";
+import { formatSalesforceDate } from "../lib/date";
 
 const money = (n: number): string => `$${n.toLocaleString("en-US")}`;
 
 const formatDate = (iso: string | null): string =>
-  iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—";
+  formatSalesforceDate(iso, { month: "short", day: "numeric", year: "numeric" }) ?? "—";
 
 /** "Payments" — every payment across every one of the client's orders, with totals
  *  aggregated across orders (not just one). Each row links back to its order. */

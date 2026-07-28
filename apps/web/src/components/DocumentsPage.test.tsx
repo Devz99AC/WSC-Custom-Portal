@@ -2,54 +2,12 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_CLIENT, makeOrder, makePendingOrder } from "../test/fixtures";
 import { DocumentsPage } from "./DocumentsPage";
 
 const ORDERS_RESPONSE = {
-  client: {
-    id: "c1",
-    email: "m.brown@acmeholdings.com",
-    name: "Marcus Brown",
-    phone: null,
-    businessName: "Acme Holdings LLC",
-  },
-  orders: [
-    {
-      id: "o1",
-      orderNumber: "UO1423103",
-      amount: 6200,
-      paidToDate: 0,
-      balanceDue: 6200,
-      statusSf: "Pending Balance",
-      placedAt: "2026-07-20",
-      advisorName: "Rinkie S.",
-      paymentMethod: "Credit Card",
-      shelfCorp: null,
-      clientId: "c1",
-    },
-    {
-      id: "o2",
-      orderNumber: "UO1423102",
-      amount: 8750,
-      paidToDate: 8750,
-      balanceDue: 0,
-      statusSf: "Verified - Initial Contact",
-      placedAt: "2026-05-02",
-      advisorName: "Rinkie S.",
-      paymentMethod: "Wire Transfer",
-      shelfCorp: {
-        id: "s1",
-        name: "2016 Wyoming LLC",
-        entityType: "LLC",
-        stateOfFormation: "Wyoming",
-        incorporationDate: "2016-03-15",
-        agedYears: 8,
-        price: 8750,
-        duns: "07-891-2345",
-        creditReadyFeatures: [],
-      },
-      clientId: "c1",
-    },
-  ],
+  client: TEST_CLIENT,
+  orders: [makePendingOrder(), makeOrder()],
 };
 
 describe("DocumentsPage", () => {

@@ -33,6 +33,13 @@ export const shelfCorpSchema = z.object({
   price: z.number().nullable(),
   duns: z.string().nullable(),
   creditReadyFeatures: z.array(z.string()),
+  corpNumber: z.string().nullable(),
+  registrationNumber: z.string().nullable(),
+  creditScore: z.string().nullable(),
+  fundingCapacity: z.number().nullable(),
+  lastAnnualReportDate: z.string().nullable(),
+  nextRenewalDate: z.string().nullable(),
+  registeredAgentStatus: z.string().nullable(),
 });
 
 export const paymentSchema = z.object({
@@ -54,9 +61,14 @@ export const orderSchema = z.object({
   paidToDate: z.number().nonnegative(),
   balanceDue: z.number(),
   statusSf: z.string(),
+  statusUpdatedAt: z.string().nullable(),
   placedAt: z.string().nullable(),
+  fullyPaidAt: z.string().nullable(),
   advisorName: z.string().nullable(),
   paymentMethod: paymentMethodSchema.nullable(),
+  paymentFrequency: z.string().nullable(),
+  ein: z.string().nullable(),
+  einIssuedAt: z.string().nullable(),
   shelfCorp: shelfCorpSchema.nullable(),
   clientId: z.string().min(1),
 });

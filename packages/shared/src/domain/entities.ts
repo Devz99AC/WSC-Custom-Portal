@@ -20,7 +20,13 @@ export interface Client {
 
 export type ShelfCorpStatus = "Available" | "Reserved" | "Sold";
 
-/** The shelf corporation product — Salesforce `SC_Corp__c`. */
+/** The shelf corporation product — Salesforce `SC_Corp__c`.
+ *
+ *  Deliberately a small subset of the object: `SC_Corp__c` also carries WSC's own
+ *  commercial data (`Invested_Amount__c`, `Payback_*`, `Reseller_*`, `Total_Revenues_*`,
+ *  `Incorporation_Cost__c`) and operational credentials (`WP_Login__c`/`WP_Password__c`,
+ *  `Secret_Code__c`). None of that belongs in a client-facing DTO — only fields the buyer
+ *  legitimately needs about the corp they own are mapped here. */
 export interface ShelfCorp {
   id: string; // SC_Corp__c.Id
   name: string; // Corp_Name / Name
@@ -31,6 +37,13 @@ export interface ShelfCorp {
   price: number | null; // Client_Price__c
   duns: string | null; // DUNS__c
   creditReadyFeatures: string[]; // derived from Paid_Features_Selected__c
+  corpNumber: string | null; // Corp__c — WSC's corp reference (e.g. "SCC415386")
+  registrationNumber: string | null; // Registration__c — state filing number
+  creditScore: string | null; // Credit_Score__c (free text, e.g. "80 Paydex")
+  fundingCapacity: number | null; // Funding_Capacity__c — credit the corp can support
+  lastAnnualReportDate: string | null; // Last_Annual_Report__c (ISO-8601)
+  nextRenewalDate: string | null; // Next_Annual_Report__c — "Next Renewal Date" (ISO-8601)
+  registeredAgentStatus: string | null; // RA_Status__c
 }
 
 export type PaymentMethod =
@@ -65,9 +78,18 @@ export interface Order {
   paidToDate: number; // Total_Payments__c
   balanceDue: number; // Amount__c − Total_Payments__c (derived)
   statusSf: string; // Status__c (raw SF value; interpret via orderStage* helpers)
+  statusUpdatedAt: string | null; // Status_Date__c — when the stage last moved (ISO-8601)
   placedAt: string | null; // Order_Date__c (ISO-8601)
+  fullyPaidAt: string | null; // Fully_Paid_Date__c — when the balance reached zero (ISO-8601)
   advisorName: string | null; // SR_Name__c / Sales_Rep__c.Name
   paymentMethod: PaymentMethod | null; // Payment_Method__c
+  paymentFrequency: string | null; // Payment_Frequency__c (e.g. "One-Time")
+  /** The corp's federal tax ID — `EIN__c`, formatted `XX-XXXXXXX` from the raw SF number.
+   *  Sensitive PII (CLAUDE.md §3): it reaches the client only because row-level authz
+   *  guarantees this is their OWN order, it is never logged, and the UI keeps it masked
+   *  behind an explicit reveal. Do not add it to list endpoints or to any log line. */
+  ein: string | null;
+  einIssuedAt: string | null; // EIN_Date_Issued__c (ISO-8601)
   shelfCorp: ShelfCorp | null; // Corp__c → SC_Corp__c
   clientId: string; // Client__c → FU_User__c
 }
