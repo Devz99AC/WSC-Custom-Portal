@@ -64,7 +64,17 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     if (!parsed.success) {
       return reply.code(400).send({ error: "A valid email is required" });
     }
-    await deps.requestMagicLink.execute(parsed.data.email);
+
+    try {
+      await deps.requestMagicLink.execute(parsed.data.email);
+    } catch (error) {
+      // A delivery failure must NOT change the response: we only ever attempt a send for
+      // an email that matched a client, so surfacing the error (or a 5xx) here would leak
+      // exactly the account-existence bit REQUEST_LINK_RESPONSE exists to hide. Log it
+      // server-side for the operator and stay silent to the caller (CLAUDE.md §2 — never
+      // bubble raw upstream errors to the client).
+      request.log.error({ err: error }, "magic-link delivery failed");
+    }
     return REQUEST_LINK_RESPONSE;
   });
 

@@ -38,15 +38,31 @@ const envSchema = z.object({
   APP_BASE_URL: z.string().url().default("http://localhost:5173"),
 
   // Email delivery for the magic-link. "console" (default, dev) logs the link instead of
-  // sending it. "smtp" sends via Google Workspace (or any SMTP account) — no separate
-  // transactional-email vendor, reuses a mailbox WSC already pays for.
-  EMAIL_SENDER: z.enum(["console", "smtp"]).default("console"),
+  // sending it. "resend" is what PRODUCTION uses — an HTTPS API, because Railway blocks
+  // outbound SMTP (verified 2026-07-24). "gmail-api" is an equivalent HTTPS path through
+  // the Workspace mailbox WSC already pays for, parked because it needs Workspace
+  // super-admin access to set up. "smtp" still works on hosts that allow SMTP, and locally.
+  EMAIL_SENDER: z.enum(["console", "smtp", "gmail-api", "resend"]).default("console"),
   SMTP_HOST: z.string().min(1).default("smtp.gmail.com"),
   SMTP_PORT: z.coerce.number().int().positive().default(587),
   SMTP_USER: z.string().min(1).optional(),
   SMTP_PASSWORD: z.string().min(1).optional(),
   SMTP_FROM_EMAIL: z.string().email().optional(),
   SMTP_FROM_NAME: z.string().min(1).default("WSC Client Portal"),
+
+  // Gmail API (EMAIL_SENDER=gmail-api). Required trio checked in the composition root,
+  // matching how the Salesforce JWT vars are handled. The private key accepts either the
+  // PEM contents directly or a path to the file (local dev) — see infrastructure/crypto/pem.ts.
+  GMAIL_SA_CLIENT_EMAIL: z.string().email().optional(),
+  GMAIL_SA_PRIVATE_KEY: z.string().min(1).optional(),
+  // The Workspace mailbox the service account sends as. Defaults to SMTP_FROM_EMAIL so a
+  // host switching transports doesn't have to duplicate the same address twice.
+  GMAIL_IMPERSONATED_USER: z.string().email().optional(),
+
+  // Resend (EMAIL_SENDER=resend). The "from" identity is shared with the other transports
+  // via SMTP_FROM_EMAIL / SMTP_FROM_NAME above — the SMTP_ prefix is historical, those two
+  // are transport-agnostic, so switching transports doesn't mean re-entering the address.
+  RESEND_API_KEY: z.string().min(1).optional(),
 
   // Optional. When set, the magic-link store persists to Redis instead of an
   // in-memory Map — required once more than one BFF instance runs, or to survive

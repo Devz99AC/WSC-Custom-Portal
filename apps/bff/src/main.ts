@@ -19,6 +19,8 @@ import { InMemoryMagicLinkStore } from "./infrastructure/auth/in-memory-magic-li
 import { RedisMagicLinkStore } from "./infrastructure/auth/redis-magic-link-store.js";
 import { createConsoleEmailSender } from "./infrastructure/email/console-email-sender.js";
 import { createSmtpEmailSender } from "./infrastructure/email/smtp-email-sender.js";
+import { createGmailApiEmailSender } from "./infrastructure/email/gmail-api-email-sender.js";
+import { createResendEmailSender } from "./infrastructure/email/resend-email-sender.js";
 import { renderMagicLinkEmail } from "./infrastructure/email/magic-link-template.js";
 import { buildServer } from "./infrastructure/http/server.js";
 
@@ -48,6 +50,33 @@ function buildMagicLinkStore(env: Env): { store: MagicLinkStore; redisClient: Re
 }
 
 function buildEmailSender(env: Env): EmailSender {
+  if (env.EMAIL_SENDER === "resend") {
+    if (!env.RESEND_API_KEY || !env.SMTP_FROM_EMAIL) {
+      throw new Error("RESEND_API_KEY and SMTP_FROM_EMAIL are required when EMAIL_SENDER=resend");
+    }
+    return createResendEmailSender({
+      apiKey: env.RESEND_API_KEY,
+      fromEmail: env.SMTP_FROM_EMAIL,
+      fromName: env.SMTP_FROM_NAME,
+    });
+  }
+
+  if (env.EMAIL_SENDER === "gmail-api") {
+    const impersonatedUser = env.GMAIL_IMPERSONATED_USER ?? env.SMTP_FROM_EMAIL;
+    if (!env.GMAIL_SA_CLIENT_EMAIL || !env.GMAIL_SA_PRIVATE_KEY || !impersonatedUser) {
+      throw new Error(
+        "GMAIL_SA_CLIENT_EMAIL, GMAIL_SA_PRIVATE_KEY and GMAIL_IMPERSONATED_USER (or SMTP_FROM_EMAIL) are required when EMAIL_SENDER=gmail-api",
+      );
+    }
+    return createGmailApiEmailSender({
+      clientEmail: env.GMAIL_SA_CLIENT_EMAIL,
+      privateKey: env.GMAIL_SA_PRIVATE_KEY,
+      impersonatedUser,
+      fromEmail: env.SMTP_FROM_EMAIL ?? impersonatedUser,
+      fromName: env.SMTP_FROM_NAME,
+    });
+  }
+
   if (env.EMAIL_SENDER !== "smtp") {
     return createConsoleEmailSender();
   }
