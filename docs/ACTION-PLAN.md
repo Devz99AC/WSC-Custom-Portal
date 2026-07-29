@@ -1,7 +1,27 @@
-# WSC Customer Portal — Action Plan (actualizado 2026-07-22, post-feedback del stakeholder)
+# WSC Customer Portal — Action Plan (histórico: 2026-07-22, post-feedback del stakeholder)
 
+> # ⛔ ESTE CHECKLIST YA NO ES EL VIGENTE — congelado el 2026-07-22
+>
+> **La secuencia que se está ejecutando es [`execution-roadmap.html`](execution-roadmap.html) —
+> 9/15 al 2026-07-29.** Se reestructuró el 2026-07-24 alrededor del eje **lectura vs escritura**
+> (directiva del stakeholder: primero todo lo que solo lee de la base de datos), que es un
+> ordenamiento distinto al de las fases P1–P6 de este archivo.
+>
+> Cambios de fondo posteriores a este documento que lo dejan desalineado:
+> - **Los tickets de soporte pasaron a diferidos** — el objeto que se asumía (`Case`) **no se usa
+>   en producción** de esta org. De ahí salió la pregunta abierta Q5.
+> - **Refer a Friend se partió por la costura lectura/escritura**: la lista de referidos se puede
+>   construir, el formulario de enviar un lead no (escribe, y depende de Q3).
+> - **Q1 y Q2 se cerraron** sobre la marcha ([`checkpoint-q1-q2.md`](checkpoint-q1-q2.md)); solo
+>   quedan Q3–Q6 para el CEO.
+>
+> Se conserva por el **feedback textual del stakeholder** que hay más abajo, que sigue siendo la
+> fuente de qué pidió y con qué palabras. Para saber qué está construido, el roadmap.
+>
+> ---
+>
 > Para el historial completo (qué se descubrió, qué falló, por qué) ver
-> [`STATUS.md`](STATUS.md). Este doc es el checklist accionable, **priorizado por
+> [`STATUS.md`](STATUS.md). Este doc **era** el checklist accionable, **priorizado por
 > qué se puede hacer AHORA sin depender de Salesforce ni de acceso de admin**.
 
 ## Estado

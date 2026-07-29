@@ -9,13 +9,34 @@ e-sign via **Formstack Documents**), support, a referral program, and a learning
 front of it. See [`CLAUDE.md`](CLAUDE.md), [`ROADMAP.md`](ROADMAP.md), and
 [`docs/`](docs/) for the authoritative architecture and plan.
 
-> **Status (2026-07-22):** live in **staging/production** — frontend on Vercel
+> ## 📌 Current status — 2026-07-29 · **9 of 15 steps**
+>
+> **The live checklist is [`docs/execution-roadmap.html`](docs/execution-roadmap.html)** (open in
+> a browser — the progress bar is computed from the file itself). Treat it as the current-state
+> source of truth; everything else in `docs/` is history and rationale.
+>
+> Six sections live behind Basic Auth, reading real Salesforce data: **Orders · Payments ·
+> Documents · Learning Center · Support · Profile**. Real magic-link login delivered over
+> Resend's HTTPS API (Railway blocks outbound SMTP). Typed Salesforce error classification.
+> Gates green: typecheck 4/4, lint clean, build 3/3, 87 tests.
+>
+> **Blocking go-live: step 10 (DNS).** Until `wholesaleshelfcorporations.com` is verified as a
+> sending domain in Resend, magic-link emails only reach the Resend account owner — no real
+> client can sign in. ⚠️ Merge the Resend SPF **into** the existing Google Workspace record; two
+> SPF records invalidate both and break the team's normal email.
+>
+> <details><summary>Historical status (2026-07-22) — kept for context</summary>
+>
+> live in **staging/production** — frontend on Vercel
 > (`wsc-custom-portal-web.vercel.app`, behind HTTP Basic Auth), BFF on Railway with Redis, real
 > **magic-link login** (ADR-0005) and **`PORTAL_DATA_SOURCE=salesforce-jwt`** reading real
 > Salesforce data through a least-privilege integration user. Adapters: `mock` (default, sample
 > data), `salesforce` (dev, reuses the `sf` CLI session), `salesforce-jwt` (OAuth 2.0 JWT Bearer).
-> **👉 Current state: [`docs/STATUS.md`](docs/STATUS.md). Plan (post-stakeholder-feedback, fases
-> P1–P6): [`docs/ACTION-PLAN.md`](docs/ACTION-PLAN.md).**
+> Those docs ([`docs/STATUS.md`](docs/STATUS.md), [`docs/ACTION-PLAN.md`](docs/ACTION-PLAN.md))
+> stopped being updated on 2026-07-22 — read them for *why* decisions were made, not for what is
+> built today.
+>
+> </details>
 
 ## Monorepo layout
 

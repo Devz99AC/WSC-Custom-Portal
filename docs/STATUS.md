@@ -1,6 +1,47 @@
 # WSC Customer Portal — Estado del proyecto y plan de acción
 
-> **Actualizado:** 2026-07-22 (corrección de staleness: el código JWT del BFF ya estaba
+> # ⛔ ESTE DOCUMENTO ES HISTÓRICO — dejó de actualizarse el 2026-07-22
+>
+> **El estado actual vive en [`execution-roadmap.html`](execution-roadmap.html) — 9/15 al
+> 2026-07-29.** Ábrelo en el navegador; la barra de progreso la calcula el propio archivo.
+>
+> Después de la fecha de este documento pasó **una semana entera de trabajo** que no está aquí:
+> Documents reales, detalle de orden enriquecido, pipeline de display de 4 pasos, las 3 figuras
+> de contacto, envío de correo por Resend, clasificador de errores de Salesforce, Learning Center
+> y la sección de Support. Resumen fiel abajo, en §0.
+>
+> Este archivo se conserva por el **rastro de razonamiento** — qué se descubrió, qué falló y por
+> qué se decidió lo que se decidió. No lo uses para saber qué está construido hoy.
+>
+> ---
+>
+> ## §0 — Lo que pasó DESPUÉS de este documento (2026-07-23 → 2026-07-29)
+>
+> Cada punto tiene su nota completa en el paso correspondiente de `execution-roadmap.html`.
+>
+> | # | Paso | Qué dejó |
+> | --- | --- | --- |
+> | 2 | **Documents** | Los adjuntos cuelgan **siempre** de `Online_Order__c`; la agrupación que ve el cliente es el **nombre del producto** (la corp). Descarga por streaming desde el BFF, nunca una URL de Salesforce en el navegador. |
+> | 3 | **Detalle de orden enriquecido** | Campos básicos de `SC_Corp__c` + `Online_Order__c`. **EIN enmascarado**, solo en el detalle. ⚠️ Añadir campos al SOQL **exige abrir FLS en el Permission Set** — se saltó ese paso una vez y **tumbó producción**. |
+> | 6 | **Pipeline de display (Q1 cerrado)** | 4 pasos: Unpaid → Initial Onboarding Call → Work Started → Complete. 🔑 `Status__c` **se filtra por record type**: el describe global miente (16 valores vs los 12 reales). Los `Cancelled - *` no se mapean; los `ON HOLD - *` re-derivan el progreso de los timestamps. |
+> | 7 | **Contactos reales (Q2 cerrado)** | **3 figuras**, las tres lookups a `SEOX3_Team_Member__c`. Antes del pago solo el Advisor; al verificarse el pago desaparece y salen los dos de soporte. Se **borró el nombre "Lua" hardcodeado** que veían clientes reales. |
+> | 9 | **Envío de correo (Resend)** | ⚠️ **Railway bloquea SMTP saliente** — verificado, TCP a 587 y 465 expiran y HTTPS no. El camino de Google Workspace era un callejón sin salida; se construyó un adaptador de API HTTPS. |
+> | 13 | **Errores de Salesforce tipados** | Motivado por la caída del 28: un `INVALID_FIELD` **contiene el SOQL completo** y salía crudo en un 500. Ahora se clasifica contra la forma real del error. `REQUEST_LIMIT_EXCEEDED` **a propósito no se reintenta** — el presupuesto es de 24h. |
+> | 12 | **Learning Center** | Índice que despliega el video en el sitio, con el video abierto **en la URL** para que soporte pueda enlazar uno concreto. El `<iframe>` solo se monta al abrir. Los 3 videos son **marcadores**. |
+> | 11 | **Support** | Lista de **personas, no de órdenes**, deduplicadas entre órdenes. Se añadió **a qué corresponde cada rol** — dato que Salesforce no guarda. Sin formulario de tickets a propósito (Q5). |
+>
+> **Q1 y Q2 quedaron CERRADOS** en el proceso ([`checkpoint-q1-q2.md`](checkpoint-q1-q2.md)).
+> A la reunión con el CEO ya solo van **Q3** (referidos), **Q4** (chat/AI), **Q5** (qué es
+> "soporte") y **Q6** (¿se le muestran las `Note` al cliente?).
+>
+> **Lo único que bloquea el go-live es el paso 10 (DNS).** Mientras el remitente sea
+> `onboarding@resend.dev`, el correo solo llega al dueño de la cuenta de Resend — ningún cliente
+> real puede entrar. ⚠️ El SPF de Resend hay que **fusionarlo** con el de Google Workspace que ya
+> existe; dos registros SPF invalidan ambos y tumban también el correo normal del equipo.
+>
+> ---
+>
+> **Actualizado (histórico):** 2026-07-22 (corrección de staleness: el código JWT del BFF ya estaba
 > implementado y los pagos ya estaban sembrados; estado del sandbox **re-verificado en vivo**
 > vía `sf data query` con el alias `wsc-jwt`) · **Rama:** todo mergeado a `main` (fast-forward limpio
 > desde `phase-0-foundations`, pusheado a origin). `phase-0-foundations` sigue existiendo

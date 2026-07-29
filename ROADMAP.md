@@ -7,10 +7,23 @@
 >
 > **SSOT:** Salesforce · **Companion doc:** [`docs/ARCHITECTURE-AND-ROADMAP.md`](docs/ARCHITECTURE-AND-ROADMAP.md) (deep rationale / justificación profunda).
 >
-> 📌 **Live status (2026-07-22):** Phase 0 done; magic-link auth (ADR-0005), 5 views in React,
-> staging live (Vercel + Railway + Redis behind Basic Auth) and **`salesforce-jwt` in PRODUCTION**
-> with a least-privilege integration user. Current state: [`docs/STATUS.md`](docs/STATUS.md);
-> actionable plan: [`docs/ACTION-PLAN.md`](docs/ACTION-PLAN.md).
+> ⚠️ **This document is the ORIGINAL greenfield plan (frozen 2026-07-22) and is no longer the
+> execution sequence.** [ADR-0006](docs/adr/0006-post-sale-scope-descope-payments.md) descoped
+> Stripe/checkout, the anti-double-sale reservation and client-side document upload; the phases
+> below still describe them. Keep this for the depth-of-scope rationale per pillar.
+>
+> 📌 **What is actually being executed, and how far it has got, lives in
+> [`docs/execution-roadmap.html`](docs/execution-roadmap.html) — 9/15 as of 2026-07-29.** Open it
+> in a browser. Where this file and that one disagree, **that one wins**.
+>
+> <details><summary>Historical live status (2026-07-22)</summary>
+>
+> Phase 0 done; magic-link auth (ADR-0005), 5 views in React, staging live (Vercel + Railway +
+> Redis behind Basic Auth) and **`salesforce-jwt` in PRODUCTION** with a least-privilege
+> integration user. Pointed at [`docs/STATUS.md`](docs/STATUS.md) and
+> [`docs/ACTION-PLAN.md`](docs/ACTION-PLAN.md), both of which also stopped being updated that day.
+>
+> </details>
 >
 > ⚠️ **RE-SCOPE (2026-07-22) — stakeholder feedback defines the FINAL product scope.** The portal
 > is **post-sale** (order tracking, support, referrals, learning); new purchases go through the

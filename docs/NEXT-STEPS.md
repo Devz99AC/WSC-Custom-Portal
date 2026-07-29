@@ -1,12 +1,21 @@
 # WSC Customer Portal — Próximos Pasos (post Grupo A+B+C)
 
-> **Snapshot al 2026-07-22.** Este documento es una foto explicada del plan a partir de
-> hoy — para el estado vivo y el detalle línea por línea, la fuente de verdad sigue siendo
-> [`STATUS.md`](STATUS.md) (historial completo) y [`ACTION-PLAN.md`](ACTION-PLAN.md)
-> (checklist accionable). Úsalo como briefing de arranque para retomar el trabajo, no como
-> reemplazo de esos dos.
+> # ⛔ BRIEFING CADUCADO — foto del 2026-07-22
+>
+> Este archivo se escribió como *briefing de arranque* para retomar el trabajo. **Ya no sirve
+> para eso**: los "próximos pasos" que enumera abajo, en su mayoría, o están hechos o cambiaron
+> de forma.
+>
+> **Para retomar, abre [`execution-roadmap.html`](execution-roadmap.html) — 9/15 al 2026-07-29.**
+> Cada paso terminado lleva su propia nota de qué se decidió y por qué, que es exactamente lo que
+> este documento pretendía dar.
+>
+> Los tres archivos a los que apunta abajo ([`STATUS.md`](STATUS.md),
+> [`ACTION-PLAN.md`](ACTION-PLAN.md)) también se congelaron ese mismo día.
+>
+> ---
 
-## Dónde estamos
+## Dónde estábamos el 2026-07-22
 
 Grupo A, B y C del `ACTION-PLAN.md` están **completos y verificados en producción**:
 

@@ -15,6 +15,22 @@ A **post-sale Customer Portal** for **Wholesale Shelf Corporations (WSC)** where
 
 ---
 
+## 0.5 Where the project actually stands — read this before planning any work
+
+**The live checklist is [`docs/execution-roadmap.html`](docs/execution-roadmap.html).** Open it in a browser: the progress bar is computed from the file's own `.step.done` elements, so it can't disagree with its own contents. Every finished step carries a note on what was decided and why.
+
+> 📌 **State as of 2026-07-29: 9/15.** Live in staging (Vercel + Railway + Redis, behind HTTP Basic Auth), reading real Salesforce data through a least-privilege integration user. Six sections: **Orders · Payments · Documents · Learning Center · Support · Profile**. Gates: typecheck 4/4, lint clean, build 3/3, 87 tests.
+>
+> **The only real blocker to going live is step 10 (DNS).** Until the sending domain is verified in Resend, magic-link emails reach nobody but the Resend account owner — so no real client can sign in, no matter what else is built. ⚠️ The domain already has a Google Workspace SPF record; the Resend one must be **merged into it**, not added alongside. Two SPF records invalidate both and take down the team's normal email too.
+>
+> **Open CEO questions: Q3** (referral rules) · **Q4** (chat/AI tool) · **Q5** (what "support" concretely means) · **Q6** (are `Note` records shown to clients?). Q1 and Q2 are **closed** — see [`docs/checkpoint-q1-q2.md`](docs/checkpoint-q1-q2.md).
+
+**When you complete a step, update the roadmap file *and* the dated line above, together.** A count that only lives in one of the two is how a later session ends up planning against a state that no longer exists.
+
+⚠️ **`docs/STATUS.md`, `docs/ACTION-PLAN.md` and `docs/NEXT-STEPS.md` are HISTORICAL.** They were accurate on 2026-07-22 and are kept for the rationale trail — why things were decided, what was tried and failed. They are **not** a current-state source, and a week of work landed after them. Where they disagree with the execution roadmap, **the roadmap wins.**
+
+---
+
 ## 1. Salesforce integration rules
 
 Build all SFDC access through a single **`SalesforceClient` service** (dependency-injected). No component issues raw HTTP to SFDC.
