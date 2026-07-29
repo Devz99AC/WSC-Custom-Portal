@@ -393,6 +393,10 @@ a:hover {
   background: var(--wsc-warn-bg);
   color: var(--wsc-warn);
 }
+.b-bad {
+  background: rgba(200, 16, 46, 0.1);
+  color: var(--wsc-red);
+}
 
 /* ---------- TRACKER ---------- */
 .track {
@@ -431,6 +435,13 @@ a:hover {
   border-color: var(--wsc-red);
   color: #fff;
   box-shadow: 0 0 0 4px rgba(200, 16, 46, 0.16);
+}
+/* A paused order still shows where it got to, but the current step must not pulse like
+   work is happening — amber, no glow. */
+.track.paused .tstep.cur .ring {
+  background: var(--wsc-warn);
+  border-color: var(--wsc-warn);
+  box-shadow: none;
 }
 .tstep .tl {
   font-size: 9px;
@@ -581,6 +592,33 @@ a:hover {
   margin-top: 3px;
   line-height: 1.5;
 }
+/* Contact channels under a staff member — wrap on narrow screens instead of overflowing. */
+.contact-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 5px;
+}
+.contact-lines a {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--wsc-navy);
+  text-decoration: none;
+}
+.contact-lines a:hover {
+  text-decoration: underline;
+}
+/* Separates several contacts stacked in one card. */
+.card .prod + .prod {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--wsc-line);
+}
+.statusnote.handoff {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--wsc-line);
+}
 .kv {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -680,8 +718,9 @@ tr.rowlink:hover {
     flex-wrap: wrap;
     gap: 10px 0;
   }
+  /* 4 display steps — half-width wraps to a clean 2×2 instead of 3 + 1 orphan. */
   .tstep {
-    flex: 0 0 33.33%;
+    flex: 0 0 50%;
   }
   .tstep:not(:last-child)::after {
     display: none;

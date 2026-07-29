@@ -31,6 +31,31 @@ const DEMO_CLIENT: Client = {
   businessName: "Acme Holdings LLC",
 };
 
+const DEMO_ADVISOR = {
+  role: "advisor",
+  name: "Rinkie S.",
+  email: "rinkie@wholesaleshelfcorporations.com",
+  phone: "+1 (720) 534-2065",
+  whatsAppNumber: "+1 (720) 534-2065",
+} as const;
+
+// Real WSC support people (seen in production's Quality Control section on a live order).
+const DEMO_SUPPORT_MANAGER = {
+  role: "support-manager",
+  name: "Lua Espluga",
+  email: "lua@wholesaleshelfcorporations.com",
+  phone: "(720) 598-0685",
+  whatsAppNumber: "(720) 598-0685",
+} as const;
+
+const DEMO_BACKEND_SUPPORT = {
+  role: "backend-support",
+  name: "Rinki Gurjar",
+  email: "rinki@wholesaleshelfcorporations.com",
+  phone: "+1 (720) 534-2067",
+  whatsAppNumber: "+1 (720) 534-2067",
+} as const;
+
 const DEMO_ORDERS: Order[] = [
   {
     id: "a0Odemo0000000002",
@@ -40,9 +65,15 @@ const DEMO_ORDERS: Order[] = [
     balanceDue: 6200,
     statusSf: "Pending Balance",
     statusUpdatedAt: "2026-07-20T14:05:00.000Z",
+    onHoldReason: null,
     placedAt: "2026-07-20",
     fullyPaidAt: null,
-    advisorName: "Rinkie S.",
+    initialContactAt: null,
+    completedAt: null,
+    // Still pre-payment: the advisor owns this one, support hasn't taken over yet.
+    advisor: DEMO_ADVISOR,
+    supportManager: null,
+    backEndSupport: null,
     paymentMethod: "Credit Card",
     paymentFrequency: "One-Time",
     ein: null,
@@ -58,9 +89,14 @@ const DEMO_ORDERS: Order[] = [
     balanceDue: 0,
     statusSf: "Verified - Initial Contact",
     statusUpdatedAt: "2026-05-19T12:36:00.000Z",
+    onHoldReason: null,
     placedAt: "2026-05-02",
     fullyPaidAt: "2026-05-08",
-    advisorName: "Rinkie S.",
+    initialContactAt: "2026-05-19",
+    completedAt: null,
+    advisor: DEMO_ADVISOR,
+    supportManager: DEMO_SUPPORT_MANAGER,
+    backEndSupport: DEMO_BACKEND_SUPPORT,
     paymentMethod: "Wire Transfer",
     paymentFrequency: "One-Time",
     ein: "88-1234567",

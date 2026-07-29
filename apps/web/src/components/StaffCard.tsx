@@ -1,4 +1,11 @@
-import { isPostPaymentStage, type Order } from "@wsc/shared";
+import {
+  STAFF_ROLE_LABELS,
+  staffRolesForStatus,
+  whatsAppLink,
+  type Order,
+  type StaffContact,
+  type StaffRole,
+} from "@wsc/shared";
 
 const initials = (name: string): string =>
   name
@@ -8,60 +15,72 @@ const initials = (name: string): string =>
     .slice(0, 2)
     .toUpperCase();
 
-/**
- * Mock post-purchase Implementation Manager — the org doesn't have a confirmed field for
- * this role yet (ACTION-PLAN Q2/Q5: candidate is `QC_Agent__c`, pending stakeholder
- * confirmation). "Lua" is the stakeholder's own example name from the feedback session,
- * not an invented one — the phone is a placeholder until the real field lands, flagged
- * as such in the UI rather than presented as a working number.
- */
-const IMPLEMENTATION_MANAGER = {
-  role: "Implementation Manager",
-  name: "Lua",
-  phone: null,
-};
-
-/** Real advisor contact channel — the same "call your advisor" number already used in
- *  the magic-link email template (infrastructure/email/magic-link-template.ts). */
-const ADVISOR_PHONE = "+1 (720) 534-2065";
-
-interface StaffCardProps {
-  order: Order;
-}
-
-/**
- * "Your point of contact" — hands off from the pre-payment Sales Advisor (real name from
- * `Sales_Rep__c`, already live) to the post-payment Implementation Manager (mock — the
- * real field lands once Q2 is confirmed, ACTION-PLAN F1) based on the order's own status.
- */
-export function StaffCard({ order }: StaffCardProps) {
-  const postPayment = isPostPaymentStage(order.statusSf);
-
-  const role = postPayment ? IMPLEMENTATION_MANAGER.role : "Sales Advisor";
-  const name = postPayment ? IMPLEMENTATION_MANAGER.name : (order.advisorName ?? "Not yet assigned");
-  const phone = postPayment ? IMPLEMENTATION_MANAGER.phone : (order.advisorName ? ADVISOR_PHONE : null);
+function ContactRow({ contact }: { contact: StaffContact }) {
+  const whatsApp = whatsAppLink(contact.whatsAppNumber);
 
   return (
-    <div className="card">
-      <div className="card-h">Your point of contact</div>
-      <div className="prod">
-        <div className="ava" style={{ width: "44px", height: "44px", fontSize: "15px" }}>
-          {initials(name)}
-        </div>
-        <div>
-          <div className="pn">{name}</div>
-          <div className="pd">
-            {role}
-            {phone ? ` · ${phone}` : ""}
-          </div>
-          {postPayment && (
-            <div className="pd" style={{ marginTop: "4px" }}>
-              Direct contact info is pending confirmation — reach out via Support in the
-              meantime.
-            </div>
+    <div className="prod">
+      <div className="ava" style={{ width: "44px", height: "44px", fontSize: "15px" }}>
+        {initials(contact.name)}
+      </div>
+      <div>
+        <div className="pn">{contact.name}</div>
+        <div className="pd">{STAFF_ROLE_LABELS[contact.role]}</div>
+        <div className="contact-lines">
+          {contact.email && <a href={`mailto:${contact.email}`}>{contact.email}</a>}
+          {contact.phone && <a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a>}
+          {whatsApp && (
+            <a href={whatsApp} target="_blank" rel="noreferrer">
+              WhatsApp
+            </a>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+const CONTACT_BY_ROLE = (order: Order): Record<StaffRole, StaffContact | null> => ({
+  advisor: order.advisor,
+  "support-manager": order.supportManager,
+  "backend-support": order.backEndSupport,
+});
+
+/**
+ * "Your point of contact." Which people appear is decided by the order's own status
+ * (`staffRolesForStatus`): the Sales Advisor while the sale is still open, then the two
+ * support roles once payment is verified.
+ *
+ * Nothing here is invented. A role whose Salesforce lookup is empty renders as "not yet
+ * assigned" rather than a placeholder name — real clients read this card, and a made-up
+ * contact is worse than an honest gap.
+ */
+export function StaffCard({ order }: { order: Order }) {
+  const roles = staffRolesForStatus(order.statusSf);
+  const byRole = CONTACT_BY_ROLE(order);
+  const handedOff = !roles.includes("advisor");
+
+  return (
+    <div className="card">
+      <div className="card-h">{roles.length > 1 ? "Your points of contact" : "Your point of contact"}</div>
+
+      {roles.map((role) => {
+        const contact = byRole[role];
+        return contact ? (
+          <ContactRow key={role} contact={contact} />
+        ) : (
+          <p key={role} className="statusnote">
+            {STAFF_ROLE_LABELS[role]} — not yet assigned. Your team will introduce them shortly.
+          </p>
+        );
+      })}
+
+      {handedOff && (
+        <p className="statusnote handoff">
+          Your sales advisor&apos;s part is complete now that the sale has closed. From here
+          on, everything about this order goes through the support contacts above.
+        </p>
+      )}
     </div>
   );
 }

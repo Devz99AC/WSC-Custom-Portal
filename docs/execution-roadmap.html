@@ -359,24 +359,26 @@
 
     <div class="phase-label">Fase B — lectura desbloqueada por el checkpoint</div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">6</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Pipeline corregido — mapping de display</span><span class="tag ya">Ya</span></div>
           <div class="desc">Tabla de mapeo en <code>packages/shared</code> según lo acordado en Q1 — labels como data, nunca hardcoded. Sigue siendo solo lectura: no toca el picklist real de Salesforce.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-28 — Q1 quedó cerrado en el proceso.</strong> Mapa final en <code>docs/pipeline-display-map.md</code>: <strong>4 pasos</strong> (Unpaid → Initial Onboarding Call → Work Started → Complete). Se eliminaron dos pasos de la lista original: la "Onboarding call" era duplicado del paso 2, y "Corp docs shipped" no va porque el envío ocurre el mismo día dentro de Work Started.<br>🔑 <strong>El hallazgo que lo destrabó:</strong> <code>Status__c</code> <strong>se filtra por record type</strong>. El describe global devuelve 16 valores, pero el record type WSC solo expone 12 — las 3 etapas de envío que yo había modelado <strong>no pueden ocurrir en una orden WSC</strong>. Con eso, los dos "conflictos" del documento anterior desaparecieron solos. Segunda trampa: el <em>value</em> de <code>ON HOLD - Client's Unresponsive</code> lleva apóstrofo y el <em>label</em> en pantalla no.<br>Los <code>Cancelled - *</code> no se mapean (sin barra, solo aviso; el badge dice "Cancelled" a secas porque los motivos son contabilidad interna). Los <code>ON HOLD - *</code> mantienen la barra con badge y motivo — y como pasar a ON HOLD <strong>sobrescribe</strong> la etapa, el progreso se re-deriva de los timestamps (<code>TimeStamp_Verified_IC__c</code>, <code>TimeStamp_Verified_Complete__c</code>) en vez de adivinarse.<br>Los 3 campos nuevos necesitaron FLS en el Permission Set — <strong>detectado antes de desplegar</strong> esta vez, verificando con <code>-o wsc-integration</code>.</div>
         </div>
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">7</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
-          <div class="top"><span class="title">Advisor / Implementation Manager — contacto real</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Reemplaza el mock del paso 1: agregar <code>Sales_Rep__c</code> / el campo confirmado en Q2 al SOQL y al Permission Set (FLS campo por campo, como en G3).</div>
+          <div class="top"><span class="title">Advisor / Soporte — contacto real (3 figuras)</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Reemplaza el mock del paso 1 con los contactos reales de Salesforce, y aplica la regla de traspaso de la venta al soporte.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-28 — Q2 quedó cerrado en el proceso.</strong> El stakeholder definió <strong>3 figuras</strong>, y resultó que las tres ya son lookups al mismo objeto <code>SEOX3_Team_Member__c</code>: <code>Sales_Rep__c</code> (Advisor), <code>QC_Agent__c</code> (Support Manager) y <code>Back_End_Worker__c</code> (Back-End Support). Cada una aporta nombre, e-mail, teléfono y WhatsApp.<br><strong>Regla de traspaso:</strong> antes del pago se ve solo el Advisor; en cuanto el pago se verifica el Advisor <em>desaparece</em> y salen los dos de soporte, con una nota explicando que la comunicación pasa a soporte al cerrarse la venta.<br>🗑️ <strong>Se eliminó el nombre inventado "Lua" del código</strong> — estaba hardcodeado y se le mostraba a clientes reales. Ahora un rol sin asignar dice "not yet assigned" en vez de fabricar una persona.<br>Decisiones: el e-mail sale de <code>WSC_EMail__c</code> con respaldo en <code>Corporate_E_Mail__c</code> — <strong>nunca</strong> del <code>QC_Agent_E_Mail__c</code> de la orden, que pese a su nombre es una fórmula que genera un buzón genérico <code>QC@dominio</code> y haría creer al cliente que escribe a esa persona. El nombre del Advisor cae de vuelta a <code>SR_Name__c</code>, que es lo que las órdenes reales tienen lleno hoy. Los links de WhatsApp se construyen con <code>wa.me</code> quitando todo lo que no sea dígito.<br>⚠️ Requirió <strong>acceso de lectura a un objeto nuevo</strong> (<code>SEOX3_Team_Member__c</code>) en el Permission Set, no solo FLS. Sigue sin <code>ViewAllRecords</code>: el sharing normal alcanza (verificado).</div>
         </div>
       </div>
     </div>

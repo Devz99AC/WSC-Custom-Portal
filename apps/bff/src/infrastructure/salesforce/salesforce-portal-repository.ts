@@ -10,6 +10,8 @@ import {
   type PaymentsList,
   type PortalDocument,
   type ShelfCorp,
+  type StaffContact,
+  type StaffRole,
 } from "@wsc/shared";
 import type {
   ClientIdentity,
@@ -59,7 +61,19 @@ const formatEin = (value: unknown): string | null => {
   return digits.length === 9 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : null;
 };
 
+/** The staff fields, identical for all three roles — they're the same object
+ *  (`SEOX3_Team_Member__c`) reached through three different lookups. */
+const staffSelect = (relationship: string): string =>
+  [
+    `${relationship}.Name`,
+    `${relationship}.WSC_EMail__c`,
+    `${relationship}.Corporate_E_Mail__c`,
+    `${relationship}.Corporate_Phone__c`,
+    `${relationship}.What_s_App__c`,
+  ].join(", ");
+
 const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Status_Date__c,
+              On_Hold_Reason__c, TimeStamp_Verified_IC__c, TimeStamp_Verified_Complete__c,
               Order_Date__c, Fully_Paid_Date__c, SR_Name__c, Payment_Method__c,
               Payment_Frequency__c, Paid_Features_Selected__c, Client__c, Corp__c, Corp_Name__c,
               Client__r.Name, Client__r.E_Mail__c, Client__r.Phone__c, Client__r.Cell_Phone__c,
@@ -67,7 +81,9 @@ const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Status_
               Corp__r.Name, Corp__r.Type__c, Corp__r.Jurisdiction__c, Corp__r.Incorporation_Date__c,
               Corp__r.Age__c, Corp__r.Client_Price__c, Corp__r.DUNS__c, Corp__r.Corp__c,
               Corp__r.Registration__c, Corp__r.Credit_Score__c, Corp__r.Funding_Capacity__c,
-              Corp__r.Last_Annual_Report__c, Corp__r.Next_Annual_Report__c, Corp__r.RA_Status__c`;
+              Corp__r.Last_Annual_Report__c, Corp__r.Next_Annual_Report__c, Corp__r.RA_Status__c,
+              ${staffSelect("Sales_Rep__r")}, ${staffSelect("QC_Agent__r")},
+              ${staffSelect("Back_End_Worker__r")}`;
 
 /** Detail-only projection. The EIN is sensitive PII (CLAUDE.md §3), so it is fetched only
  *  for the single-order view that actually displays it and never travels in the list
@@ -353,9 +369,14 @@ export class SalesforcePortalRepository implements PortalRepository {
       balanceDue: Math.max(amount - paidToDate, 0),
       statusSf: str(orderRecord.Status__c) ?? "",
       statusUpdatedAt: str(orderRecord.Status_Date__c),
+      onHoldReason: str(orderRecord.On_Hold_Reason__c),
       placedAt: str(orderRecord.Order_Date__c),
       fullyPaidAt: str(orderRecord.Fully_Paid_Date__c),
-      advisorName: str(orderRecord.SR_Name__c),
+      initialContactAt: str(orderRecord.TimeStamp_Verified_IC__c),
+      completedAt: str(orderRecord.TimeStamp_Verified_Complete__c),
+      advisor: this.mapStaff("advisor", obj(orderRecord.Sales_Rep__r), str(orderRecord.SR_Name__c)),
+      supportManager: this.mapStaff("support-manager", obj(orderRecord.QC_Agent__r), null),
+      backEndSupport: this.mapStaff("backend-support", obj(orderRecord.Back_End_Worker__r), null),
       paymentMethod: str(orderRecord.Payment_Method__c) ? toMethod(orderRecord.Payment_Method__c) : null,
       paymentFrequency: str(orderRecord.Payment_Frequency__c),
       // Absent from the list projection by design (ORDER_DETAIL_SELECT) — resolves to null there.
@@ -363,6 +384,35 @@ export class SalesforcePortalRepository implements PortalRepository {
       einIssuedAt: str(orderRecord.EIN_Date_Issued__c),
       shelfCorp,
       clientId: str(orderRecord.Client__c) ?? "",
+    };
+  }
+
+  /**
+   * Maps one of the three staff lookups. `fallbackName` covers the advisor specifically:
+   * `SR_Name__c` is a plain text field the sales team fills in and is populated on real
+   * orders even when the `Sales_Rep__c` lookup isn't — dropping to the lookup alone would
+   * make the advisor's name vanish from orders that currently show it.
+   *
+   * Returns null when there's no name at all, so the UI can say "not yet assigned"
+   * instead of rendering an empty card.
+   */
+  private mapStaff(
+    role: StaffRole,
+    member: SalesforceRecord | null,
+    fallbackName: string | null,
+  ): StaffContact | null {
+    const name = str(member?.Name) ?? fallbackName;
+    if (!name) {
+      return null;
+    }
+    return {
+      role,
+      name,
+      // Brand-specific address first: this is the WSC portal, and a team member can hold
+      // a different mailbox per brand.
+      email: str(member?.WSC_EMail__c) ?? str(member?.Corporate_E_Mail__c),
+      phone: str(member?.Corporate_Phone__c),
+      whatsAppNumber: str(member?.What_s_App__c),
     };
   }
 

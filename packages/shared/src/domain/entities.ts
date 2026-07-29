@@ -46,6 +46,51 @@ export interface ShelfCorp {
   registeredAgentStatus: string | null; // RA_Status__c
 }
 
+/**
+ * The three WSC people a client deals with, in the order they appear (stakeholder,
+ * 2026-07-28). All three are lookups from `Online_Order__c` to the SAME object,
+ * `SEOX3_Team_Member__c`:
+ *
+ * | Role                | Lookup                |
+ * | ------------------- | --------------------- |
+ * | `advisor`           | `Sales_Rep__c`        |
+ * | `support-manager`   | `QC_Agent__c`         |
+ * | `backend-support`   | `Back_End_Worker__c`  |
+ *
+ * The advisor owns the relationship **until the sale closes**; from payment onward the
+ * client talks to the two support roles instead. `staffForOrder()` encodes that hand-off.
+ */
+export type StaffRole = "advisor" | "support-manager" | "backend-support";
+
+export interface StaffContact {
+  role: StaffRole;
+  name: string;
+  email: string | null; // WSC_EMail__c, falling back to Corporate_E_Mail__c
+  phone: string | null; // Corporate_Phone__c
+  whatsAppNumber: string | null; // What_s_App__c (raw; see whatsAppLink())
+}
+
+/** Client-facing label for a staff role — data, never hardcoded in components. */
+export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
+  advisor: "Sales Advisor",
+  "support-manager": "Support Manager",
+  "backend-support": "Back-End Support",
+};
+
+/**
+ * `wa.me` deep link from a stored phone number. Salesforce stores these as free-form
+ * phone text (`+1 (720) 534-2065`, `720-658-0593`…), and wa.me accepts digits only, so
+ * everything else is stripped. Returns null when nothing usable is left, rather than
+ * producing a link that opens WhatsApp on a broken number.
+ */
+export function whatsAppLink(rawNumber: string | null): string | null {
+  if (!rawNumber) {
+    return null;
+  }
+  const digits = rawNumber.replace(/\D/g, "");
+  return digits.length >= 7 ? `https://wa.me/${digits}` : null;
+}
+
 export type PaymentMethod =
   | "Credit Card"
   | "Wire Transfer"
@@ -79,9 +124,17 @@ export interface Order {
   balanceDue: number; // Amount__c − Total_Payments__c (derived)
   statusSf: string; // Status__c (raw SF value; interpret via orderStage* helpers)
   statusUpdatedAt: string | null; // Status_Date__c — when the stage last moved (ISO-8601)
+  onHoldReason: string | null; // On_Hold_Reason__c — only meaningful while ON HOLD - *
   placedAt: string | null; // Order_Date__c (ISO-8601)
   fullyPaidAt: string | null; // Fully_Paid_Date__c — when the balance reached zero (ISO-8601)
-  advisorName: string | null; // SR_Name__c / Sales_Rep__c.Name
+  /** Stage timestamps. Salesforce overwrites `Status__c` when an order is put ON HOLD, so
+   *  these are the only way to know how far a paused order actually got — see
+   *  `orderProgress()` in domain/order-stage.ts. */
+  initialContactAt: string | null; // TimeStamp_Verified_IC__c
+  completedAt: string | null; // TimeStamp_Verified_Complete__c
+  advisor: StaffContact | null; // Sales_Rep__c → SEOX3_Team_Member__c (name falls back to SR_Name__c)
+  supportManager: StaffContact | null; // QC_Agent__c → SEOX3_Team_Member__c
+  backEndSupport: StaffContact | null; // Back_End_Worker__c → SEOX3_Team_Member__c
   paymentMethod: PaymentMethod | null; // Payment_Method__c
   paymentFrequency: string | null; // Payment_Frequency__c (e.g. "One-Time")
   /** The corp's federal tax ID — `EIN__c`, formatted `XX-XXXXXXX` from the raw SF number.

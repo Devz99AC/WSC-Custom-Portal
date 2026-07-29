@@ -1,4 +1,12 @@
-import type { Client, Order, Payment, PortalDocument, ShelfCorp } from "@wsc/shared";
+import type {
+  Client,
+  Order,
+  Payment,
+  PortalDocument,
+  ShelfCorp,
+  StaffContact,
+  StaffRole,
+} from "@wsc/shared";
 
 /**
  * Canonical test payloads, typed against the domain entities.
@@ -18,6 +26,18 @@ export const TEST_CLIENT: Client = {
   phone: null,
   businessName: "Acme Holdings LLC",
 };
+
+export const makeStaff = (
+  role: StaffRole,
+  overrides: Partial<StaffContact> = {},
+): StaffContact => ({
+  role,
+  name: "Rinkie S.",
+  email: "rinkie@wholesaleshelfcorporations.com",
+  phone: "+1 (720) 534-2065",
+  whatsAppNumber: "+1 (720) 534-2065",
+  ...overrides,
+});
 
 export const makeShelfCorp = (overrides: Partial<ShelfCorp> = {}): ShelfCorp => ({
   id: "s1",
@@ -49,9 +69,15 @@ export const makeOrder = (overrides: Partial<Order> = {}): Order => ({
   balanceDue: 0,
   statusSf: "Verified - Initial Contact",
   statusUpdatedAt: "2026-05-19T12:36:00.000Z",
+  onHoldReason: null,
   placedAt: "2026-05-02",
   fullyPaidAt: "2026-05-08",
-  advisorName: "Rinkie S.",
+  initialContactAt: "2026-05-19",
+  completedAt: null,
+  // Real WSC people, as they appear on a live order in production.
+  advisor: makeStaff("advisor", { name: "Rinkie S." }),
+  supportManager: makeStaff("support-manager", { name: "Lua Espluga" }),
+  backEndSupport: makeStaff("backend-support", { name: "Rinki Gurjar" }),
   paymentMethod: "Wire Transfer",
   paymentFrequency: "One-Time",
   ein: "88-1234567",
@@ -73,6 +99,8 @@ export const makePendingOrder = (overrides: Partial<Order> = {}): Order =>
     statusUpdatedAt: "2026-07-20T14:05:00.000Z",
     placedAt: "2026-07-20",
     fullyPaidAt: null,
+    initialContactAt: null,
+    completedAt: null,
     paymentMethod: "Credit Card",
     ein: null,
     einIssuedAt: null,

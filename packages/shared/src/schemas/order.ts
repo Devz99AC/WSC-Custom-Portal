@@ -42,6 +42,14 @@ export const shelfCorpSchema = z.object({
   registeredAgentStatus: z.string().nullable(),
 });
 
+export const staffContactSchema = z.object({
+  role: z.enum(["advisor", "support-manager", "backend-support"]),
+  name: z.string().min(1),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  whatsAppNumber: z.string().nullable(),
+});
+
 export const paymentSchema = z.object({
   id: z.string().min(1),
   orderId: z.string().min(1),
@@ -62,9 +70,14 @@ export const orderSchema = z.object({
   balanceDue: z.number(),
   statusSf: z.string(),
   statusUpdatedAt: z.string().nullable(),
+  onHoldReason: z.string().nullable(),
   placedAt: z.string().nullable(),
   fullyPaidAt: z.string().nullable(),
-  advisorName: z.string().nullable(),
+  initialContactAt: z.string().nullable(),
+  completedAt: z.string().nullable(),
+  advisor: staffContactSchema.nullable(),
+  supportManager: staffContactSchema.nullable(),
+  backEndSupport: staffContactSchema.nullable(),
   paymentMethod: paymentMethodSchema.nullable(),
   paymentFrequency: z.string().nullable(),
   ein: z.string().nullable(),

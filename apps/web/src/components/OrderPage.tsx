@@ -1,9 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
-import { orderStageLabel } from "@wsc/shared";
 import { useOrder } from "../hooks/useOrder";
 import { UnauthorizedError } from "../api/client";
 import { formatSalesforceDate } from "../lib/date";
+import { orderStatusBadgeClass, orderStatusLabel } from "../lib/order-status";
 import { OrderTracker } from "./OrderTracker";
 import { StaffCard } from "./StaffCard";
 
@@ -90,7 +90,9 @@ export function OrderPage() {
           <h2 className="disp">Order {order.orderNumber}</h2>
           <p>{order.placedAt ? `Placed ${formatDate(order.placedAt)}` : ""}</p>
         </div>
-        <span className="badge b-ok">{orderStageLabel(order.statusSf)}</span>
+        <span className={`badge ${orderStatusBadgeClass(order.statusSf)}`}>
+          {orderStatusLabel(order.statusSf)}
+        </span>
       </div>
 
       <div className="stat-grid">
@@ -111,10 +113,13 @@ export function OrderPage() {
 
       <div className="card">
         <div className="card-h">Order progress</div>
-        <OrderTracker statusSf={order.statusSf} />
-        <div className="statusline">
-          <span className="badge b-ok">{orderStageLabel(order.statusSf)}</span>
-        </div>
+        <OrderTracker
+          statusSf={order.statusSf}
+          fullyPaidAt={order.fullyPaidAt}
+          initialContactAt={order.initialContactAt}
+          completedAt={order.completedAt}
+          onHoldReason={order.onHoldReason}
+        />
       </div>
 
       <StaffCard order={order} />

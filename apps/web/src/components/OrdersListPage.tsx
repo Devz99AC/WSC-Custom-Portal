@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { orderStageLabel } from "@wsc/shared";
 import { useOrders } from "../hooks/useOrders";
 import { UnauthorizedError } from "../api/client";
 import { formatSalesforceDate } from "../lib/date";
+import { orderStatusBadgeClass, orderStatusLabel } from "../lib/order-status";
 
 const money = (n: number): string => `$${n.toLocaleString("en-US")}`;
 
@@ -75,7 +75,9 @@ export function OrdersListPage() {
                     <td className="tnum">{money(order.amount)}</td>
                     <td className="tnum">{order.balanceDue > 0 ? money(order.balanceDue) : "—"}</td>
                     <td>
-                      <span className="badge b-ok">{orderStageLabel(order.statusSf)}</span>
+                      <span className={`badge ${orderStatusBadgeClass(order.statusSf)}`}>
+                        {orderStatusLabel(order.statusSf)}
+                      </span>
                     </td>
                   </tr>
                 ))}
