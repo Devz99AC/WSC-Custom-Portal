@@ -42,6 +42,9 @@ export function AppShell({ client, onSignOut }: AppShellProps) {
         <NavLink to="/documents" className={navClass}>
           Documents
         </NavLink>
+        <NavLink to="/learning" className={navClass}>
+          Learning Center
+        </NavLink>
         <NavLink to="/profile" className={navClass}>
           Profile
         </NavLink>

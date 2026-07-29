@@ -445,13 +445,14 @@
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">12</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Learning Center — contenido de video</span><span class="tag extra">Extra</span></div>
           <div class="desc">Grid de videos embebidos (YouTube unlisted / Vimeo = $0). El contenido lo produce WSC; el portal solo lo muestra.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-29 — la parte del portal.</strong> Quinta sección del portal, en <code>/learning</code>. <strong>Patrón elegido: índice que despliega el video en el sitio</strong> (acordeón), no una página por video — con videos cortos, mandar al cliente a otra pantalla le cuesta 3 interacciones llegar al segundo video en vez de 1, y mete un "atrás" propio que compite con el del navegador.<br>🔑 <strong>Pero el video abierto vive en la URL</strong> (<code>/learning/&lt;slug&gt;</code>, misma página con un video expandido): eso recupera lo único bueno del patrón de página aparte — soporte puede mandarle a un cliente el link de un video concreto — y hace que el botón atrás del navegador cierre el reproductor. Cerrar usa <code>replace</code> para no expulsar del portal a quien llegó por link directo.<br>El <code>&lt;iframe&gt;</code> <strong>solo se monta al abrir</strong>; el índice muestra la miniatura. Cada embed de YouTube arrastra megabytes de JS de terceros y montar los tres para enseñar una lista de títulos es una página que nadie espera en el móvil. Se usa <code>youtube-nocookie.com</code> (no deja cookie de tracking hasta que se le da play) y <code>rel=0</code>, para que las sugerencias del final se queden en el canal de WSC en vez de ofrecerle la competencia a un cliente que ya pagó.<br>⚠️ <strong>Falta el contenido real.</strong> Los 3 videos actuales son marcadores puestos por el stakeholder para ver la estructura: <strong>dos son reseñas de clientes y uno es un caso</strong> — ninguno explica el proceso post-venta, que es para lo que existe esta sección. Los títulos se sacaron del oEmbed de YouTube en vez de escribirse a mano, y las descripciones quedaron vacías a propósito: describir un video que no hemos visto es inventarle contenido. Todo se edita en un solo archivo, <code>apps/web/src/content/learning-center.ts</code>.</div>
         </div>
       </div>
     </div>

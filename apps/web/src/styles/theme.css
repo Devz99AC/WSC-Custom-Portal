@@ -698,6 +698,108 @@ tr.rowlink:hover {
   font-weight: 800;
 }
 
+/* ---------- LEARNING CENTER ---------- */
+/* Rows run edge to edge, so the card's own padding is dropped here rather than fought
+   with per-row negative margins. `.card.lc-list` outranks `.card` regardless of order. */
+.card.lc-list {
+  padding: 0;
+  overflow: hidden;
+}
+.lc-item + .lc-item {
+  border-top: 1px solid var(--wsc-line);
+}
+.lc-head {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 16px;
+  color: inherit;
+}
+.lc-head:hover {
+  background: var(--wsc-bg);
+  color: inherit;
+  text-decoration: none;
+}
+.lc-head:focus-visible {
+  outline: 2px solid var(--wsc-gold);
+  outline-offset: -2px;
+}
+.lc-thumb {
+  width: 112px;
+  height: 63px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--wsc-navy-d);
+  flex-shrink: 0;
+}
+.lc-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.lc-tag {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 800;
+  color: var(--wsc-gold-d);
+}
+.lc-title {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--wsc-navy);
+  line-height: 1.35;
+}
+.lc-sum {
+  font-size: 11px;
+  color: var(--wsc-mut);
+}
+.lc-toggle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--wsc-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--wsc-navy);
+  flex-shrink: 0;
+}
+.lc-item.on .lc-toggle {
+  background: var(--wsc-navy);
+  border-color: var(--wsc-navy);
+  color: #fff;
+}
+.lc-panel {
+  padding: 0 16px 15px;
+}
+.lc-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+}
+.lc-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.lc-close {
+  display: inline-block;
+  margin-top: 11px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--wsc-navy);
+}
+
 @media (max-width: 640px) {
   .shell {
     grid-template-columns: 1fr;
@@ -724,5 +826,16 @@ tr.rowlink:hover {
   }
   .tstep:not(:last-child)::after {
     display: none;
+  }
+  .lc-head {
+    gap: 10px;
+    padding: 12px;
+  }
+  .lc-thumb {
+    width: 84px;
+    height: 47px;
+  }
+  .lc-panel {
+    padding: 0 12px 13px;
   }
 }
