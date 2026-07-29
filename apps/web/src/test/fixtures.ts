@@ -32,8 +32,8 @@ export const makeStaff = (
   overrides: Partial<StaffContact> = {},
 ): StaffContact => ({
   role,
-  name: "Rinkie S.",
-  email: "rinkie@wholesaleshelfcorporations.com",
+  name: "Scott Benon",
+  email: "scott@wholesaleshelfcorporations.com",
   phone: "+1 (720) 534-2065",
   whatsAppNumber: "+1 (720) 534-2065",
   ...overrides,
@@ -75,7 +75,7 @@ export const makeOrder = (overrides: Partial<Order> = {}): Order => ({
   initialContactAt: "2026-05-19",
   completedAt: null,
   // Real WSC people, as they appear on a live order in production.
-  advisor: makeStaff("advisor", { name: "Rinkie S." }),
+  advisor: makeStaff("advisor", { name: "Scott Benon" }),
   supportManager: makeStaff("support-manager", { name: "Lua Espluga" }),
   backEndSupport: makeStaff("backend-support", { name: "Rinki Gurjar" }),
   paymentMethod: "Wire Transfer",

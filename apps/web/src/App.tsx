@@ -8,6 +8,7 @@ import { PaymentsPage } from "./components/PaymentsPage";
 import { DocumentsPage } from "./components/DocumentsPage";
 import { DocumentProductPage } from "./components/DocumentProductPage";
 import { LearningCenterPage } from "./components/LearningCenterPage";
+import { SupportPage } from "./components/SupportPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { useOrders } from "./hooks/useOrders";
 import { UnauthorizedError, logout } from "./api/client";
@@ -62,6 +63,7 @@ export function App() {
           {/* Same page either way — the slug only decides which video starts expanded. */}
           <Route path="learning" element={<LearningCenterPage />} />
           <Route path="learning/:slug" element={<LearningCenterPage />} />
+          <Route path="support" element={<SupportPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<Navigate to="/orders" replace />} />
         </Route>

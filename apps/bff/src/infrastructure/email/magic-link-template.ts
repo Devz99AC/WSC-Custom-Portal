@@ -1,3 +1,5 @@
+import { WSC_CONTACT } from "@wsc/shared";
+
 export interface MagicLinkEmailInput {
   name: string;
   verifyUrl: string;
@@ -41,7 +43,7 @@ export function renderMagicLinkEmail({ name, verifyUrl, ttlMinutes }: MagicLinkE
           </table>
           <p style="margin:28px 0 0;font-size:12px;line-height:1.6;color:#6a7689;">
             If you didn't request this link, you can safely ignore this email — no account
-            changes were made. Trouble signing in? Call your advisor at +1 (720) 534-2065.
+            changes were made. Trouble signing in? Call us at ${WSC_CONTACT.phone}.
           </p>
         </td></tr>
       </table>
@@ -57,7 +59,7 @@ Click the link below to sign in to your WSC Client Portal. This link is valid fo
 ${verifyUrl}
 
 If you didn't request this link, you can safely ignore this email — no account changes were made.
-Trouble signing in? Call your advisor at +1 (720) 534-2065.`;
+Trouble signing in? Call us at ${WSC_CONTACT.phone}.`;
 
   return { subject, html, text };
 }

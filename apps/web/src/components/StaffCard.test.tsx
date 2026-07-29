@@ -7,9 +7,9 @@ describe("StaffCard", () => {
   it("shows only the Sales Advisor, with all four channels, while the sale is still open", () => {
     render(<StaffCard order={makePendingOrder({ supportManager: null, backEndSupport: null })} />);
 
-    expect(screen.getByText("Rinkie S.")).toBeInTheDocument();
+    expect(screen.getByText("Scott Benon")).toBeInTheDocument();
     expect(screen.getByText("Sales Advisor")).toBeInTheDocument();
-    expect(screen.getByText("rinkie@wholesaleshelfcorporations.com")).toBeInTheDocument();
+    expect(screen.getByText("scott@wholesaleshelfcorporations.com")).toBeInTheDocument();
     expect(screen.getByText("+1 (720) 534-2065")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "WhatsApp" })).toBeInTheDocument();
 

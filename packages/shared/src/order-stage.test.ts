@@ -119,8 +119,8 @@ describe("orderDetailSchema", () => {
         completedAt: null,
         advisor: {
           role: "advisor",
-          name: "Rinkie S.",
-          email: "rinkie@wsc.com",
+          name: "Scott Benon",
+          email: "scott@wsc.com",
           phone: "+1 (720) 534-2065",
           whatsAppNumber: "+1 (720) 534-2065",
         },

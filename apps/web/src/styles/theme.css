@@ -698,6 +698,20 @@ tr.rowlink:hover {
   font-weight: 800;
 }
 
+/* ---------- SUPPORT ---------- */
+.sup-purpose {
+  font-size: 11px;
+  color: var(--wsc-ink);
+  margin: 5px 0 7px;
+  max-width: 52ch;
+  line-height: 1.45;
+}
+.sup-covers {
+  font-size: 10px;
+  color: var(--wsc-mut);
+  margin-top: 6px;
+}
+
 /* ---------- LEARNING CENTER ---------- */
 /* Rows run edge to edge, so the card's own padding is dropped here rather than fought
    with per-row negative margins. `.card.lc-list` outranks `.card` regardless of order. */

@@ -78,6 +78,23 @@ export const STAFF_ROLE_LABELS: Record<StaffRole, string> = {
 };
 
 /**
+ * What each role is FOR — the routing a client actually needs ("who do I ask about this?").
+ * Salesforce stores who holds a role; it has no field for what the role handles, so this is
+ * the one part of a contact that can't be read from the org.
+ *
+ * Stated by the stakeholder (2026-07-29): everything goes through the Support Manager
+ * first — sub-agents work behind them, but the client's entry point doesn't change — and
+ * anything to do with documentation goes to Back-End Support. Deliberately keyed by ROLE
+ * and not by person: naming Lua or Rinki here would put a human's name back in the source,
+ * which is exactly what step 7 removed.
+ */
+export const STAFF_ROLE_PURPOSE: Record<StaffRole, string> = {
+  advisor: "Your purchase — pricing, payment, and choosing the corporation, until the sale closes.",
+  "support-manager": "Start here. Anything about your order goes through your Support Manager first.",
+  "backend-support": "Documentation — anything that needs to be filed, issued, or corrected.",
+};
+
+/**
  * `wa.me` deep link from a stored phone number. Salesforce stores these as free-form
  * phone text (`+1 (720) 534-2065`, `720-658-0593`…), and wa.me accepts digits only, so
  * everything else is stripped. Returns null when nothing usable is left, rather than

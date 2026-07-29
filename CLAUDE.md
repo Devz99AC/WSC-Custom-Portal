@@ -78,7 +78,7 @@ Use these exact terms in identifiers, types, and comments. Consistent naming acr
 | **D-U-N-S** | Dun & Bradstreet business identifier used for business credit. | `dunsNumber`. |
 | **Entity Type** | Legal form of the corp (e.g. *Wyoming LLC*, C-Corp). | `entityType` / `Entity_Type__c`. |
 | **State of Formation** | US state where the entity was formed (e.g. Wyoming). | `stateOfFormation`. |
-| **Advisor** | WSC staff member assigned to guide the client's order (e.g. *Rinkie S.*). | `advisor` / `Assigned_Advisor__c`. |
+| **Advisor** | WSC staff member assigned to guide the client's order (e.g. *Scott Benon*). | `advisor` / `Assigned_Advisor__c`. |
 | **Order** | A client's purchase engagement. **Maps to SFDC `Opportunity`** (`OO-####`), not a literal "Order" object. | `Order` DTO ↔ `Opportunity`. |
 | **Order Status / Stage** | Real SFDC pipeline: `To Verify Payment → Pending Balance → Verified - Initial Contact → Verified - Work Started → Verified - Waiting to Ship → Verified - Shipped → Verified - Delivered → Verified - Complete` (+ `Cancelled - *`, `ON HOLD - *`). A client-facing **6-step grouping** (Unpaid → Initial Onboarding → Corp docs shipped → Onboarding call → Credit ready setup → Complete/ready for funding) is **pending stakeholder alignment — those steps do not exist in SFDC yet** (ACTION-PLAN Q1/C1). | `orderStage`; resolve labels via mapping table, never hardcode. |
 | **Balance Due** | Remaining unpaid amount before the corp ships. | `balanceDue` = `Amount − sum(verified Payments)`. |

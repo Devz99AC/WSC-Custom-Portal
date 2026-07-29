@@ -434,13 +434,14 @@
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">11</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
-          <div class="top"><span class="title">WhatsApp — deep link</span><span class="tag extra">Extra</span></div>
+          <div class="top"><span class="title">Sección de Soporte + WhatsApp deep link</span><span class="tag extra">Extra</span></div>
           <div class="desc"><code>wa.me/&lt;número&gt;</code> como botón de contacto. Gratis, inmediato, cero backend.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-29.</strong> El deep link ya existía desde el paso 7 dentro del detalle de una orden; lo que faltaba era el sitio donde un cliente pregunta <em>"¿a quién le escribo?"</em>. Sexta sección del portal, en <code>/support</code>.<br>🔑 <strong>Es una lista de personas, no de órdenes.</strong> Un cliente con una corp en Pending Balance y otra en Work Started tiene tres personas distintas y ningún sitio que diga cuál es cuál; la vista orden-por-orden repite a la misma gente y sigue sin responder la pregunta. Cada persona sale una vez, con los productos que cubre debajo (nombrados por la corp, como en Documents). La línea de cobertura se oculta cuando hay una sola orden, porque ahí no desambigua nada.<br>🆕 <strong>Se añadió a qué corresponde cada rol</strong> (<code>STAFF_ROLE_PURPOSE</code>), según lo que fijó el stakeholder: todo entra por el Support Manager (hay subagentes detrás, pero el punto de entrada del cliente no cambia) y toda la documentación va a Back-End. Salesforce guarda <em>quién</em> ocupa un rol pero no tiene ningún campo para <em>qué</em> atiende ese rol, así que es lo único del contacto que no se puede leer del org. Va indexado <strong>por rol, nunca por persona</strong>: escribir "Lua" ahí sería devolver un nombre humano al código, justo lo que quitó el paso 7.<br>📇 Bloque de contacto de la empresa (teléfono, correo, oficina en Greenwood Village) en <code>WSC_CONTACT</code>, dentro de <code>packages/shared</code> porque el correo de acceso del BFF citaba el mismo teléfono a mano — dos copias de un teléfono son un teléfono que acaba contradiciéndose. De paso se corrigió ese correo, que decía "llama a tu advisor" sobre un número que es la línea general.<br>🚫 <strong>Sin formulario de tickets a propósito</strong> — eso escribe, y el objeto que se asumía no se usa en producción (Q5). Un formulario que no llega a ningún sitio es peor que no tenerlo. Tampoco hay horarios ni promesas de tiempo de respuesta: no tenemos ese dato y un SLA que WSC no cumpla hace más daño que el silencio.<br>Los teléfonos de demo pasaron al bloque <code>555-01xx</code> reservado para ficción: uno de ellos era la línea real de WSC puesta como si fuera de una persona.</div>
         </div>
       </div>
     </div>

@@ -31,12 +31,16 @@ const DEMO_CLIENT: Client = {
   businessName: "Acme Holdings LLC",
 };
 
+// Demo phone numbers come from the 555-01xx block reserved for fiction (same convention as
+// the demo client above). (720) 534-2065 is WSC's real main line and now lives in
+// `WSC_CONTACT`; giving it to a person here made the two indistinguishable in the UI, and a
+// plausible-but-unreserved number in seed data eventually rings a stranger.
 const DEMO_ADVISOR = {
   role: "advisor",
-  name: "Rinkie S.",
-  email: "rinkie@wholesaleshelfcorporations.com",
-  phone: "+1 (720) 534-2065",
-  whatsAppNumber: "+1 (720) 534-2065",
+  name: "Scott Benon",
+  email: "scott@wholesaleshelfcorporations.com",
+  phone: "+1 (720) 555-0184",
+  whatsAppNumber: "+1 (720) 555-0184",
 } as const;
 
 // Real WSC support people (seen in production's Quality Control section on a live order).
@@ -52,8 +56,8 @@ const DEMO_BACKEND_SUPPORT = {
   role: "backend-support",
   name: "Rinki Gurjar",
   email: "rinki@wholesaleshelfcorporations.com",
-  phone: "+1 (720) 534-2067",
-  whatsAppNumber: "+1 (720) 534-2067",
+  phone: "+1 (720) 555-0191",
+  whatsAppNumber: "+1 (720) 555-0191",
 } as const;
 
 const DEMO_ORDERS: Order[] = [

@@ -1,44 +1,11 @@
 import {
   STAFF_ROLE_LABELS,
   staffRolesForStatus,
-  whatsAppLink,
   type Order,
   type StaffContact,
   type StaffRole,
 } from "@wsc/shared";
-
-const initials = (name: string): string =>
-  name
-    .split(" ")
-    .map((part) => part.charAt(0))
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-function ContactRow({ contact }: { contact: StaffContact }) {
-  const whatsApp = whatsAppLink(contact.whatsAppNumber);
-
-  return (
-    <div className="prod">
-      <div className="ava" style={{ width: "44px", height: "44px", fontSize: "15px" }}>
-        {initials(contact.name)}
-      </div>
-      <div>
-        <div className="pn">{contact.name}</div>
-        <div className="pd">{STAFF_ROLE_LABELS[contact.role]}</div>
-        <div className="contact-lines">
-          {contact.email && <a href={`mailto:${contact.email}`}>{contact.email}</a>}
-          {contact.phone && <a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a>}
-          {whatsApp && (
-            <a href={whatsApp} target="_blank" rel="noreferrer">
-              WhatsApp
-            </a>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+import { ContactRow } from "./ContactRow";
 
 const CONTACT_BY_ROLE = (order: Order): Record<StaffRole, StaffContact | null> => ({
   advisor: order.advisor,

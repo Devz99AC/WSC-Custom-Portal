@@ -119,7 +119,7 @@ flowchart TB
 | `Client.contact` (account holder) | **Contact** | `Id`, `AccountId`, `FirstName`, `LastName`, `Email`, `Phone`, `Preferred_Language__c`, `Portal_Enabled__c` | ⇄ | Real-time | `Email` is the magic-link identity key (must be unique + indexed). Profile edits are the only client-writable Contact fields. |
 | `Order` | **Opportunity** | `Id`, `Name` (`OO-####`), `Amount`, `StageName`, `CloseDate`, `Assigned_Advisor__c`, `Order_Number__c` | SF→App (stage), App→SF (payment-driven stage advance) | Real-time + Event | Sample: `OO-1042`, `Amount = 8750`. Stage is the pipeline backbone (see §2.3). |
 | `Order.lineItem` (product) | **OpportunityLineItem** → **Product2** / **PricebookEntry** | `Product2Id`, `Quantity`, `UnitPrice`, `TotalPrice` | SF→App | Real-time | Links Opportunity to the specific `Shelf_Corp__c`. |
-| `Advisor` | **User** (or Contact) | `Id`, `Name`, `Email` | SF→App | Real-time | Shown as *Rinkie S.* Expose display name only; never expose `User` PII beyond first name + initial. |
+| `Advisor` | **User** (or Contact) | `Id`, `Name`, `Email` | SF→App | Real-time | Shown as *Scott Benon*. Expose display name only; never expose `User` PII beyond first name + initial. |
 
 ### 2.2 Custom objects
 

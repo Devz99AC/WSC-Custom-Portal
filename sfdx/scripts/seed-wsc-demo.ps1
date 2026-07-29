@@ -15,7 +15,7 @@ $EMAIL = "m.brown@acmeholdings.com"
 $WSC_RECORDTYPE = "0120g000000QEpmAAG"          # Online_Order__c "WSC" record type
 $CLIENT = "a0xVF0000028APFYA2"                   # existing FU_User (Marcus Brown)
 
-$o = sf data create record --sobject Online_Order__c --values "RecordTypeId=$WSC_RECORDTYPE Brand__c='WSC' Client__c=$CLIENT E_Mail__c='$EMAIL' Status__c='To Verify Payment' Amount__c=8750 Order_Date__c=2026-05-02 Payment_Method__c='Wire Transfer' SR_Name__c='Rinkie S.' Name__c='Marcus Brown' Company_Name__c='Acme Holdings LLC'" --target-org $ORG --json | ConvertFrom-Json
+$o = sf data create record --sobject Online_Order__c --values "RecordTypeId=$WSC_RECORDTYPE Brand__c='WSC' Client__c=$CLIENT E_Mail__c='$EMAIL' Status__c='To Verify Payment' Amount__c=8750 Order_Date__c=2026-05-02 Payment_Method__c='Wire Transfer' SR_Name__c='Scott Benon' Name__c='Marcus Brown' Company_Name__c='Acme Holdings LLC'" --target-org $ORG --json | ConvertFrom-Json
 
 if ($o.result.id) {
   Write-Host "OK  Online_Order__c -> $($o.result.id)"

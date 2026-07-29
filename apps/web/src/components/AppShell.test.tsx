@@ -31,7 +31,8 @@ describe("AppShell", () => {
     expect(screen.getByText("Marcus Brown")).toBeInTheDocument();
     expect(screen.getByText("Acme Holdings LLC")).toBeInTheDocument();
     expect(screen.getByText("Order page content")).toBeInTheDocument();
-    for (const label of ["My Orders", "Payments", "Documents", "Learning Center", "Profile"]) {
+    const nav = ["My Orders", "Payments", "Documents", "Learning Center", "Support", "Profile"];
+    for (const label of nav) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
 
