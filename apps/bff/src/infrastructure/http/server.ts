@@ -15,6 +15,23 @@ import {
   verifySessionJwt,
   type SessionJwtConfig,
 } from "../auth/session-jwt.js";
+import { DomainError, RateLimitedError, ValidationError } from "../../domain/errors.js";
+
+/**
+ * The ONE place a typed error becomes an HTTP status (CLAUDE.md §2). Anything not in this
+ * table is a bug on our side and gets a 500 with no detail — the alternative is leaking
+ * whatever an upstream happened to put in `message`.
+ */
+const STATUS_BY_CODE: Record<string, number> = {
+  VALIDATION: 422,
+  CONFLICT: 409,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  RATE_LIMITED: 429,
+  UPSTREAM_UNAVAILABLE: 503,
+  UPSTREAM_MISCONFIGURED: 500,
+  SALESFORCE_APEX: 502,
+};
 
 export interface ServerDeps {
   getOrders: GetOrders;
@@ -63,6 +80,49 @@ function readSession(request: FastifyRequest, config: SessionJwtConfig) {
 export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
   const app = Fastify({ logger: { level: env.LOG_LEVEL } });
   app.register(fastifyCookie);
+
+  // Centralized error handling (CLAUDE.md §2). Route handlers throw typed errors and never
+  // build status codes themselves; the upstream detail is logged here and dropped from the
+  // response, because a Salesforce message routinely embeds the failing SOQL.
+  app.setErrorHandler((error, request, reply) => {
+    if (error instanceof DomainError) {
+      const status = STATUS_BY_CODE[error.code] ?? 500;
+      // 5xx means WE need to act on it — log loudly. 4xx is the caller's problem: still
+      // recorded, but at a level that doesn't drown the real alerts.
+      const log = status >= 500 ? request.log.error : request.log.warn;
+      log.call(
+        request.log,
+        { code: error.code, detail: error.detail, status },
+        `request failed: ${error.name}`,
+      );
+
+      if (error instanceof RateLimitedError) {
+        reply.header("Retry-After", error.retryAfterSeconds);
+      }
+      return reply.code(status).send({
+        error: error.message,
+        code: error.code,
+        ...(error instanceof ValidationError && error.fields.length > 0
+          ? { fields: error.fields }
+          : {}),
+      });
+    }
+
+    // Fastify's own errors (malformed JSON body, unsupported media type…) carry a usable
+    // status. Anything else is an unexpected throw and stays a bare 500 — its message is
+    // an internal detail, so it goes to the log and not to the client.
+    const fastifyError = error as { statusCode?: unknown; message?: unknown };
+    const status =
+      typeof fastifyError.statusCode === "number" ? fastifyError.statusCode : 500;
+    if (status >= 500) {
+      request.log.error({ err: error }, "unhandled error");
+      return reply.code(500).send({ error: "Something went wrong.", code: "INTERNAL" });
+    }
+    request.log.warn({ err: error }, "bad request");
+    const message =
+      typeof fastifyError.message === "string" ? fastifyError.message : "Bad request.";
+    return reply.code(status).send({ error: message, code: "BAD_REQUEST" });
+  });
 
   app.get("/health", async () => ({
     status: "ok",

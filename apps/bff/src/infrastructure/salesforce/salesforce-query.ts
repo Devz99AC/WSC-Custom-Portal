@@ -1,5 +1,30 @@
 import { getJwtAccessToken, invalidateJwtAccessToken, isInvalidSessionError } from "./salesforce-jwt-auth.js";
 import type { JwtBearerConfig } from "./salesforce-jwt-auth.js";
+import { classifySalesforceError, isRetryableSalesforceError } from "./salesforce-errors.js";
+
+/** Transient-failure retries live in the adapter, not in controllers (CLAUDE.md §2). */
+const MAX_TRANSIENT_ATTEMPTS = 3;
+const BACKOFF_BASE_MS = 150;
+
+const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Wraps every Salesforce call so that (a) transient failures get a short exponential
+ * backoff and (b) whatever finally escapes is a typed domain error — never a raw
+ * Salesforce error whose message embeds the SOQL (CLAUDE.md §1/§2).
+ */
+async function callSalesforce<T>(attempt: () => Promise<T>): Promise<T> {
+  for (let tries = 1; ; tries += 1) {
+    try {
+      return await attempt();
+    } catch (error) {
+      if (tries >= MAX_TRANSIENT_ATTEMPTS || !isRetryableSalesforceError(error)) {
+        throw classifySalesforceError(error);
+      }
+      await delay(BACKOFF_BASE_MS * 2 ** (tries - 1));
+    }
+  }
+}
 
 export type SalesforceRecord = Record<string, unknown>;
 
@@ -49,16 +74,19 @@ export async function createDevSalesforceQuery(
   const connection = await Connection.create({ authInfo });
 
   return {
-    query: async (soql: string): Promise<SalesforceRecord[]> => {
-      const result = await connection.query(soql);
-      return result.records as unknown as SalesforceRecord[];
-    },
+    query: (soql: string): Promise<SalesforceRecord[]> =>
+      callSalesforce(async () => {
+        const result = await connection.query(soql);
+        return result.records as unknown as SalesforceRecord[];
+      }),
     attachmentBody: (attachmentId: string): Promise<Buffer | null> =>
-      fetchAttachmentBody(
-        connection.instanceUrl,
-        connection.accessToken ?? "",
-        connection.version,
-        attachmentId,
+      callSalesforce(() =>
+        fetchAttachmentBody(
+          connection.instanceUrl,
+          connection.accessToken ?? "",
+          connection.version,
+          attachmentId,
+        ),
       ),
   };
 }
@@ -75,7 +103,9 @@ export async function createJwtSalesforceQuery(
   const { Connection } = await import("@jsforce/jsforce-node");
 
   /** Runs `attempt`, and on an expired session re-mints the JWT and retries exactly once
-   *  (CLAUDE.md §1 — `INVALID_SESSION_ID` is transient, not a failure). */
+   *  (CLAUDE.md §1 — `INVALID_SESSION_ID` is transient, not a failure). Sits INSIDE
+   *  `callSalesforce` so the session refresh happens before the generic backoff, and so
+   *  whatever escapes is still classified into a typed error. */
   const withSessionRetry = async <T>(attempt: () => Promise<T>): Promise<T> => {
     try {
       return await attempt();
@@ -90,20 +120,24 @@ export async function createJwtSalesforceQuery(
 
   return {
     query: (soql: string): Promise<SalesforceRecord[]> =>
-      withSessionRetry(async () => {
-        const { accessToken, instanceUrl } = await getJwtAccessToken(config);
-        // jsforce-node prepends its own "v" when building /services/data/v{version} —
-        // strip a leading v/V so SF_API_VERSION works whether it's "v67.0" or "67.0".
-        const version = config.apiVersion.replace(/^v/i, "");
-        const connection = new Connection({ accessToken, instanceUrl, version });
-        const result = await connection.query(soql);
-        return result.records as unknown as SalesforceRecord[];
-      }),
+      callSalesforce(() =>
+        withSessionRetry(async () => {
+          const { accessToken, instanceUrl } = await getJwtAccessToken(config);
+          // jsforce-node prepends its own "v" when building /services/data/v{version} —
+          // strip a leading v/V so SF_API_VERSION works whether it's "v67.0" or "67.0".
+          const version = config.apiVersion.replace(/^v/i, "");
+          const connection = new Connection({ accessToken, instanceUrl, version });
+          const result = await connection.query(soql);
+          return result.records as unknown as SalesforceRecord[];
+        }),
+      ),
 
     attachmentBody: (attachmentId: string): Promise<Buffer | null> =>
-      withSessionRetry(async () => {
-        const { accessToken, instanceUrl } = await getJwtAccessToken(config);
-        return fetchAttachmentBody(instanceUrl, accessToken, config.apiVersion, attachmentId);
-      }),
+      callSalesforce(() =>
+        withSessionRetry(async () => {
+          const { accessToken, instanceUrl } = await getJwtAccessToken(config);
+          return fetchAttachmentBody(instanceUrl, accessToken, config.apiVersion, attachmentId);
+        }),
+      ),
   };
 }

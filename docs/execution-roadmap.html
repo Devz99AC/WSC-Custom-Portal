@@ -454,13 +454,26 @@
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">13</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Errores de Salesforce tipados (no más 500 crudos)</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Mapear los <code>errorCode</code> de Salesforce a errores tipados del dominio y de ahí a códigos HTTP, como exige CLAUDE.md §1/§2.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Motivado por la caída de ese mismo día: el mensaje de un <code>INVALID_FIELD</code> de Salesforce <strong>contiene el SOQL completo</strong>, y salía tal cual en un 500. Ahora <code>salesforce-errors.ts</code> clasifica contra la forma real del error (capturada del org, no supuesta: un <code>HttpApiError</code> con <code>errorCode</code>) → 422 validación · 409 duplicado · 403 sharing/FLS · 429 límite de governor con <code>Retry-After</code> · 503 caída transitoria · 500 configuración nuestra mal puesta. El texto de Salesforce vive solo en <code>detail</code>, que se loguea y <strong>nunca</strong> se serializa. Reintento con backoff en el adaptador para lo transitorio; <strong>a propósito NO se reintenta <code>REQUEST_LIMIT_EXCEEDED</code></strong> — el presupuesto de API es de 24h, reintentar solo quema más del que se acabó. Verificado en vivo contra el sandbox y con el primer test HTTP de extremo a extremo del proyecto (<code>server.test.ts</code>), que incluye que <code>/auth/request-link</code> siga devolviendo lo mismo aunque el repositorio explote — la anti-enumeración manda sobre el reporte de errores.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">14</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Deuda de tests</span><span class="tag ya">Ya</span></div>
           <div class="desc">Tests de integración contra el sandbox real + Playwright e2e. Puede avanzar en paralelo en cualquier momento.</div>
+          <div class="warn">Avanzado en parte: ya existe <code>server.test.ts</code> (nivel HTTP, con <code>app.inject</code>) y factories de fixtures tipadas en <code>apps/web/src/test/fixtures.ts</code>. Falta Playwright e2e.</div>
         </div>
       </div>
     </div>
@@ -477,7 +490,7 @@
     </div>
 
     <div class="step">
-      <div class="num">14</div>
+      <div class="num">15</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
