@@ -265,7 +265,7 @@
 
   <div class="progress-row">
     <div class="progress-track"><div class="progress-fill" style="width: 0%"></div></div>
-    <div class="progress-label">0 / 14</div>
+    <div class="progress-label">9 / 14</div>
   </div>
 
   <!-- ================= FENCE 1 — LECTURA ================= -->
@@ -315,7 +315,7 @@
         <div class="body">
           <div class="top"><span class="title">Detalle de orden enriquecido</span><span class="tag ya">Ya</span></div>
           <div class="desc">Mostrar campos que <em>ya existen</em> en Salesforce y hoy no se muestran (envío/tracking, features credit-ready, más datos del corp). Es puro agregar campos al SOQL y al Permission Set — cero lógica nueva.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Del corp (<code>SC_Corp__c</code>): Corp #, Registration #, credit score, funding capacity, estado del registered agent, último annual report y próxima renovación. De la orden (<code>Online_Order__c</code>): EIN + fecha de emisión, forma de pago, fecha de pago total y última actualización de estado. El <strong>EIN sale enmascarado</strong> con un botón «Show» y <strong>no viaja en el endpoint de lista</strong> (proyección aparte, es PII — CLAUDE.md §3). Las filas sin dato no se pintan en vez de mostrar «—». Quedan fuera a propósito los campos internos del corp (márgenes, payback, reseller, credenciales WP). <strong>Envío/tracking no se incluyó</strong>: los campos existen pero están vacíos en el sandbox, así que no hay cómo verificarlo.<br>De paso se arregló un bug real: las fechas <em>date-only</em> de Salesforce se renderizaban <strong>un día antes</strong> para cualquier cliente al oeste de UTC (una orden del 2 de mayo salía «May 1»). Estaba duplicado en cuatro componentes; ahora vive en <code>lib/date.ts</code> con test de regresión.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Del corp (<code>SC_Corp__c</code>): Corp #, Registration #, credit score, funding capacity, estado del registered agent, último annual report y próxima renovación. De la orden (<code>Online_Order__c</code>): EIN + fecha de emisión, forma de pago, fecha de pago total y última actualización de estado. El <strong>EIN sale enmascarado</strong> con un botón «Show» y <strong>no viaja en el endpoint de lista</strong> (proyección aparte, es PII — CLAUDE.md §3). Las filas sin dato no se pintan en vez de mostrar «—». Quedan fuera a propósito los campos internos del corp (márgenes, payback, reseller, credenciales WP). <strong>Envío/tracking no se incluyó</strong>: los campos existen pero están vacíos en el sandbox, así que no hay cómo verificarlo.<br>De paso se arregló un bug real: las fechas <em>date-only</em> de Salesforce se renderizaban <strong>un día antes</strong> para cualquier cliente al oeste de UTC (una orden del 2 de mayo salía «May 1»). Estaba duplicado en cuatro componentes; ahora vive en <code>lib/date.ts</code> con test de regresión.<br>🔎 <strong>Cabo suelto detectado el 2026-08-06 — las features credit-ready siguen sin mostrarse.</strong> El BFF ya lee <code>Paid_Features_Selected__c</code> del pedido y lo parte en lista (<code>creditReadyFeatures</code>), pero <strong>ningún componente la pinta</strong>, porque en el sandbox está vacía en los dos pedidos que hay — y dos pedidos no prueban nada. Son las features que el cliente <em>pagó</em> (dirección, teléfono, 411, D-U-N-S) y hoy no puede ver. <strong>Pendiente: el stakeholder lo consulta con el admin de funding</strong> para localizar dónde vive realmente esa información en producción. Si resulta que está en otro campo u otro objeto, el mapeo actual hay que cambiarlo, no solo añadir la vista.</div>
         </div>
       </div>
     </div>
@@ -345,19 +345,21 @@
     <div class="checkpoint">
       <div class="flag">💬</div>
       <div class="box">
-        <div class="ct">Checkpoint — Conversación 1 con el CEO</div>
+        <div class="ct">Checkpoint — Conversación 1 con el CEO · <b>quedan 2 de 6</b></div>
         <div class="cd">
-          <b>Q1</b> pipeline de 6 pasos: ¿mapping solo de display, o cambiar el picklist real? ·
-          <b>Q2</b> ¿el Implementation Manager es <code>QC_Agent__c</code> u otro campo? ·
-          <b>Q3</b> Refer a Friend: lógica de negocio completa (qué es un "CP", montos, cuándo se paga, cómo se rastrea) ·
-          <b>Q4</b> herramienta de chat/AI (la org ya tiene LiveChat + Twilio instalados) ·
-          <b>Q5</b> ¿qué es "soporte" en concreto? el objeto que se asumía no está en uso en producción ·
-          <b>Q6</b> ¿los registros <code>Note</code> de la orden se le muestran al cliente? hoy solo se muestran los <code>Attachment</code> (archivos). Las Notes son texto libre que escribe el staff y <b>no hay ningún campo que distinga una nota interna de una apta para el cliente</b> — mostrarlas todas podría filtrar comentarios internos. Si el CEO las quiere visibles, hace falta acordar un criterio (¿un prefijo en el título? ¿un campo nuevo?)
+          <b>🟠 ABIERTAS</b><br />
+          <b>Q3</b> Refer a Friend: lógica de negocio completa (qué es un "CP", montos, cuándo se paga, cómo se rastrea). <b>Es lo único que bloquea W2</b> — la sección entera está parada esperando esto. ·
+          <b>Q4</b> herramienta de chat/AI (la org ya tiene LiveChat + Twilio instalados)<br /><br />
+          <b>✅ CERRADAS</b><br />
+          <s><b>Q1</b> pipeline</s> y <s><b>Q2</b> Implementation Manager</s> — cerradas el 2026-07-28 sobre la marcha, ver <code>docs/checkpoint-q1-q2.md</code>. ·
+          <s><b>Q5</b> ¿qué es "soporte"?</s> — resuelta <b>por alcance, no por decisión</b>: Support se entregó como hub de contacto (paso 10), así que nada depende ya de ella salvo que alguien pida crear tickets (W1). ·
+          <s><b>Q6</b> ¿se le muestran las <code>Note</code> al cliente?</s> — <b>cerrada el 2026-08-06: NO se muestran.</b> El stakeholder las declaró no relevantes para el cliente. El portal sigue mostrando solo los <code>Attachment</code>. Queda resuelto de paso el riesgo que la motivaba: <b>no hay ningún campo que distinga una nota interna de una apta para el cliente</b>, así que mostrarlas habría filtrado comentarios internos del staff.
         </div>
       </div>
     </div>
 
     <div class="phase-label">Fase B — lectura desbloqueada por el checkpoint</div>
+
 
     <div class="step done">
       <div class="num">6</div>
@@ -383,16 +385,6 @@
       </div>
     </div>
 
-    <div class="step">
-      <div class="num">8</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Refer a Friend — SOLO la vista de lectura</span><span class="tag ya">Ya</span></div>
-          <div class="desc">"Mis referidos": lista de leads referidos con su estado y las ganancias acumuladas, leyendo <code>Supporting_Lead__c</code> / <code>Supporting_Lead_Allocation__c</code>. <strong>El formulario para enviar un lead nuevo NO va aquí</strong> — eso escribe, y vive en la sección morada de abajo.</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- ================= FENCE 2 — INFRA ================= -->
@@ -409,19 +401,19 @@
     </div>
 
     <div class="step done">
-      <div class="num">9</div>
+      <div class="num">8</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Envío de correo real (Resend)</span><span class="tag ya">Ya</span></div>
           <div class="desc">El link de acceso ya llega por correo en vez de imprimirse en los logs. <strong>No se pudo por SMTP:</strong> Railway bloquea la salida SMTP (verificado — TCP a smtp.gmail.com expira en 587 y en 465, mientras HTTPS funciona), así que se implementó un adaptador de API HTTP. Runbook: <code>docs/resend-setup.md</code>.</div>
-          <div class="desc">⚠️ Pendiente para el go-live: hoy envía desde <code>onboarding@resend.dev</code>, que <strong>solo entrega al correo dueño de la cuenta de Resend</strong>. Ver paso 10.</div>
+          <div class="desc">⚠️ Pendiente para el go-live: hoy envía desde <code>onboarding@resend.dev</code>, que <strong>solo entrega al correo dueño de la cuenta de Resend</strong>. Ver paso 9.</div>
         </div>
       </div>
     </div>
 
     <div class="step">
-      <div class="num">10</div>
+      <div class="num">9</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -429,13 +421,13 @@
           <div class="desc"><strong>Dos cambios de DNS que conviene hacer juntos:</strong></div>
           <div class="desc">a) <strong>Vercel</strong>: Settings → Domains + registro DNS. Actualizar <code>APP_BASE_URL</code> en Railway al terminar (es lo que arma la URL del link de acceso).</div>
           <div class="desc">b) <strong>Resend</strong>: verificar <code>wholesaleshelfcorporations.com</code> para poder enviar desde <code>support@…</code> en vez de <code>onboarding@resend.dev</code> — sin esto solo llega correo al dueño de la cuenta de Resend, o sea ningún cliente real. Luego cambiar <code>SMTP_FROM_EMAIL</code> en Railway.</div>
-          <div class="desc">⚠️ Cuidado al agregar el SPF de Resend: el dominio ya tiene SPF de Google Workspace. <strong>Hay que fusionarlos en un solo registro</strong> — dos registros SPF invalidan ambos y tumban la entregabilidad de todo el correo del dominio, incluido el normal del equipo.</div>
+          <div class="warn">📖 <strong>Runbook completo paso a paso: <code>docs/dns-runbook.md</code></strong> (escrito el 2026-08-06, con el estado del DNS verificado en vivo ese día).<br>🔑 <strong>El DNS se administra en CLOUDFLARE</strong>, no en Vercel ni en el registrador — los nameservers son <code>gina/mark.ns.cloudflare.com</code>. Añadir registros en Vercel no haría absolutamente nada.<br>⚠️ Cuidado con el SPF: el dominio ya tiene <code>v=spf1 include:_spf.google.com include:_spf.salesforce.com include:formstack.com -all</code>. Un dominio admite <strong>un solo registro SPF</strong>; dos invalidan ambos y tumban también el correo normal del equipo. <strong>Pero el riesgo es menor de lo que parecía</strong>: Resend suele poner su SPF en el subdominio <code>send.</code> y alinear por DKIM, en cuyo caso no hay que fusionar nada. La regla de decisión está en el runbook §1.2. Si tocara fusionar, hay margen: <strong>5 de 10</strong> consultas DNS consumidas, y Resend suma 1.<br>🔴 <strong>Trampa de Cloudflare:</strong> el CNAME de Vercel debe quedar en <strong>DNS only</strong> (nube gris). Proxied (naranja) impide emitir el certificado.</div>
         </div>
       </div>
     </div>
 
     <div class="step done">
-      <div class="num">11</div>
+      <div class="num">10</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -447,19 +439,19 @@
     </div>
 
     <div class="step done">
-      <div class="num">12</div>
+      <div class="num">11</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Learning Center — contenido de video</span><span class="tag extra">Extra</span></div>
           <div class="desc">Grid de videos embebidos (YouTube unlisted / Vimeo = $0). El contenido lo produce WSC; el portal solo lo muestra.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-29 — la parte del portal.</strong> Quinta sección del portal, en <code>/learning</code>. <strong>Patrón elegido: índice que despliega el video en el sitio</strong> (acordeón), no una página por video — con videos cortos, mandar al cliente a otra pantalla le cuesta 3 interacciones llegar al segundo video en vez de 1, y mete un "atrás" propio que compite con el del navegador.<br>🔑 <strong>Pero el video abierto vive en la URL</strong> (<code>/learning/&lt;slug&gt;</code>, misma página con un video expandido): eso recupera lo único bueno del patrón de página aparte — soporte puede mandarle a un cliente el link de un video concreto — y hace que el botón atrás del navegador cierre el reproductor. Cerrar usa <code>replace</code> para no expulsar del portal a quien llegó por link directo.<br>El <code>&lt;iframe&gt;</code> <strong>solo se monta al abrir</strong>; el índice muestra la miniatura. Cada embed de YouTube arrastra megabytes de JS de terceros y montar los tres para enseñar una lista de títulos es una página que nadie espera en el móvil. Se usa <code>youtube-nocookie.com</code> (no deja cookie de tracking hasta que se le da play) y <code>rel=0</code>, para que las sugerencias del final se queden en el canal de WSC en vez de ofrecerle la competencia a un cliente que ya pagó.<br>⚠️ <strong>Falta el contenido real.</strong> Los 3 videos actuales son marcadores puestos por el stakeholder para ver la estructura: <strong>dos son reseñas de clientes y uno es un caso</strong> — ninguno explica el proceso post-venta, que es para lo que existe esta sección. Los títulos se sacaron del oEmbed de YouTube en vez de escribirse a mano, y las descripciones quedaron vacías a propósito: describir un video que no hemos visto es inventarle contenido. Todo se edita en un solo archivo, <code>apps/web/src/content/learning-center.ts</code>.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-29 — la parte del portal.</strong> Quinta sección del portal, en <code>/learning</code>. <strong>Patrón elegido: índice que despliega el video en el sitio</strong> (acordeón), no una página por video — con videos cortos, mandar al cliente a otra pantalla le cuesta 3 interacciones llegar al segundo video en vez de 1, y mete un "atrás" propio que compite con el del navegador.<br>🔑 <strong>Pero el video abierto vive en la URL</strong> (<code>/learning/&lt;slug&gt;</code>, misma página con un video expandido): eso recupera lo único bueno del patrón de página aparte — soporte puede mandarle a un cliente el link de un video concreto — y hace que el botón atrás del navegador cierre el reproductor. Cerrar usa <code>replace</code> para no expulsar del portal a quien llegó por link directo.<br>El <code>&lt;iframe&gt;</code> <strong>solo se monta al abrir</strong>; el índice muestra la miniatura. Cada embed de YouTube arrastra megabytes de JS de terceros y montar los tres para enseñar una lista de títulos es una página que nadie espera en el móvil. Se usa <code>youtube-nocookie.com</code> (no deja cookie de tracking hasta que se le da play) y <code>rel=0</code>, para que las sugerencias del final se queden en el canal de WSC en vez de ofrecerle la competencia a un cliente que ya pagó.<br>⚠️ <strong>Falta el contenido real.</strong> Los 3 videos actuales son marcadores puestos por el stakeholder para ver la estructura: <strong>dos son reseñas de clientes y uno es un caso</strong> — ninguno explica el proceso post-venta, que es para lo que existe esta sección. Los títulos se sacaron del oEmbed de YouTube en vez de escribirse a mano, y las descripciones quedaron vacías a propósito: describir un video que no hemos visto es inventarle contenido. Todo se edita en un solo archivo, <code>apps/web/src/content/learning-center.ts</code>.<br>📌 <strong>Decisión del stakeholder (2026-08-06): el contenido real se añade AL FINAL del proyecto.</strong> Para salir a producción antes de tenerlo, la sección mostrará un <em>"Coming Soon…"</em> en vez de los marcadores. <strong>Hasta entonces no se toca nada</strong> — la base se queda exactamente como está, con los 3 videos actuales. No adelantar el "Coming Soon": es un cambio de una línea en el archivo de contenido y se hace justo antes del go-live, no ahora.</div>
         </div>
       </div>
     </div>
 
     <div class="step done">
-      <div class="num">13</div>
+      <div class="num">12</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -471,13 +463,13 @@
     </div>
 
     <div class="step">
-      <div class="num">14</div>
+      <div class="num">13</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Deuda de tests</span><span class="tag ya">Ya</span></div>
           <div class="desc">Tests de integración contra el sandbox real + Playwright e2e. Puede avanzar en paralelo en cualquier momento.</div>
-          <div class="warn">Avanzado en parte: ya existe <code>server.test.ts</code> (nivel HTTP, con <code>app.inject</code>) y factories de fixtures tipadas en <code>apps/web/src/test/fixtures.ts</code>. Falta Playwright e2e.</div>
+          <div class="warn">Avanzado en parte: ya existe <code>server.test.ts</code> (nivel HTTP, con <code>app.inject</code>) y factories de fixtures tipadas en <code>apps/web/src/test/fixtures.ts</code>. Falta Playwright e2e.<br>✅ <strong>2026-08-06: el stakeholder verificó el flujo a mano y funciona</strong> (login por magic link → ver orden → descargar documento). Eso confirma que <em>hoy</em> está bien; lo que sigue faltando es la parte automatizada, que es lo que avisa el día que se rompa. Se deja abierto como deuda, no como funcionalidad pendiente — <strong>no hay nada que arreglar aquí</strong>.</div>
         </div>
       </div>
     </div>
@@ -494,7 +486,7 @@
     </div>
 
     <div class="step">
-      <div class="num">15</div>
+      <div class="num">14</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -535,8 +527,9 @@
       <div class="num">W2</div>
       <div class="card">
         <div class="body">
-          <div class="top"><span class="title">Refer a Friend — enviar lead</span><span class="tag blocked">CEO</span></div>
-          <div class="desc">El formulario que crea el <code>Supporting_Lead__c</code>. La vista de "mis referidos" (solo lectura) sí está en el paso 8; esto es solo la mitad que escribe. Depende de Q3.</div>
+          <div class="top"><span class="title">Refer a Friend — la sección completa</span><span class="tag blocked">CEO</span></div>
+          <div class="desc">Las dos mitades: la lista de "mis referidos" (lee <code>Supporting_Lead__c</code> / <code>Supporting_Lead_Allocation__c</code>) y el formulario que crea el lead nuevo.</div>
+          <div class="desc">🔄 <strong>Movido aquí el 2026-08-06 por decisión del stakeholder</strong> — antes era el paso 8, partido por la costura lectura/escritura. Razón: <em>"better to finish the current stuff"</em>. Se trae también la mitad de lectura <strong>aunque fuese un mockup</strong>, porque construir media sección y dejar la columna de ganancias en blanco esperando a Q3 se ve peor que no tenerla. Las dos mitades vuelven juntas cuando Q3 defina las reglas del negocio (qué es un "CP", montos, cuándo se paga, cómo se rastrea).</div>
         </div>
       </div>
     </div>
@@ -564,7 +557,8 @@
 
   <footer>
     Ábrelo directamente en el navegador (doble click) — no depende de ningún servidor.<br />
-    Última actualización: 2026-07-24.
+    Última actualización: 2026-08-06 — Refer a Friend salió de la secuencia numerada y pasó
+    entero a la cerca de escritura (W2), así que el total bajó de 15 a 14 pasos.
   </footer>
 </div>
 

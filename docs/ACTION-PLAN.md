@@ -3,17 +3,20 @@
 > # ⛔ ESTE CHECKLIST YA NO ES EL VIGENTE — congelado el 2026-07-22
 >
 > **La secuencia que se está ejecutando es [`execution-roadmap.html`](execution-roadmap.html) —
-> 9/15 al 2026-07-29.** Se reestructuró el 2026-07-24 alrededor del eje **lectura vs escritura**
+> 9/14 al 2026-08-06.** Se reestructuró el 2026-07-24 alrededor del eje **lectura vs escritura**
 > (directiva del stakeholder: primero todo lo que solo lee de la base de datos), que es un
 > ordenamiento distinto al de las fases P1–P6 de este archivo.
 >
 > Cambios de fondo posteriores a este documento que lo dejan desalineado:
 > - **Los tickets de soporte pasaron a diferidos** — el objeto que se asumía (`Case`) **no se usa
 >   en producción** de esta org. De ahí salió la pregunta abierta Q5.
-> - **Refer a Friend se partió por la costura lectura/escritura**: la lista de referidos se puede
->   construir, el formulario de enviar un lead no (escribe, y depende de Q3).
+> - **Refer a Friend se partió por la costura lectura/escritura** el 2026-07-24 (lista sí,
+>   formulario no) y **esa división se revirtió el 2026-08-06**: la sección entera se fue a la
+>   cerca de escritura (W2) por decisión del stakeholder — *"better to finish the current
+>   stuff"*. Las dos mitades vuelven juntas cuando Q3 defina las reglas. El total de pasos bajó
+>   de 15 a 14.
 > - **Q1 y Q2 se cerraron** sobre la marcha ([`checkpoint-q1-q2.md`](checkpoint-q1-q2.md)); solo
->   quedan Q3–Q6 para el CEO.
+>   quedan Q3 y Q4 para el CEO (Q5 se resolvió por alcance, Q6 se cerró el 2026-08-06: las `Note` no se muestran).
 >
 > Se conserva por el **feedback textual del stakeholder** que hay más abajo, que sigue siendo la
 > fuente de qué pidió y con qué palabras. Para saber qué está construido, el roadmap.

@@ -49,6 +49,14 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().min(1).optional(),
   SMTP_FROM_EMAIL: z.string().email().optional(),
   SMTP_FROM_NAME: z.string().min(1).default("WSC Client Portal"),
+  /**
+   * Where a client's reply actually goes. Sending as `noreply@` keeps the From line
+   * impersonal, but on its own it drops every reply on the floor — and a client whose
+   * sign-in link failed will hit Reply, not look up a phone number. Set this to a mailbox a
+   * human reads (`support@…`). Left unset, no Reply-To header is sent and behaviour is
+   * exactly as before.
+   */
+  SMTP_REPLY_TO_EMAIL: z.string().email().optional(),
 
   // Gmail API (EMAIL_SENDER=gmail-api). Required trio checked in the composition root,
   // matching how the Salesforce JWT vars are handled. The private key accepts either the

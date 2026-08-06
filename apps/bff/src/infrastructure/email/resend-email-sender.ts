@@ -4,6 +4,9 @@ export interface ResendConfig {
   apiKey: string;
   fromEmail: string;
   fromName: string;
+  /** Optional; omitted from the payload when absent so nothing changes for callers that
+   *  don't set it. See `SMTP_REPLY_TO_EMAIL` in config/env.ts for why it exists. */
+  replyToEmail?: string;
 }
 
 const SEND_URL = "https://api.resend.com/emails";
@@ -28,6 +31,7 @@ export const createResendEmailSender = (config: ResendConfig): EmailSender => {
       body: JSON.stringify({
         from: `${config.fromName} <${config.fromEmail}>`,
         to: [message.to],
+        ...(config.replyToEmail ? { reply_to: config.replyToEmail } : {}),
         subject: message.subject,
         html: message.html,
         text: message.text,

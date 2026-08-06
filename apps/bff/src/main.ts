@@ -59,6 +59,7 @@ function buildEmailSender(env: Env): EmailSender {
       apiKey: env.RESEND_API_KEY,
       fromEmail: env.SMTP_FROM_EMAIL,
       fromName: env.SMTP_FROM_NAME,
+      ...(env.SMTP_REPLY_TO_EMAIL ? { replyToEmail: env.SMTP_REPLY_TO_EMAIL } : {}),
     });
   }
 

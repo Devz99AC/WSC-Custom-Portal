@@ -9,7 +9,7 @@ e-sign via **Formstack Documents**), support, a referral program, and a learning
 front of it. See [`CLAUDE.md`](CLAUDE.md), [`ROADMAP.md`](ROADMAP.md), and
 [`docs/`](docs/) for the authoritative architecture and plan.
 
-> ## 📌 Current status — 2026-07-29 · **9 of 15 steps**
+> ## 📌 Current status — 2026-08-06 · **9 of 14 steps**
 >
 > **The live checklist is [`docs/execution-roadmap.html`](docs/execution-roadmap.html)** (open in
 > a browser — the progress bar is computed from the file itself). Treat it as the current-state
@@ -20,7 +20,7 @@ front of it. See [`CLAUDE.md`](CLAUDE.md), [`ROADMAP.md`](ROADMAP.md), and
 > Resend's HTTPS API (Railway blocks outbound SMTP). Typed Salesforce error classification.
 > Gates green: typecheck 4/4, lint clean, build 3/3, 87 tests.
 >
-> **Blocking go-live: step 10 (DNS).** Until `wholesaleshelfcorporations.com` is verified as a
+> **Blocking go-live: step 9 (DNS).** Until `wholesaleshelfcorporations.com` is verified as a
 > sending domain in Resend, magic-link emails only reach the Resend account owner — no real
 > client can sign in. ⚠️ Merge the Resend SPF **into** the existing Google Workspace record; two
 > SPF records invalidate both and break the team's normal email.
