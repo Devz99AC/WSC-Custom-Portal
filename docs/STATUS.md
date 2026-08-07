@@ -2,7 +2,7 @@
 
 > # ⛔ ESTE DOCUMENTO ES HISTÓRICO — dejó de actualizarse el 2026-07-22
 >
-> **El estado actual vive en [`execution-roadmap.html`](execution-roadmap.html) — 10/14 al
+> **El estado actual vive en [`execution-roadmap.html`](execution-roadmap.html) — 10/18 al
 > 2026-08-06.** Ábrelo en el navegador; la barra de progreso la calcula el propio archivo.
 >
 > Después de la fecha de este documento pasó **una semana entera de trabajo** que no está aquí:

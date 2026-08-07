@@ -13,7 +13,7 @@
 > below still describe them. Keep this for the depth-of-scope rationale per pillar.
 >
 > 📌 **What is actually being executed, and how far it has got, lives in
-> [`docs/execution-roadmap.html`](docs/execution-roadmap.html) — 10/14 as of 2026-08-06.** Open it
+> [`docs/execution-roadmap.html`](docs/execution-roadmap.html) — 10/18 as of 2026-08-06.** Open it
 > in a browser. Where this file and that one disagree, **that one wins**.
 >
 > <details><summary>Historical live status (2026-07-22)</summary>

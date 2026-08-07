@@ -3,7 +3,7 @@
 > # ⛔ ESTE CHECKLIST YA NO ES EL VIGENTE — congelado el 2026-07-22
 >
 > **La secuencia que se está ejecutando es [`execution-roadmap.html`](execution-roadmap.html) —
-> 10/14 al 2026-08-06.** Se reestructuró el 2026-07-24 alrededor del eje **lectura vs escritura**
+> 10/18 al 2026-08-06.** Se reestructuró el 2026-07-24 alrededor del eje **lectura vs escritura**
 > (directiva del stakeholder: primero todo lo que solo lee de la base de datos), que es un
 > ordenamiento distinto al de las fases P1–P6 de este archivo.
 >

@@ -78,32 +78,46 @@ export function DocumentProductPage() {
         <div className="card-h">Documents</div>
         {files.length === 0 ? (
           <p className="statusnote">
-            No documents have been shared yet for {title} — signed paperwork and receipts
-            will appear here once your advisor uploads them.
+            No documents have been shared yet for {title} — signed paperwork and receipts will
+            appear here once your advisor uploads them.
           </p>
         ) : (
           <div className="tbl-wrap">
-            <table className="lst">
-              <thead>
-                <tr>
-                  <th>Document</th>
-                  <th>Order</th>
-                  <th>Shared</th>
-                  <th>Size</th>
-                  <th></th>
+            {/* Roles are explicit because the ≤640px card layout overrides `display`,
+                which drops them — see theme.css "TABLE". */}
+            <table className="lst" role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Document</th>
+                  <th role="columnheader">Order</th>
+                  <th role="columnheader">Shared</th>
+                  <th role="columnheader">Size</th>
+                  <th role="columnheader">
+                    <span className="vh">Download</span>
+                  </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {files.map((file) => (
-                  <tr key={file.id}>
-                    <td>
-                      <span className="rowlink-a">{file.name}</span>
-                      {file.description && <div className="pd">{file.description}</div>}
+                  <tr key={file.id} role="row">
+                    {/* Name and description are wrapped together so the stacked mobile cell
+                        keeps them as one value beside the label, not two. */}
+                    <td role="cell" data-label="Document" className="tcell-wide">
+                      <div>
+                        <span className="rowlink-a">{file.name}</span>
+                        {file.description && <div className="pd">{file.description}</div>}
+                      </div>
                     </td>
-                    <td>{file.orderNumber}</td>
-                    <td>{formatDate(file.sharedAt)}</td>
-                    <td className="tnum">{formatFileSize(file.sizeBytes)}</td>
-                    <td>
+                    <td role="cell" data-label="Order">
+                      {file.orderNumber}
+                    </td>
+                    <td role="cell" data-label="Shared">
+                      {formatDate(file.sharedAt)}
+                    </td>
+                    <td role="cell" data-label="Size" className="tnum">
+                      {formatFileSize(file.sizeBytes)}
+                    </td>
+                    <td role="cell" className="tcell-action">
                       <a className="rowlink-a" href={documentDownloadUrl(file.id)} download>
                         Download
                       </a>

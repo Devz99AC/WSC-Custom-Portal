@@ -6,7 +6,7 @@
 > para eso**: los "próximos pasos" que enumera abajo, en su mayoría, o están hechos o cambiaron
 > de forma.
 >
-> **Para retomar, abre [`execution-roadmap.html`](execution-roadmap.html) — 10/14 al 2026-08-06.**
+> **Para retomar, abre [`execution-roadmap.html`](execution-roadmap.html) — 10/18 al 2026-08-06.**
 > Cada paso terminado lleva su propia nota de qué se decidió y por qué, que es exactamente lo que
 > este documento pretendía dar.
 >

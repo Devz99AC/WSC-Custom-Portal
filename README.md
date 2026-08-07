@@ -9,7 +9,7 @@ e-sign via **Formstack Documents**), support, a referral program, and a learning
 front of it. See [`CLAUDE.md`](CLAUDE.md), [`ROADMAP.md`](ROADMAP.md), and
 [`docs/`](docs/) for the authoritative architecture and plan.
 
-> ## 📌 Current status — 2026-08-06 · **10 of 14 steps**
+> ## 📌 Current status — 2026-08-06 · **10 of 18 steps**
 >
 > **The live checklist is [`docs/execution-roadmap.html`](docs/execution-roadmap.html)** (open in
 > a browser — the progress bar is computed from the file itself). Treat it as the current-state

@@ -42,31 +42,39 @@ export function DocumentsPage() {
       <div className="card">
         {products.length === 0 ? (
           <p className="statusnote">
-            No products with documents yet — once your advisor assigns a shelf corporation
-            to an order, it will show up here.
+            No products with documents yet — once your advisor assigns a shelf corporation to an
+            order, it will show up here.
           </p>
         ) : (
           <div className="tbl-wrap">
-            <table className="lst">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Entity type</th>
-                  <th>Order(s)</th>
-                  <th>Documents</th>
+            {/* Roles are explicit because the ≤640px card layout overrides `display`,
+                which drops them — see theme.css "TABLE". */}
+            <table className="lst" role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Product</th>
+                  <th role="columnheader">Entity type</th>
+                  <th role="columnheader">Order(s)</th>
+                  <th role="columnheader">Documents</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {products.map((product) => (
-                  <tr key={product.id} className="rowlink">
-                    <td>
+                  <tr key={product.id} className="rowlink" role="row">
+                    <td role="cell" data-label="Product">
                       <Link className="rowlink-a" to={`/documents/${product.id}`}>
                         {product.name}
                       </Link>
                     </td>
-                    <td>{product.entityType}</td>
-                    <td>{product.orderNumbers.join(", ")}</td>
-                    <td className="tnum">{product.documentCount}</td>
+                    <td role="cell" data-label="Entity type">
+                      {product.entityType}
+                    </td>
+                    <td role="cell" data-label="Order(s)">
+                      {product.orderNumbers.join(", ")}
+                    </td>
+                    <td role="cell" data-label="Documents" className="tnum">
+                      {product.documentCount}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -77,8 +85,8 @@ export function DocumentsPage() {
 
       {products.some((product) => product.id === UNFILED_PRODUCT_ID) && (
         <p className="statusnote">
-          Some files belong to an order that doesn&apos;t have a shelf corporation assigned
-          yet, so they&apos;re grouped separately until your advisor links one.
+          Some files belong to an order that doesn&apos;t have a shelf corporation assigned yet, so
+          they&apos;re grouped separately until your advisor links one.
         </p>
       )}
     </>

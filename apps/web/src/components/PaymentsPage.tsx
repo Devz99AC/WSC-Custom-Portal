@@ -78,28 +78,39 @@ export function PaymentsPage() {
           <p className="statusnote">No payments recorded yet.</p>
         ) : (
           <div className="tbl-wrap">
-            <table className="lst">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Product</th>
-                  <th>Order</th>
-                  <th>Method</th>
-                  <th>Amount</th>
-                  <th>Status</th>
+            {/* Below 640px each row stacks into a card, labelled from `data-label`. That
+                needs `display` overrides, which drop the implicit ARIA table roles, so the
+                roles below are explicit — see theme.css "TABLE". */}
+            <table className="lst" role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Date</th>
+                  <th role="columnheader">Product</th>
+                  <th role="columnheader">Order</th>
+                  <th role="columnheader">Method</th>
+                  <th role="columnheader">Amount</th>
+                  <th role="columnheader">Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {payments.data.payments.map((payment) => (
-                  <tr key={payment.id}>
-                    <td>{formatDate(payment.statusDate)}</td>
-                    <td>{payment.productName ?? "—"}</td>
-                    <td>
+                  <tr key={payment.id} role="row">
+                    <td role="cell" data-label="Date">
+                      {formatDate(payment.statusDate)}
+                    </td>
+                    <td role="cell" data-label="Product">
+                      {payment.productName ?? "—"}
+                    </td>
+                    <td role="cell" data-label="Order">
                       <Link to={`/orders/${payment.orderId}`}>{payment.orderNumber}</Link>
                     </td>
-                    <td>{payment.method}</td>
-                    <td className="tnum">{money(payment.amount)}</td>
-                    <td>
+                    <td role="cell" data-label="Method">
+                      {payment.method}
+                    </td>
+                    <td role="cell" data-label="Amount" className="tnum">
+                      {money(payment.amount)}
+                    </td>
+                    <td role="cell" data-label="Status">
                       <span className={`badge ${payment.isVerified ? "b-ok" : "b-warn"}`}>
                         {payment.isVerified ? "Verified" : "Pending"}
                       </span>

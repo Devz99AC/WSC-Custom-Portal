@@ -31,12 +31,39 @@
   box-sizing: border-box;
 }
 
+html {
+  /* iOS inflates text in landscape unless this is pinned, which silently breaks every
+     font-size below. */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   font-family: "Helvetica Neue", Arial, sans-serif;
   background: var(--wsc-bg);
   color: var(--wsc-ink);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Visible only to assistive tech — for labels that would be redundant on screen (e.g. an
+   action column whose header is blank). */
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* One consistent keyboard-focus ring. Gold reads against both the white content area and
+   the navy sidebar. */
+:focus-visible {
+  outline: 2px solid var(--wsc-gold);
+  outline-offset: 2px;
 }
 
 a {
@@ -70,15 +97,23 @@ a:hover {
   padding: 48px 16px;
   text-align: center;
 }
-.wsc-shell .err {
+/* Global, not scoped to `.wsc-shell` — the same class is used for the failure states
+   inside `.main` and on the login card, where it previously fell through to unstyled
+   browser-default body text. */
+.err {
   color: var(--wsc-red-d);
+  font-size: 12px;
   font-weight: 700;
-  margin-bottom: 16px;
+  line-height: 1.45;
+  margin: 0 0 16px;
 }
 
 /* ---------- LOGIN ---------- */
 .login {
   min-height: 100vh;
+  /* Fall back for browsers without dvh; dvh keeps the card centred on mobile Safari as
+     the URL bar collapses, instead of the layout jumping mid-scroll. */
+  min-height: 100dvh;
   background: linear-gradient(157deg, var(--wsc-navy-d), var(--wsc-navy-700));
   display: flex;
   flex-direction: column;
@@ -91,8 +126,11 @@ a:hover {
   border-radius: 14px;
   padding: 34px 32px;
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
   text-align: center;
+  /* The card had no elevation at all, so it read as a white rectangle painted onto the
+     navy rather than sitting on it. Same shadow the prototype used. */
+  box-shadow: 0 24px 60px -28px rgba(15, 24, 48, 0.5);
 }
 .login-card .wsc-logo {
   font-size: 40px;
@@ -108,6 +146,36 @@ a:hover {
 }
 .login-card .wmark b {
   color: var(--wsc-red);
+}
+/* Hairline between the brand lockup and the form, so the card has two clear halves
+   instead of one long centred column. */
+.login-card .kicker {
+  padding-top: 20px;
+  border-top: 1px solid var(--wsc-line);
+}
+.login-card .err {
+  background: var(--wsc-red-bg);
+  border-radius: 8px;
+  padding: 9px 11px;
+  text-align: left;
+}
+/* Confirmation mark on the "check your email" state — the screen otherwise looked
+   identical in weight to the form the client just left. */
+.login-tick {
+  width: 42px;
+  height: 42px;
+  margin: 22px auto 14px;
+  border-radius: 50%;
+  background: var(--wsc-ok-bg);
+  color: var(--wsc-ok);
+  font-size: 21px;
+  font-weight: 800;
+  line-height: 42px;
+}
+/* The address is echoed back for checking, so it must not be cut off or push the card
+   wide, however long it is. */
+.login-echo {
+  overflow-wrap: anywhere;
 }
 .kicker {
   font-size: 10px;
@@ -145,8 +213,10 @@ a:hover {
   width: 100%;
   border: 1px solid var(--wsc-line);
   border-radius: 8px;
-  padding: 11px 12px;
-  font-size: 13px;
+  padding: 12px;
+  /* Must stay at 16px: iOS Safari zooms the whole page in when a focused input is any
+     smaller, and the client then has to pinch back out to find the button. */
+  font-size: 16px;
   color: var(--wsc-ink);
   font-family: inherit;
 }
@@ -162,8 +232,11 @@ a:hover {
   border: none;
   border-radius: 8px;
   padding: 13px;
+  /* 44px is the smallest reliable touch target. */
+  min-height: 46px;
   font-size: 13px;
   font-weight: 800;
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: 0.15s;
   font-family: inherit;
@@ -172,11 +245,45 @@ a:hover {
   background: var(--wsc-gold-d);
   color: #fff;
 }
+.btn-gold:active {
+  transform: translateY(1px);
+}
+/* In flight. Without this the button looked untouched after the tap, so the natural
+   reaction is to press it again. */
+.btn-gold:disabled {
+  background: var(--wsc-line);
+  color: var(--wsc-mut);
+  cursor: progress;
+  transform: none;
+}
+/* Secondary action on the confirmation screen — a real button, but it must not compete
+   with the gold primary. */
+.btn-quiet {
+  margin-top: 18px;
+  background: none;
+  border: none;
+  padding: 10px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--wsc-navy);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.btn-quiet:hover {
+  color: var(--wsc-gold-d);
+}
 .login-foot {
   font-size: 11px;
   color: var(--wsc-mut);
   margin-top: 16px;
   line-height: 1.5;
+}
+.login-foot a {
+  font-weight: 700;
+  /* Tappable on a phone rather than a line of text you have to read out and dial. */
+  display: inline-block;
+  padding: 4px 2px;
 }
 .login-mark {
   color: #c4cedd;
@@ -219,6 +326,10 @@ a:hover {
 }
 .side-logo .sl-sub b {
   color: var(--wsc-red);
+}
+.side-nav {
+  display: flex;
+  flex-direction: column;
 }
 .nav-i {
   display: flex;
@@ -292,6 +403,10 @@ a:hover {
 
 .main {
   padding: 24px 26px;
+  /* A grid track sized `1fr` still refuses to shrink below its content, so one long
+     unbreakable string anywhere inside used to widen the whole shell and push the page
+     sideways. This caps it at the track and lets the content wrap instead. */
+  min-width: 0;
 }
 .topbar {
   display: flex;
@@ -299,6 +414,11 @@ a:hover {
   align-items: flex-end;
   margin-bottom: 18px;
   gap: 12px;
+  /* The status badge drops under the heading rather than squeezing it. */
+  flex-wrap: wrap;
+}
+.topbar h2 {
+  overflow-wrap: anywhere;
 }
 .topbar h2 {
   font-size: 20px;
@@ -570,6 +690,15 @@ a:hover {
   gap: 13px;
   align-items: flex-start;
 }
+/* A flex item won't shrink below its content by default, so a long email or corp name in
+   the text column pushed the card wider than the screen instead of wrapping. */
+.prod > :last-child {
+  min-width: 0;
+  flex: 1;
+}
+.prod .pn {
+  overflow-wrap: anywhere;
+}
 .prod-ic {
   width: 48px;
   height: 48px;
@@ -604,6 +733,11 @@ a:hover {
   font-weight: 700;
   color: var(--wsc-navy);
   text-decoration: none;
+  /* An email address is one unbreakable word to the line breaker; without this it runs
+     off the side of the card on a phone. */
+  overflow-wrap: anywhere;
+  /* These are the primary action on the Support page and are tapped, not clicked. */
+  padding: 3px 0;
 }
 .contact-lines a:hover {
   text-decoration: underline;
@@ -639,6 +773,7 @@ a:hover {
   color: var(--wsc-ink);
   font-weight: 700;
   margin-top: 2px;
+  overflow-wrap: anywhere;
 }
 /* Inline "Show/Hide" toggle for masked values (EIN) — reads as a link, not a form button. */
 .kv .v .reveal {
@@ -658,7 +793,17 @@ a:hover {
   text-decoration: underline;
 }
 
-/* ---------- TABLE ---------- */
+/* ---------- TABLE ----------
+ * Two layouts from one markup. Wide: an ordinary table. At ≤640px each row becomes a
+ * stacked card whose fields are labelled from the `data-label` attribute the cells carry
+ * — see the media query at the foot of this file. Six columns of dates, money and badges
+ * cannot be squeezed into 375px, and dropping columns would hide records a client is
+ * entitled to see.
+ *
+ * Building the cards means overriding `display` on the table elements, which makes
+ * browsers discard their implicit ARIA roles, so the components spell the roles out. Do
+ * not "tidy" those away.
+ */
 .tbl-wrap {
   width: 100%;
   overflow-x: auto;
@@ -674,17 +819,27 @@ table.lst th {
   letter-spacing: 0.05em;
   color: var(--wsc-mut);
   font-weight: 800;
-  padding: 0 0 8px;
+  padding: 0 14px 8px 0;
   border-bottom: 1px solid var(--wsc-line);
 }
 table.lst td {
   font-size: 11.5px;
   color: var(--wsc-ink);
-  padding: 9px 0;
+  /* Column gutter: with no right padding the headings ran together into one unreadable
+     string ("DATEPRODUCTORDER") as soon as the viewport got tight. */
+  padding: 9px 14px 9px 0;
   border-bottom: 1px solid var(--wsc-line);
+}
+table.lst th:last-child,
+table.lst td:last-child {
+  padding-right: 0;
 }
 table.lst tr:last-child td {
   border-bottom: none;
+}
+.tcell-action {
+  text-align: right;
+  white-space: nowrap;
 }
 .tnum {
   color: var(--wsc-navy);
@@ -765,6 +920,9 @@ tr.rowlink:hover {
   font-weight: 800;
   color: var(--wsc-navy);
   line-height: 1.35;
+  /* Titles carry the bare domain ("WholesaleShelfCorporations.com"), which is a single
+     30-character word the line breaker will not split on its own. */
+  overflow-wrap: anywhere;
 }
 .lc-sum {
   font-size: 11px;
@@ -814,33 +972,239 @@ tr.rowlink:hover {
   color: var(--wsc-navy);
 }
 
+/* ---------- TABLET ---------- */
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 184px 1fr;
+  }
+  .main {
+    padding: 22px 20px 40px;
+  }
+}
+
+/* ---------- PHONE ---------- */
 @media (max-width: 640px) {
+  .login {
+    padding: 32px 16px;
+  }
+  .login-card {
+    padding: 28px 22px;
+  }
+  .login-card h1 {
+    font-size: 20px;
+  }
+
+  /* The sidebar becomes a header above the content. `auto 1fr` matters: the shell is a
+     100vh grid, and with both rows auto-sized the browser stretches them to fill it — on
+     a short page (an error, an empty state) that blew the header up to half the screen
+     with the nav floating in the middle of it. */
   .shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
   .side {
     flex-direction: row;
     flex-wrap: wrap;
-    padding: 12px;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .side-logo {
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    border-bottom: none;
+  }
+  .side-logo .wsc-logo {
+    font-size: 22px;
+  }
+  /* Sign-out is pulled up beside the logo (source order puts it last), so the links get
+     the full width of the row below instead of being split around it. */
+  .side-logo {
+    order: 1;
   }
   .side-foot {
+    order: 2;
+  }
+  .side-nav {
+    order: 3;
+    flex-basis: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .nav-i {
+    padding: 8px 11px;
+    font-size: 12px;
+    border-left: none;
+    border-radius: 7px;
+  }
+  .nav-i.on {
+    border-left-color: transparent;
+    background: rgba(255, 255, 255, 0.14);
+  }
+  /* This whole block used to be `display:none`, which left a client on a phone with no
+     way to sign out at all. Only the identity line goes — the name and email are already
+     on Profile — and the button stays, up on the logo row. */
+  .side-foot {
+    margin-top: 0;
+    padding: 0;
+    border-top: none;
+  }
+  .side-user {
     display: none;
   }
-  .stat-grid,
-  .kv {
-    grid-template-columns: 1fr;
+  .signout {
+    width: auto;
+    margin-top: 0;
+    padding: 8px 12px;
   }
+
+  .main {
+    padding: 16px 14px 32px;
+  }
+  .topbar {
+    margin-bottom: 14px;
+  }
+  .topbar h2 {
+    font-size: 18px;
+  }
+  .card {
+    padding: 14px 15px;
+  }
+
+  /* Label and figure sit on one line: three stacked full-width blocks pushed the actual
+     content of the page below the fold. */
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .stat {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: 12px;
+    padding: 12px 14px;
+  }
+  .stat .lab {
+    grid-area: 1 / 1;
+    margin-bottom: 0;
+  }
+  .stat .sub2 {
+    grid-area: 2 / 1;
+    margin-top: 1px;
+  }
+  .stat .val {
+    grid-area: 1 / 2 / span 2;
+    justify-self: end;
+    font-size: 19px;
+  }
+
+  /* Two per row while the values stay short, one when they don't. 140px is what actually
+     fits two columns inside a card at 375px once the page, card and column gaps are
+     taken out — 150 silently collapsed back to one. */
+  .kv {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
   .track {
     flex-wrap: wrap;
-    gap: 10px 0;
+    gap: 14px 0;
   }
   /* 4 display steps — half-width wraps to a clean 2×2 instead of 3 + 1 orphan. */
   .tstep {
     flex: 0 0 50%;
   }
+  .tstep .tl {
+    font-size: 9.5px;
+  }
+  /* Keep the connector that runs between the two steps in a row, drop the one that would
+     otherwise shoot off the right edge toward a step on the line below. Without any of
+     them the four steps read as unrelated badges rather than a sequence. */
   .tstep:not(:last-child)::after {
     display: none;
   }
+  .tstep:nth-child(odd):not(:last-child)::after {
+    display: block;
+  }
+
+  /* Rows become cards; each cell carries its own heading from `data-label`. */
+  .tbl-wrap {
+    overflow-x: visible;
+  }
+  table.lst,
+  table.lst tbody,
+  table.lst tr,
+  table.lst td {
+    display: block;
+  }
+  table.lst thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  table.lst tr {
+    border: 1px solid var(--wsc-line);
+    border-radius: 9px;
+    padding: 3px 13px;
+    margin-bottom: 9px;
+  }
+  table.lst tr:last-child {
+    margin-bottom: 0;
+  }
+  table.lst td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px 16px;
+    padding: 8px 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+    border-bottom: 1px solid var(--wsc-line);
+  }
+  table.lst td::before {
+    content: attr(data-label);
+    flex: 0 0 auto;
+    text-align: left;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 800;
+    color: var(--wsc-mut);
+  }
+  /* The desktop rule strips the border from every cell of the final row; here the
+     separators are internal to a card, so restore them and take the border off the last
+     cell of each card instead. Both selectors have to outrank `table.lst tr:last-child td`,
+     hence the redundant-looking `tr`. */
+  table.lst tr:last-child td {
+    border-bottom: 1px solid var(--wsc-line);
+  }
+  table.lst tr td:last-child {
+    border-bottom: none;
+  }
+  /* A filename plus its description is too much text to hang off the right edge in a
+     ragged-left column, so this kind of cell puts the heading on its own line and reads
+     top-to-bottom instead. */
+  table.lst td.tcell-wide {
+    display: block;
+    text-align: left;
+  }
+  table.lst td.tcell-wide::before {
+    display: block;
+    margin-bottom: 3px;
+  }
+  /* Download link: no heading to pair it with, so it lines up with the values above it
+     rather than sitting alone against the left edge. */
+  table.lst td.tcell-action {
+    justify-content: flex-end;
+  }
+  table.lst td.tcell-action::before {
+    content: none;
+  }
+
   .lc-head {
     gap: 10px;
     padding: 12px;
@@ -851,5 +1215,18 @@ tr.rowlink:hover {
   }
   .lc-panel {
     padding: 0 12px 13px;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-card {
+    padding: 24px 18px;
+  }
+  .nav-i {
+    padding: 7px 9px;
+    font-size: 11.5px;
+  }
+  .stat .val {
+    font-size: 18px;
   }
 }

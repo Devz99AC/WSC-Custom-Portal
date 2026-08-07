@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import type { Client } from "@wsc/shared";
+import { WscLogo } from "./WscLogo";
 
 const initials = (name: string): string =>
   name
@@ -26,31 +27,30 @@ export function AppShell({ client, onSignOut }: AppShellProps) {
     <div className="shell">
       <aside className="side">
         <div className="side-logo">
-          <div className="wsc-logo">
-            WS<span className="c">C</span>
-          </div>
-          <div className="sl-sub">
-            <b>W</b>HOLESALE<b>S</b>HELF<b>C</b>ORP
-          </div>
+          <WscLogo wordmark="short" />
         </div>
-        <NavLink to="/orders" className={navClass}>
-          My Orders
-        </NavLink>
-        <NavLink to="/payments" className={navClass}>
-          Payments
-        </NavLink>
-        <NavLink to="/documents" className={navClass}>
-          Documents
-        </NavLink>
-        <NavLink to="/learning" className={navClass}>
-          Learning Center
-        </NavLink>
-        <NavLink to="/support" className={navClass}>
-          Support
-        </NavLink>
-        <NavLink to="/profile" className={navClass}>
-          Profile
-        </NavLink>
+        {/* Grouped so the links can become a wrapping row of their own below the logo on a
+            phone, where the sidebar turns into a header (theme.css ≤640px). */}
+        <nav className="side-nav" aria-label="Sections">
+          <NavLink to="/orders" className={navClass}>
+            My Orders
+          </NavLink>
+          <NavLink to="/payments" className={navClass}>
+            Payments
+          </NavLink>
+          <NavLink to="/documents" className={navClass}>
+            Documents
+          </NavLink>
+          <NavLink to="/learning" className={navClass}>
+            Learning Center
+          </NavLink>
+          <NavLink to="/support" className={navClass}>
+            Support
+          </NavLink>
+          <NavLink to="/profile" className={navClass}>
+            Profile
+          </NavLink>
+        </nav>
         <div className="side-foot">
           <div className="side-user">
             <div className="ava">{initials(client.name)}</div>

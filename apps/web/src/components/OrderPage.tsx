@@ -145,7 +145,9 @@ export function OrderPage() {
                 { k: "State of formation", v: corp.stateOfFormation },
                 { k: "Incorporated", v: formatDate(corp.incorporationDate) },
                 corp.corpNumber ? { k: "Corp #", v: corp.corpNumber } : null,
-                corp.registrationNumber ? { k: "Registration #", v: corp.registrationNumber } : null,
+                corp.registrationNumber
+                  ? { k: "Registration #", v: corp.registrationNumber }
+                  : null,
                 // EIN lives on Online_Order__c, but it identifies the corporation — this is
                 // where a client looks for "my company's tax ID".
                 order.ein ? { k: "EIN", v: <EinValue ein={order.ein} /> } : null,
@@ -191,22 +193,30 @@ export function OrderPage() {
       <div className="card">
         <div className="card-h">Payment history</div>
         <div className="tbl-wrap">
-          <table className="lst">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Method</th>
-                <th>Amount</th>
-                <th>Status</th>
+          {/* Roles are explicit because the ≤640px card layout overrides `display`,
+              which drops them — see theme.css "TABLE". */}
+          <table className="lst" role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader">Date</th>
+                <th role="columnheader">Method</th>
+                <th role="columnheader">Amount</th>
+                <th role="columnheader">Status</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody role="rowgroup">
               {payments.map((payment) => (
-                <tr key={payment.id}>
-                  <td>{formatDate(payment.statusDate)}</td>
-                  <td>{payment.method}</td>
-                  <td className="tnum">{money(payment.amount)}</td>
-                  <td>
+                <tr key={payment.id} role="row">
+                  <td role="cell" data-label="Date">
+                    {formatDate(payment.statusDate)}
+                  </td>
+                  <td role="cell" data-label="Method">
+                    {payment.method}
+                  </td>
+                  <td role="cell" data-label="Amount" className="tnum">
+                    {money(payment.amount)}
+                  </td>
+                  <td role="cell" data-label="Status">
                     <span className={`badge ${payment.isVerified ? "b-ok" : "b-warn"}`}>
                       {payment.isVerified ? "Verified" : "Pending"}
                     </span>
@@ -214,11 +224,17 @@ export function OrderPage() {
                 </tr>
               ))}
               {order.balanceDue > 0 && (
-                <tr>
-                  <td>—</td>
-                  <td>Balance payment</td>
-                  <td className="tnum">{money(order.balanceDue)}</td>
-                  <td>
+                <tr role="row">
+                  <td role="cell" data-label="Date">
+                    —
+                  </td>
+                  <td role="cell" data-label="Method">
+                    Balance payment
+                  </td>
+                  <td role="cell" data-label="Amount" className="tnum">
+                    {money(order.balanceDue)}
+                  </td>
+                  <td role="cell" data-label="Status">
                     <span className="badge b-warn">Pending</span>
                   </td>
                 </tr>

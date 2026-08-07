@@ -20,11 +20,16 @@ import type {
  * SC_Corp__c — see docs/salesforce-data-model.md), so switching to live Salesforce is a
  * one-line change in the composition root. Mirrors the sandbox's real two orders
  * (UO1423102, UO1423103) for the same demo client.
+ *
+ * Every id here must be **15 or 18 characters** — the same shape a real Salesforce id has,
+ * and what the route params are validated against (`SALESFORCE_ID` in http/server.ts).
+ * These were 17 characters, which the regex rejects, so `/orders/:id` answered 400 for
+ * every order and the demo could never open one.
  */
 const DEMO_EMAIL = "m.brown@acmeholdings.com";
 
 const DEMO_CLIENT: Client = {
-  id: "a0Fdemo0000000001",
+  id: "a0Fdemo00000000001",
   email: DEMO_EMAIL,
   name: "Marcus Brown",
   phone: "+1 (305) 555-0148",
@@ -62,7 +67,7 @@ const DEMO_BACKEND_SUPPORT = {
 
 const DEMO_ORDERS: Order[] = [
   {
-    id: "a0Odemo0000000002",
+    id: "a0Odemo00000000002",
     orderNumber: "UO1423103",
     amount: 6200,
     paidToDate: 0,
@@ -86,7 +91,7 @@ const DEMO_ORDERS: Order[] = [
     clientId: DEMO_CLIENT.id,
   },
   {
-    id: "a0Odemo0000000001",
+    id: "a0Odemo00000000001",
     orderNumber: "UO1423102",
     amount: 8750,
     paidToDate: 8750,
@@ -106,7 +111,7 @@ const DEMO_ORDERS: Order[] = [
     ein: "88-1234567",
     einIssuedAt: "2026-05-14",
     shelfCorp: {
-      id: "a0Cdemo0000000001",
+      id: "a0Cdemo00000000001",
       name: "2016 Wyoming LLC",
       entityType: "LLC",
       stateOfFormation: "Wyoming",
@@ -133,10 +138,10 @@ const DEMO_ORDERS: Order[] = [
 ];
 
 const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
-  "a0Odemo0000000001": [
+  a0Odemo00000000001: [
     {
-      id: "a0Pdemo0000000001",
-      orderId: "a0Odemo0000000001",
+      id: "a0Pdemo00000000001",
+      orderId: "a0Odemo00000000001",
       orderNumber: "UO1423102",
       productName: "2016 Wyoming LLC",
       amount: 2500,
@@ -146,8 +151,8 @@ const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
       statusDate: "2026-05-08T16:40:00.000Z",
     },
     {
-      id: "a0Pdemo0000000002",
-      orderId: "a0Odemo0000000001",
+      id: "a0Pdemo00000000002",
+      orderId: "a0Odemo00000000001",
       orderNumber: "UO1423102",
       productName: "2016 Wyoming LLC",
       amount: 6250,
@@ -157,31 +162,31 @@ const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
       statusDate: "2026-05-03T10:00:00.000Z",
     },
   ],
-  "a0Odemo0000000002": [],
+  a0Odemo00000000002: [],
 };
 
 /** Mirrors the real model: attachments hang off the ORDER, filed under that order's corp. */
 const DEMO_DOCUMENTS: PortalDocument[] = [
   {
-    id: "00Pdemo0000000001",
+    id: "00Pdemo00000000001",
     name: "Articles of Organization - 2016 Wyoming LLC.pdf",
     contentType: "application/pdf",
     sizeBytes: 148_204,
     description: "Filed formation document issued by the Wyoming Secretary of State.",
     sharedAt: "2026-05-10T15:12:00.000Z",
-    shelfCorpId: "a0Cdemo0000000001",
-    orderId: "a0Odemo0000000001",
+    shelfCorpId: "a0Cdemo00000000001",
+    orderId: "a0Odemo00000000001",
     orderNumber: "UO1423102",
   },
   {
-    id: "00Pdemo0000000002",
+    id: "00Pdemo00000000002",
     name: "EIN Confirmation Letter (CP-575).pdf",
     contentType: "application/pdf",
     sizeBytes: 96_130,
     description: "IRS notice confirming the entity's Employer Identification Number.",
     sharedAt: "2026-05-14T09:41:00.000Z",
-    shelfCorpId: "a0Cdemo0000000001",
-    orderId: "a0Odemo0000000001",
+    shelfCorpId: "a0Cdemo00000000001",
+    orderId: "a0Odemo00000000001",
     orderNumber: "UO1423102",
   },
 ];
@@ -209,7 +214,11 @@ export class MockPortalRepository implements PortalRepository {
     if (!order) {
       return Promise.resolve(null);
     }
-    return Promise.resolve({ client: DEMO_CLIENT, order, payments: DEMO_PAYMENTS_BY_ORDER[order.id] ?? [] });
+    return Promise.resolve({
+      client: DEMO_CLIENT,
+      order,
+      payments: DEMO_PAYMENTS_BY_ORDER[order.id] ?? [],
+    });
   }
 
   listPaymentsByEmail(email: string): Promise<PaymentsList | null> {

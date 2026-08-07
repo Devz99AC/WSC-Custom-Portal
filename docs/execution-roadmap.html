@@ -239,10 +239,12 @@
     <div class="kicker">WSC Customer Portal</div>
     <h1>Ruta de ejecución</h1>
     <p class="sub">
-      Separado por <strong>tipo de acceso a Salesforce</strong>: primero todo lo que solo
-      <strong>lee</strong> datos y los muestra (el foco actual), luego infraestructura, y al
-      final lo que requiere <strong>escritura</strong> — diferido y fuera del alcance de
-      ahora. Marca <code>class="step done"</code> en un paso al completarlo; la barra de
+      <strong>Reestructurado el 2026-08-06.</strong> El eje anterior (lectura vs escritura) ya
+      cumplió: la lectura está terminada. Ahora lo que ordena el trabajo es
+      <strong>el camino a producción</strong> — y la pieza que faltaba en todos los planes
+      anteriores: <strong>el portal lee de un SANDBOX de Salesforce</strong>, no de la
+      organización real. Entre el estado actual y un cliente de verdad hay una migración
+      entera. Marca <code>class="step done"</code> en un paso al completarlo; la barra de
       progreso se recalcula sola.
     </p>
     <div class="legend">
@@ -268,7 +270,7 @@
 
   <div class="progress-row">
     <div class="progress-track"><div class="progress-fill" style="width: 0%"></div></div>
-    <div class="progress-label">10 / 14</div>
+    <div class="progress-label">10 / 18</div>
   </div>
 
   <!-- ================= FENCE 1 — LECTURA ================= -->
@@ -276,17 +278,14 @@
     <div class="fence-h">
       <div class="ic">👁️</div>
       <div>
-        <div class="ft">Acceso de LECTURA — el foco ahora</div>
+        <div class="ft">✅ COMPLETADO — el portal, funcionando contra el sandbox</div>
         <div class="fd">
-          Todo lo que consulta Salesforce y lo muestra en pantalla. El usuario de
-          integración ya tiene exactamente estos permisos (Permission Set
-          <code>WSC_Portal_Read_Only</code>), así que nada de esto necesita tocar
-          la configuración de seguridad de la org.
+          Las seis secciones del portal, el login por magic link, el dominio propio y el
+          correo real. Todo verificado en vivo. Cada paso conserva la nota de qué se decidió
+          y por qué — es el rastro de razonamiento del proyecto, no decoración.
         </div>
       </div>
     </div>
-
-    <div class="phase-label">Fase A — sin depender de nadie</div>
 
     <div class="step done">
       <div class="num">1</div>
@@ -323,49 +322,8 @@
       </div>
     </div>
 
-    <div class="step">
-      <div class="num">4</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Caché de lectura en Redis</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Read-through de los DTO ya formados. Reduce llamadas a la API de Salesforce (y protege del límite de governor) sin cambiar ninguna vista.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="num">5</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Paginación real en las listas</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Hoy hay un tope fijo (50 órdenes / 100 pagos) sin aviso al usuario. Cambiar a paginación keyset para que un cliente con mucho historial lo vea completo.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="checkpoint">
-      <div class="flag">💬</div>
-      <div class="box">
-        <div class="ct">Checkpoint — Conversación 1 con el CEO · <b>quedan 2 de 6</b></div>
-        <div class="cd">
-          <b>🟠 ABIERTAS</b><br />
-          <b>Q3</b> Refer a Friend: lógica de negocio completa (qué es un "CP", montos, cuándo se paga, cómo se rastrea). <b>Es lo único que bloquea W2</b> — la sección entera está parada esperando esto. ·
-          <b>Q4</b> herramienta de chat/AI (la org ya tiene LiveChat + Twilio instalados)<br /><br />
-          <b>✅ CERRADAS</b><br />
-          <s><b>Q1</b> pipeline</s> y <s><b>Q2</b> Implementation Manager</s> — cerradas el 2026-07-28 sobre la marcha, ver <code>docs/checkpoint-q1-q2.md</code>. ·
-          <s><b>Q5</b> ¿qué es "soporte"?</s> — resuelta <b>por alcance, no por decisión</b>: Support se entregó como hub de contacto (paso 10), así que nada depende ya de ella salvo que alguien pida crear tickets (W1). ·
-          <s><b>Q6</b> ¿se le muestran las <code>Note</code> al cliente?</s> — <b>cerrada el 2026-08-06: NO se muestran.</b> El stakeholder las declaró no relevantes para el cliente. El portal sigue mostrando solo los <code>Attachment</code>. Queda resuelto de paso el riesgo que la motivaba: <b>no hay ningún campo que distinga una nota interna de una apta para el cliente</b>, así que mostrarlas habría filtrado comentarios internos del staff.
-        </div>
-      </div>
-    </div>
-
-    <div class="phase-label">Fase B — lectura desbloqueada por el checkpoint</div>
-
-
     <div class="step done">
-      <div class="num">6</div>
+      <div class="num">4</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -377,7 +335,7 @@
     </div>
 
     <div class="step done">
-      <div class="num">7</div>
+      <div class="num">5</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -388,35 +346,20 @@
       </div>
     </div>
 
-  </div>
-
-  <!-- ================= FENCE 2 — INFRA ================= -->
-  <div class="fence infra">
-    <div class="fence-h">
-      <div class="ic">⚙️</div>
-      <div>
-        <div class="ft">Infraestructura y contenido — ni lectura ni escritura</div>
-        <div class="fd">
-          No toca la base de datos en absoluto. Necesario igual para que el portal
-          funcione de cara a un cliente real.
-        </div>
-      </div>
-    </div>
-
     <div class="step done">
-      <div class="num">8</div>
+      <div class="num">6</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Envío de correo real (Resend)</span><span class="tag ya">Ya</span></div>
           <div class="desc">El link de acceso ya llega por correo en vez de imprimirse en los logs. <strong>No se pudo por SMTP:</strong> Railway bloquea la salida SMTP (verificado — TCP a smtp.gmail.com expira en 587 y en 465, mientras HTTPS funciona), así que se implementó un adaptador de API HTTP. Runbook: <code>docs/resend-setup.md</code>.</div>
-          <div class="desc">⚠️ Pendiente para el go-live: hoy envía desde <code>onboarding@resend.dev</code>, que <strong>solo entrega al correo dueño de la cuenta de Resend</strong>. Ver paso 9.</div>
+          <div class="desc">⚠️ Pendiente para el go-live: hoy envía desde <code>onboarding@resend.dev</code>, que <strong>solo entrega al correo dueño de la cuenta de Resend</strong>. Ver paso 7.</div>
         </div>
       </div>
     </div>
 
     <div class="step done">
-      <div class="num">9</div>
+      <div class="num">7</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -431,19 +374,19 @@
     </div>
 
     <div class="step done">
-      <div class="num">10</div>
+      <div class="num">8</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Sección de Soporte + WhatsApp deep link</span><span class="tag extra">Extra</span></div>
           <div class="desc"><code>wa.me/&lt;número&gt;</code> como botón de contacto. Gratis, inmediato, cero backend.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-29.</strong> El deep link ya existía desde el paso 7 dentro del detalle de una orden; lo que faltaba era el sitio donde un cliente pregunta <em>"¿a quién le escribo?"</em>. Sexta sección del portal, en <code>/support</code>.<br>🔑 <strong>Es una lista de personas, no de órdenes.</strong> Un cliente con una corp en Pending Balance y otra en Work Started tiene tres personas distintas y ningún sitio que diga cuál es cuál; la vista orden-por-orden repite a la misma gente y sigue sin responder la pregunta. Cada persona sale una vez, con los productos que cubre debajo (nombrados por la corp, como en Documents). La línea de cobertura se oculta cuando hay una sola orden, porque ahí no desambigua nada.<br>🆕 <strong>Se añadió a qué corresponde cada rol</strong> (<code>STAFF_ROLE_PURPOSE</code>), según lo que fijó el stakeholder: todo entra por el Support Manager (hay subagentes detrás, pero el punto de entrada del cliente no cambia) y toda la documentación va a Back-End. Salesforce guarda <em>quién</em> ocupa un rol pero no tiene ningún campo para <em>qué</em> atiende ese rol, así que es lo único del contacto que no se puede leer del org. Va indexado <strong>por rol, nunca por persona</strong>: escribir "Lua" ahí sería devolver un nombre humano al código, justo lo que quitó el paso 7.<br>📇 Bloque de contacto de la empresa (teléfono, correo, oficina en Greenwood Village) en <code>WSC_CONTACT</code>, dentro de <code>packages/shared</code> porque el correo de acceso del BFF citaba el mismo teléfono a mano — dos copias de un teléfono son un teléfono que acaba contradiciéndose. De paso se corrigió ese correo, que decía "llama a tu advisor" sobre un número que es la línea general.<br>🚫 <strong>Sin formulario de tickets a propósito</strong> — eso escribe, y el objeto que se asumía no se usa en producción (Q5). Un formulario que no llega a ningún sitio es peor que no tenerlo. Tampoco hay horarios ni promesas de tiempo de respuesta: no tenemos ese dato y un SLA que WSC no cumpla hace más daño que el silencio.<br>Los teléfonos de demo pasaron al bloque <code>555-01xx</code> reservado para ficción: uno de ellos era la línea real de WSC puesta como si fuera de una persona.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-07-29.</strong> El deep link ya existía desde el paso 5 dentro del detalle de una orden; lo que faltaba era el sitio donde un cliente pregunta <em>"¿a quién le escribo?"</em>. Sexta sección del portal, en <code>/support</code>.<br>🔑 <strong>Es una lista de personas, no de órdenes.</strong> Un cliente con una corp en Pending Balance y otra en Work Started tiene tres personas distintas y ningún sitio que diga cuál es cuál; la vista orden-por-orden repite a la misma gente y sigue sin responder la pregunta. Cada persona sale una vez, con los productos que cubre debajo (nombrados por la corp, como en Documents). La línea de cobertura se oculta cuando hay una sola orden, porque ahí no desambigua nada.<br>🆕 <strong>Se añadió a qué corresponde cada rol</strong> (<code>STAFF_ROLE_PURPOSE</code>), según lo que fijó el stakeholder: todo entra por el Support Manager (hay subagentes detrás, pero el punto de entrada del cliente no cambia) y toda la documentación va a Back-End. Salesforce guarda <em>quién</em> ocupa un rol pero no tiene ningún campo para <em>qué</em> atiende ese rol, así que es lo único del contacto que no se puede leer del org. Va indexado <strong>por rol, nunca por persona</strong>: escribir "Lua" ahí sería devolver un nombre humano al código, justo lo que quitó el paso 5.<br>📇 Bloque de contacto de la empresa (teléfono, correo, oficina en Greenwood Village) en <code>WSC_CONTACT</code>, dentro de <code>packages/shared</code> porque el correo de acceso del BFF citaba el mismo teléfono a mano — dos copias de un teléfono son un teléfono que acaba contradiciéndose. De paso se corrigió ese correo, que decía "llama a tu advisor" sobre un número que es la línea general.<br>🚫 <strong>Sin formulario de tickets a propósito</strong> — eso escribe, y el objeto que se asumía no se usa en producción (Q5). Un formulario que no llega a ningún sitio es peor que no tenerlo. Tampoco hay horarios ni promesas de tiempo de respuesta: no tenemos ese dato y un SLA que WSC no cumpla hace más daño que el silencio.<br>Los teléfonos de demo pasaron al bloque <code>555-01xx</code> reservado para ficción: uno de ellos era la línea real de WSC puesta como si fuera de una persona.</div>
         </div>
       </div>
     </div>
 
     <div class="step done">
-      <div class="num">11</div>
+      <div class="num">9</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -455,7 +398,7 @@
     </div>
 
     <div class="step done">
-      <div class="num">12</div>
+      <div class="num">10</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -466,32 +409,55 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ================= FENCE 2 — CAMINO A PRODUCCIÓN ================= -->
+  <div class="fence read">
+    <div class="fence-h">
+      <div class="ic">🚀</div>
+      <div>
+        <div class="ft">CAMINO A PRODUCCIÓN — la fase que faltaba en todos los planes anteriores</div>
+        <div class="fd">
+          <strong>Todo lo construido hasta aquí lee de un SANDBOX de Salesforce.</strong> Los
+          clientes reales viven en la organización de producción. Los planes anteriores trataban
+          el go-live como «quitar el Basic Auth», y eso era falso: entre el estado actual y un
+          cliente de verdad hay una migración entera que no estaba escrita en ninguna parte.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">11</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Descubrimiento del modelo REAL de producción</span><span class="tag blocked">Primero esto</span></div>
+          <div class="desc">Antes de planificar nada más: verificar que producción se parece al sandbox. Es barato (son consultas de lectura) y evita construir sobre una suposición.</div>
+          <div class="warn">🔴 <strong>La comprobación más urgente: ¿producción usa <code>Attachment</code> o <code>ContentDocument</code>?</strong> Los <code>Attachment</code> del sandbox <strong>los sembramos nosotros</strong>. Las orgs modernas de Salesforce usan Files (<code>ContentDocument</code>), y el <code>Attachment</code> clásico es legado. <strong>Si producción usa Files, la sección de Documents no muestra absolutamente nada</strong> y hay trabajo de adaptador que hoy no está contemplado.<br>Lo demás a verificar, por orden de riesgo:<br>· <strong>Los IDs de record type son distintos</strong> — todo el mapeo del pipeline depende del filtrado por record type; hay que re-consultar los valores reales, no asumir los del sandbox.<br>· <strong><code>FU_User__c.E_Mail__c</code> en clientes reales</strong> — el login entero depende de ese campo. Vacío o inconsistente = nadie entra.<br>· <strong>Las 3 figuras de personal</strong> — de Lua sabemos que está (visto en captura de producción); de <code>Sales_Rep__c</code> y <code>Back_End_Worker__c</code>, no.<br>· <strong><code>Paid_Features_Selected__c</code></strong> — el cabo suelto del paso 3. El stakeholder lo consulta con el admin de funding.<br>· <strong>Volumen</strong> — cuántas órdenes y pagos tiene un cliente real. Es lo que decide si los pasos 13 y 14 son urgentes.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">12</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Separar entornos + credenciales de producción</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Son el mismo trabajo, no dos: <strong>staging apunta al sandbox, producción a la org real</strong>. Hacerlo por separado sería hacerlo dos veces.</div>
+          <div class="warn">🐞 <strong>Defecto conocido que esto arregla:</strong> <code>apps/web/vercel.json</code> tiene la URL de Railway <strong>escrita a fuego</strong>, y Vercel crea un Preview Deployment por cada rama — así que <strong>hoy cualquier rama experimental habla con el backend de producción y con Salesforce</strong>. <code>vercel.json</code> <strong>no puede leer variables de entorno</strong> (limitación de Vercel), así que la salida es mover esos dos rewrites al Edge Middleware que ya existe (<code>apps/web/middleware.ts</code>) y leer <code>process.env.BFF_ORIGIN</code>, que Vercel sí scopea por entorno.<br><strong>En Salesforce hay que rehacer, no copiar:</strong> External Client App nueva con su propio certificado X.509, usuario de integración nuevo pre-autorizado por Permission Set, y <strong>el Permission Set entero</strong> — esta es la parte que más va a doler, porque los FLS los fuimos abriendo campo a campo durante semanas reaccionando a fallos, y en producción tienen que estar <strong>todos al primer intento</strong>.<br><code>SF_LOGIN_URL</code> pasa a <code>https://login.salesforce.com</code>. <code>SESSION_JWT_SECRET</code> <strong>distinto</strong> en cada entorno: si se comparte, una sesión de staging vale en producción.<br>El Basic Auth se queda <strong>para siempre</strong> en Preview; solo se quita de Production.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="step">
       <div class="num">13</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
-          <div class="top"><span class="title">Deuda de tests</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Tests de integración contra el sandbox real + Playwright e2e. Puede avanzar en paralelo en cualquier momento.</div>
-          <div class="warn">Avanzado en parte: ya existe <code>server.test.ts</code> (nivel HTTP, con <code>app.inject</code>) y factories de fixtures tipadas en <code>apps/web/src/test/fixtures.ts</code>. Falta Playwright e2e.<br>✅ <strong>2026-08-06: el stakeholder verificó el flujo a mano y funciona</strong> (login por magic link → ver orden → descargar documento). Eso confirma que <em>hoy</em> está bien; lo que sigue faltando es la parte automatizada, que es lo que avisa el día que se rompa. Se deja abierto como deuda, no como funcionalidad pendiente — <strong>no hay nada que arreglar aquí</strong>.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="checkpoint">
-      <div class="flag">🚦</div>
-      <div class="box">
-        <div class="ct">Checkpoint — Luz verde final · <b>es lo único que falta</b></div>
-        <div class="cd">
-          ✅ <s>Dominio propio confirmado</s> — hecho el 2026-08-06, paso 9.<br />
-          ⏳ <b>Contenido del Learning Center</b> — el stakeholder decidió añadirlo <b>al final</b>;
-          para salir antes, la sección mostrará un "Coming Soon…". No bloquea.<br />
-          🔴 <b>Aprobación explícita del CEO para abrir el portal al público</b> — esto sí bloquea,
-          y <b>ya no queda nada técnico por delante</b>.<br /><br />
-          💰 <b>Llevar también a esa conversación:</b> la cuenta de Vercel está en plan
-          <b>Hobby</b>, cuyos términos son para uso <b>no comercial</b>. Un portal de clientes con
-          el dominio corporativo apuntando ahí es uso comercial y es visible. Conviene pasar a Pro
-          <em>antes</em> de abrirlo, no el día que suspendan el despliegue.
+          <div class="top"><span class="title">Paginación real en las listas</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Hoy hay un tope fijo (50 órdenes / 100 pagos) sin aviso al usuario. Cambiar a paginación keyset para que un cliente con mucho historial lo vea completo.</div>
+          <div class="warn">📈 <strong>Dejó de ser prematuro el 2026-08-06.</strong> Con dos órdenes en el sandbox daba igual; con el volumen real de producción, ese tope fijo <strong>trunca en silencio</strong> y un cliente deja de ver parte de su historial sin que nada se lo diga. Eso es un fallo de <em>corrección</em>, no una optimización. El paso 11 dirá cuán urgente es.</div>
         </div>
       </div>
     </div>
@@ -501,8 +467,112 @@
       <div class="card">
         <div class="check"></div>
         <div class="body">
-          <div class="top"><span class="title">Quitar Basic Auth → público real</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Borrar <code>apps/web/middleware.ts</code>, o simplemente remover las variables en Vercel para poder volver a cerrarlo sin tocar código.</div>
+          <div class="top"><span class="title">Caché de lectura en Redis</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Read-through de los DTO ya formados. Reduce llamadas a la API de Salesforce (y protege del límite de governor) sin cambiar ninguna vista.</div>
+          <div class="warn">📈 <strong>También cambió de categoría.</strong> En producción el presupuesto diario de API <strong>se comparte con todo lo demás que hace la org</strong> — integraciones, marketing, procesos. Ya no es «proteger de un límite que no rozamos», es no competir con el resto de la empresa por una cuota común.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FENCE 3 — LANZAMIENTO ================= -->
+  <div class="fence infra">
+    <div class="fence-h">
+      <div class="ic">🎬</div>
+      <div>
+        <div class="ft">LANZAMIENTO — decisiones, no ingeniería</div>
+        <div class="fd">
+          Nada de esto es trabajo técnico. Son permisos, dinero y una conversación.
+        </div>
+      </div>
+    </div>
+
+    <div class="checkpoint">
+      <div class="flag">💬</div>
+      <div class="box">
+        <div class="ct">Checkpoint — Conversación con el CEO · <b>4 puntos</b></div>
+        <div class="cd">
+          🔴 <b>1. Aprobación para abrir el portal al público.</b> El portal está vivo, con datos
+          reales, en el dominio de la empresa. Solo lo tapa una contraseña de staging.<br /><br />
+          💰 <b>2. Vercel: Hobby → Pro.</b> Los términos del plan gratuito son para uso <b>no
+          comercial</b>. Un portal de clientes con el dominio corporativo apuntando ahí es uso
+          comercial y es visible. Resolverlo <em>antes</em> de abrirlo, no el día que suspendan el
+          despliegue. 20 $/mes.<br /><br />
+          🟠 <b>3. Q3 — reglas de Refer a Friend.</b> Qué cuenta como un "CP", cuánto se paga por
+          cada cosa, cuándo se paga, y cómo se rastrea que un lead vino de un cliente.
+          <b>Bloquea W2 entero.</b><br /><br />
+          🟠 <b>4. Q4 — chat / AI.</b> La org ya tiene LiveChat y Twilio instalados. Es decidir si
+          se usa alguno o no se hace.<br /><br />
+          <b>✅ CERRADAS:</b> <s>Q1 pipeline</s> y <s>Q2 Implementation Manager</s> (2026-07-28,
+          ver <code>docs/checkpoint-q1-q2.md</code>) · <s>Q5 ¿qué es "soporte"?</s> — resuelta
+          <b>por alcance, no por decisión</b>: Support se entregó como hub de contacto ·
+          <s>Q6 ¿se muestran las <code>Note</code>?</s> — <b>NO se muestran</b> (2026-08-06), el
+          stakeholder las declaró no relevantes.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">15</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Preparativos del lanzamiento</span><span class="tag ceo">Tras el CEO</span></div>
+          <div class="desc">En este orden: <strong>(a)</strong> Learning Center → poner el "Coming Soon…" si no llegó el contenido real (una línea en <code>content/learning-center.ts</code>) · <strong>(b)</strong> pasar Vercel a Pro <em>antes</em> de quitar la contraseña.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">16</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Quitar Basic Auth → público real</span><span class="tag ceo">Tras el CEO</span></div>
+          <div class="desc">Y después: prueba de humo con un cliente real (que entre y confirme que ve sus órdenes), y avisar a ventas y soporte de que el portal existe.</div>
+          <div class="warn">🔑 <strong>Borra las variables <code>BASIC_AUTH_USER</code>/<code>BASIC_AUTH_PASSWORD</code> en Vercel, NO el archivo <code>middleware.ts</code>.</strong> El middleware falla cerrado: dejándolo en el código, si algo sale mal vuelves a poner las variables y el portal queda tapado en 30 segundos, sin desplegar nada.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= FENCE 4 — DESPUÉS DE LANZAR ================= -->
+  <div class="fence infra">
+    <div class="fence-h">
+      <div class="ic">🛡️</div>
+      <div>
+        <div class="ft">DESPUÉS DE LANZAR — endurecer y pulir</div>
+        <div class="fd">
+          No bloquea el lanzamiento. Cobra sentido cuando el portal ya importa de verdad.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">17</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Playwright e2e (deuda de tests)</span><span class="tag ya">Ya</span></div>
+          <div class="desc">Login por magic link → ver una orden → descargar un documento, en un navegador real contra el sandbox.</div>
+          <div class="warn">Avanzado en parte: ya existe <code>server.test.ts</code> (nivel HTTP, con <code>app.inject</code>) y factories de fixtures tipadas en <code>apps/web/src/test/fixtures.ts</code>.<br>✅ <strong>2026-08-06: el stakeholder verificó el flujo a mano y funciona.</strong> Eso confirma que <em>hoy</em> está bien; lo que falta es la parte automatizada, que es lo que avisa el día que se rompa. <strong>Es deuda, no funcionalidad rota — no hay nada que arreglar aquí.</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step done">
+      <div class="num">18</div>
+      <div class="card">
+        <div class="check"></div>
+        <div class="body">
+          <div class="top"><span class="title">Responsividad móvil y pulido visual</span><span class="tag extra">Extra</span></div>
+          <div class="desc">Sesión aparte, pedida por el stakeholder el 2026-08-06. Prioridad: <strong>la pantalla de login</strong> (es lo primero que ve un cliente y hoy es lo más flojo), luego las tablas de Payments y Documents en móvil, StaffCard y el tracker.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-08-06.</strong> Todo dentro de <code>theme.css</code> y sus tokens — ninguna paleta, tipografía ni librería nueva. Verificado en Chrome headless a <strong>375 / 768 / 1280</strong>, y con una auditoría de desbordamiento horizontal que recorre cada elemento de las 8 vistas: <strong>0 desbordamientos en las 24 combinaciones</strong>, sin recurrir a <code>overflow-x:hidden</code> (que no arregla, solo recorta).<br>
+          <strong>Login:</strong> la tarjeta no tenía sombra y se leía como un rectángulo pintado sobre el navy; ahora eleva. El <code>input</code> subió a <strong>16px porque por debajo iOS Safari hace zoom</strong> a la página entera al enfocarlo. El botón tiene estado <code>:disabled</code> visible (antes no cambiaba al pulsarlo, así que invitaba a pulsar dos veces), altura mínima de 46px y el teléfono es un <code>tel:</code>. La clase <code>.err</code> estaba definida <em>solo</em> dentro de <code>.wsc-shell</code>, así que los mensajes de error del login y de <code>.main</code> salían como texto negro por defecto. La pantalla de «Check your email» era un callejón sin salida si te equivocabas de dirección: ahora tiene marca de confirmación y «Use a different email».<br>
+          <strong>Tablas (5):</strong> a 375px las cabeceras se fundían en <code>DATEPRODUCTORDER</code>. Cada fila pasa a ser una tarjeta con su etiqueta por celda (<code>data-label</code>) — no se oculta ninguna columna. Eso obliga a pisar <code>display</code>, lo que hace que el navegador <strong>descarte los roles ARIA implícitos de la tabla</strong>, así que los componentes los declaran explícitos: no quitarlos.<br>
+          <strong>Nav móvil:</strong> la barra lateral envolvía en un bloque roto y <code>.side-foot</code> estaba en <code>display:none</code>, de modo que <strong>en un teléfono no había forma de cerrar sesión</strong>. Ahora es una cabecera con el logo y el botón arriba y los enlaces como pastillas debajo. Además <code>.shell</code> repartía el 100vh entre sus dos filas, así que en una página corta la cabecera crecía hasta media pantalla (<code>grid-template-rows:auto 1fr</code>).<br>
+          <strong>Tracker:</strong> el 2×2 dejaba los 4 pasos sin conectores y se leían como insignias sueltas; se recupera el que une los dos pasos de cada fila. <strong>Contactos:</strong> un correo largo es una sola palabra para el saltador de línea y se salía de la tarjeta.<br>
+          <em>Nota: el logo se sigue componiendo con tipografía (no hay ningún archivo de marca en el repo). Se centralizó en <code>WscLogo.tsx</code>, que es el único sitio a tocar si algún día se añade el SVG/PNG real.</em></div>
         </div>
       </div>
     </div>
@@ -540,7 +610,7 @@
         <div class="body">
           <div class="top"><span class="title">Refer a Friend — la sección completa</span><span class="tag blocked">CEO</span></div>
           <div class="desc">Las dos mitades: la lista de "mis referidos" (lee <code>Supporting_Lead__c</code> / <code>Supporting_Lead_Allocation__c</code>) y el formulario que crea el lead nuevo.</div>
-          <div class="desc">🔄 <strong>Movido aquí el 2026-08-06 por decisión del stakeholder</strong> — antes era el paso 8, partido por la costura lectura/escritura. Razón: <em>"better to finish the current stuff"</em>. Se trae también la mitad de lectura <strong>aunque fuese un mockup</strong>, porque construir media sección y dejar la columna de ganancias en blanco esperando a Q3 se ve peor que no tenerla. Las dos mitades vuelven juntas cuando Q3 defina las reglas del negocio (qué es un "CP", montos, cuándo se paga, cómo se rastrea).</div>
+          <div class="desc">🔄 <strong>Movido aquí el 2026-08-06 por decisión del stakeholder</strong> — antes era un paso numerado de la secuencia, partido por la costura lectura/escritura. Razón: <em>"better to finish the current stuff"</em>. Se trae también la mitad de lectura <strong>aunque fuese un mockup</strong>, porque construir media sección y dejar la columna de ganancias en blanco esperando a Q3 se ve peor que no tenerla. Las dos mitades vuelven juntas cuando Q3 defina las reglas del negocio (qué es un "CP", montos, cuándo se paga, cómo se rastrea).</div>
         </div>
       </div>
     </div>
@@ -568,13 +638,16 @@
 
   <footer>
     Ábrelo directamente en el navegador (doble click) — no depende de ningún servidor.<br />
-    Última actualización: <strong>2026-08-06</strong> — cerrado el paso 9 (DNS): el portal vive en
+    Última actualización: <strong>2026-08-06 — reestructuración completa.</strong> El eje pasó de
+    <em>lectura vs escritura</em> a <em>camino a producción</em>, y se incorporó la fase que
+    faltaba en todos los planes anteriores: <strong>el portal lee de un SANDBOX</strong>, así que
+    entre el estado actual y un cliente real hay una migración entera (pasos 11 y 12). Los pasos
+    hechos se renumeraron 1–10 de corrido; la paginación y la caché dejaron de ser prematuras
+    porque en producción cambian de categoría.<br />
+    Ese mismo día se cerró el DNS (paso 7) — el portal vive en
     <code>portal.wholesaleshelfcorporations.com</code> y el correo sale desde
-    <code>noreply@wholesaleshelfcorporations.com</code>. <strong>Ya no queda nada técnico
-    bloqueando el go-live</strong>, solo la aprobación del CEO (paso 14).<br />
-    Ese mismo día Refer a Friend salió de la secuencia numerada y pasó entero a la cerca de
-    escritura (W2), así que el total bajó de 15 a 14 pasos. Runbook de DNS en
-    <code>docs/dns-runbook.md</code>.
+    <code>noreply@wholesaleshelfcorporations.com</code> — y Refer a Friend salió de la secuencia
+    numerada a la cerca de escritura (W2). Runbook de DNS en <code>docs/dns-runbook.md</code>.
   </footer>
 </div>
 

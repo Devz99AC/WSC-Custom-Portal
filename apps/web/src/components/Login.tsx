@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { requestMagicLink } from "../api/client";
+import { WscLogo } from "./WscLogo";
 
 /**
  * Passwordless magic-link login (ADR-0005). Submitting posts to the BFF, which emails a
@@ -34,15 +35,22 @@ export function Login() {
     return (
       <div className="login">
         <div className="login-card">
-          <div className="wsc-logo">
-            WS<span className="c">C</span>
+          <WscLogo wordmark="full" />
+          <div className="login-tick" aria-hidden="true">
+            ✓
           </div>
           <h1 className="disp">Check your email</h1>
           <p className="sub">
-            If <strong>{email}</strong> is on file, a secure sign-in link is on its way —
-            it expires in 15 minutes and works once.
+            If <strong className="login-echo">{email}</strong> is on file, a secure sign-in link is
+            on its way — it expires in 15 minutes and works once.
           </p>
+          {/* Without this a typo is a dead end: the address is never echoed back anywhere
+              else, so the only way to correct it is to reload the page by hand. */}
+          <button className="btn-quiet" type="button" onClick={() => setStatus("idle")}>
+            Use a different email
+          </button>
         </div>
+        <div className="login-mark">Established 2010 — 16 Years of Experience</div>
       </div>
     );
   }
@@ -50,17 +58,11 @@ export function Login() {
   return (
     <div className="login">
       <form className="login-card" onSubmit={handleSubmit}>
-        <div className="wsc-logo">
-          WS<span className="c">C</span>
-        </div>
-        <div className="wmark">
-          <b>W</b>HOLESALE<b>S</b>HELF<b>C</b>ORPORATIONS.COM
-        </div>
+        <WscLogo wordmark="full" />
         <div className="kicker">Client Portal</div>
         <h1 className="disp">Welcome back</h1>
         <p className="sub">
-          Enter your email and we&apos;ll send a secure sign-in link — no password to
-          remember.
+          Enter your email and we&apos;ll send a secure sign-in link — no password to remember.
         </p>
         {linkWasInvalid && (
           <p className="err">That link is invalid or expired — request a new one below.</p>
@@ -73,18 +75,23 @@ export function Login() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
+            // Phone keyboards otherwise capitalise the first letter and offer to
+            // autocorrect the domain, both of which corrupt an address mid-typing.
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            required
           />
         </div>
         <button className="btn-gold" type="submit" disabled={status === "sending"}>
           {status === "sending" ? "Sending…" : "Send secure sign-in link"}
         </button>
-        {status === "error" && (
-          <p className="err">Something went wrong — please try again.</p>
-        )}
+        {status === "error" && <p className="err">Something went wrong — please try again.</p>}
         <p className="login-foot">
           Trouble signing in? Call your advisor
           <br />
-          +1 (720) 534-2065
+          <a href="tel:+17205342065">+1 (720) 534-2065</a>
         </p>
       </form>
       <div className="login-mark">Established 2010 — 16 Years of Experience</div>

@@ -51,30 +51,40 @@ export function OrdersListPage() {
           </p>
         ) : (
           <div className="tbl-wrap">
-            <table className="lst">
-              <thead>
-                <tr>
-                  <th>Order</th>
-                  <th>Placed</th>
-                  <th>Product</th>
-                  <th>Amount</th>
-                  <th>Balance</th>
-                  <th>Status</th>
+            {/* Roles are explicit because the ≤640px card layout overrides `display`,
+                which drops them — see theme.css "TABLE". */}
+            <table className="lst" role="table">
+              <thead role="rowgroup">
+                <tr role="row">
+                  <th role="columnheader">Order</th>
+                  <th role="columnheader">Placed</th>
+                  <th role="columnheader">Product</th>
+                  <th role="columnheader">Amount</th>
+                  <th role="columnheader">Balance</th>
+                  <th role="columnheader">Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody role="rowgroup">
                 {orders.map((order) => (
-                  <tr key={order.id} className="rowlink">
-                    <td>
+                  <tr key={order.id} className="rowlink" role="row">
+                    <td role="cell" data-label="Order">
                       <Link className="rowlink-a" to={`/orders/${order.id}`}>
                         {order.orderNumber}
                       </Link>
                     </td>
-                    <td>{formatDate(order.placedAt)}</td>
-                    <td>{order.shelfCorp?.name ?? "—"}</td>
-                    <td className="tnum">{money(order.amount)}</td>
-                    <td className="tnum">{order.balanceDue > 0 ? money(order.balanceDue) : "—"}</td>
-                    <td>
+                    <td role="cell" data-label="Placed">
+                      {formatDate(order.placedAt)}
+                    </td>
+                    <td role="cell" data-label="Product">
+                      {order.shelfCorp?.name ?? "—"}
+                    </td>
+                    <td role="cell" data-label="Amount" className="tnum">
+                      {money(order.amount)}
+                    </td>
+                    <td role="cell" data-label="Balance" className="tnum">
+                      {order.balanceDue > 0 ? money(order.balanceDue) : "—"}
+                    </td>
+                    <td role="cell" data-label="Status">
                       <span className={`badge ${orderStatusBadgeClass(order.statusSf)}`}>
                         {orderStatusLabel(order.statusSf)}
                       </span>
