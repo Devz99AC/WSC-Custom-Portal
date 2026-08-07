@@ -27,7 +27,7 @@ export function AppShell({ client, onSignOut }: AppShellProps) {
     <div className="shell">
       <aside className="side">
         <div className="side-logo">
-          <WscLogo wordmark="short" />
+          <WscLogo variant="short" />
         </div>
         {/* Grouped so the links can become a wrapping row of their own below the logo on a
             phone, where the sidebar turns into a header (theme.css ≤640px). */}

@@ -47,7 +47,7 @@ export function Login() {
     return (
       <div className="login">
         <div className="login-card">
-          <WscLogo wordmark="full" />
+          <WscLogo variant="full" />
           <div className="login-tick" aria-hidden="true">
             ✓
           </div>
@@ -70,7 +70,7 @@ export function Login() {
   return (
     <div className="login">
       <form className="login-card" onSubmit={handleSubmit}>
-        <WscLogo wordmark="full" />
+        <WscLogo variant="full" />
         <div className="kicker">Client Portal</div>
         <h1 className="disp">Welcome back</h1>
         <p className="sub">

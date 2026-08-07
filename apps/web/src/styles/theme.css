@@ -81,14 +81,12 @@ a:hover {
   letter-spacing: -0.01em;
 }
 
+/* The brand mark is now the real artwork (apps/web/public/wsc-logo*.png), not letters set
+   in Arial Black — so these rules size an <img>. Each placement sets one dimension and
+   lets the other follow, which keeps the lockup's own proportions. */
 .wsc-logo {
-  font-family: "Arial Black", Arial, sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-.wsc-logo .c {
-  color: var(--wsc-red);
+  display: block;
+  height: auto;
 }
 
 .wsc-shell {
@@ -132,20 +130,12 @@ a:hover {
      navy rather than sitting on it. Same shadow the prototype used. */
   box-shadow: 0 24px 60px -28px rgba(15, 24, 48, 0.5);
 }
+/* The full lockup already contains the WHOLESALESHELFCORPORATIONS.COM wordmark, so there
+   is no separate text line under it here any more. */
 .login-card .wsc-logo {
-  font-size: 40px;
-  color: var(--wsc-navy);
-  margin-bottom: 4px;
-}
-.login-card .wmark {
-  font-size: 8px;
-  letter-spacing: 0.06em;
-  color: var(--wsc-navy-300);
-  font-weight: 700;
-  margin-bottom: 22px;
-}
-.login-card .wmark b {
-  color: var(--wsc-red);
+  width: 210px;
+  max-width: 78%;
+  margin: 0 auto 20px;
 }
 /* Hairline between the brand lockup and the form, so the card has two clear halves
    instead of one long centred column. */
@@ -314,8 +304,8 @@ a:hover {
   margin-bottom: 12px;
 }
 .side-logo .wsc-logo {
-  font-size: 28px;
-  color: #fff;
+  height: 27px;
+  width: auto;
 }
 .side-logo .sl-sub {
   font-size: 7px;
@@ -1016,7 +1006,7 @@ tr.rowlink:hover {
     border-bottom: none;
   }
   .side-logo .wsc-logo {
-    font-size: 22px;
+    height: 21px;
   }
   /* Sign-out is pulled up beside the logo (source order puts it last), so the links get
      the full width of the row below instead of being split around it. */

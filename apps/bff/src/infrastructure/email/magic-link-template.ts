@@ -17,8 +17,16 @@ export interface RenderedEmail {
  * apps/web/src/styles/theme.css and the prototype. Inline styles + a table-based button
  * only (no flex/grid): Outlook desktop renders with Word's engine, which ignores both.
  */
-export function renderMagicLinkEmail({ name, verifyUrl, ttlMinutes }: MagicLinkEmailInput): RenderedEmail {
+export function renderMagicLinkEmail({
+  name,
+  verifyUrl,
+  ttlMinutes,
+}: MagicLinkEmailInput): RenderedEmail {
   const subject = "Sign in to your WSC Client Portal";
+
+  // Served by the SPA itself, so the origin is whatever host issued this link — no second
+  // env var to keep in step. The knockout copy, because the header is navy.
+  const logoUrl = new URL("/wsc-logo-letters-light.png", verifyUrl).href;
 
   const html = `<!doctype html>
 <html lang="en">
@@ -27,7 +35,9 @@ export function renderMagicLinkEmail({ name, verifyUrl, ttlMinutes }: MagicLinkE
     <tr><td align="center">
       <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;">
         <tr><td style="background:#16223f;padding:28px 32px;">
-          <span style="font-family:Arial Black,Arial,sans-serif;font-weight:800;font-size:26px;letter-spacing:-0.03em;color:#ffffff;">WS<span style="color:#c8102e;">C</span></span>
+          <!-- Mail clients block remote images by default, so the alt text is styled to
+               stand in for the mark: white, heavy, on the navy header. -->
+          <img src="${logoUrl}" alt="WSC — Wholesale Shelf Corporations" width="110" height="40" style="display:block;border:0;width:110px;height:40px;font-family:Arial Black,Arial,sans-serif;font-weight:800;font-size:26px;letter-spacing:-0.03em;color:#ffffff;" />
         </td></tr>
         <tr><td style="padding:32px;">
           <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#c8102e;">Client Portal</p>

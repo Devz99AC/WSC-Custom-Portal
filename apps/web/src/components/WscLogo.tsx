@@ -1,32 +1,47 @@
 interface WscLogoProps {
-  /** Which wordmark sits under the letters. "full" is the .com lockup on the login card,
-   *  "short" the compressed sidebar version, "none" the letters on their own. */
-  wordmark: "full" | "short" | "none";
+  /** "full" is the complete lockup used on the login card. "short" is the sidebar mark,
+   *  which sits on navy and carries its own abbreviated wordmark underneath. */
+  variant: "full" | "short";
 }
 
 /**
- * The WSC lockup — navy "WS", red "C", over the WHOLESALESHELFCORPORATIONS.COM wordmark.
+ * The real WSC brand mark, trimmed from the artwork the stakeholder supplied. It used to
+ * be set in Arial Black because the repo carried no brand asset at all, which only ever
+ * approximated the actual overlapping letterforms.
  *
- * Set in type rather than placed as an image because the repo carries no brand asset (the
- * prototype drew it the same way). If a real logo file is added under apps/web/public,
- * this component is the only file that has to change.
+ * Two files rather than one: the artwork is navy and crimson, and the navy half would
+ * vanish against the navy sidebar, so that placement uses a knockout copy with the navy
+ * recoloured white. The crimson C is untouched in both. Intrinsic `width`/`height` are the
+ * files' real pixel sizes so the browser reserves the right box before the image loads;
+ * the rendered size comes from CSS.
  */
-export function WscLogo({ wordmark }: WscLogoProps) {
-  return (
-    <>
-      <div className="wsc-logo">
-        WS<span className="c">C</span>
-      </div>
-      {wordmark === "full" && (
-        <div className="wmark">
-          <b>W</b>HOLESALE<b>S</b>HELF<b>C</b>ORPORATIONS.COM
-        </div>
-      )}
-      {wordmark === "short" && (
-        <div className="sl-sub">
+export function WscLogo({ variant }: WscLogoProps) {
+  if (variant === "short") {
+    return (
+      <>
+        <img
+          className="wsc-logo"
+          src="/wsc-logo-letters-light.png"
+          alt="Wholesale Shelf Corporations"
+          width={821}
+          height={299}
+        />
+        {/* Says the same words as the alt text above, so it is decoration to a screen
+            reader rather than a second announcement. */}
+        <div className="sl-sub" aria-hidden="true">
           <b>W</b>HOLESALE<b>S</b>HELF<b>C</b>ORP
         </div>
-      )}
-    </>
+      </>
+    );
+  }
+
+  return (
+    <img
+      className="wsc-logo"
+      src="/wsc-logo.png"
+      alt="Wholesale Shelf Corporations"
+      width={821}
+      height={360}
+    />
   );
 }
