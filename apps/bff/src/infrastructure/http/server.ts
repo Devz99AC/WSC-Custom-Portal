@@ -103,11 +103,19 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
 
   const rateLimiter = deps.rateLimiter ?? new FixedWindowRateLimiter();
 
-  // Applies to every response, but earns its place on the download route: a Salesforce
-  // attachment whose stored ContentType is wrong or absent could otherwise be sniffed as
-  // HTML by the browser and executed inside the portal's own origin.
   app.addHook("onSend", async (_request, reply) => {
+    // Earns its place on the download route: a Salesforce attachment whose stored
+    // ContentType is wrong or absent could otherwise be sniffed as HTML by the browser
+    // and executed inside the portal's own origin.
     reply.header("X-Content-Type-Options", "nosniff");
+
+    // EVERY response here is scoped to one signed-in client by their session cookie, and
+    // the BFF was setting no Cache-Control at all — so Vercel's proxy default applied and
+    // the portal was answering `/api/orders` with `Cache-Control: public, max-age=0,
+    // must-revalidate` and **no `Vary: Cookie`**. Revalidation is what kept that from
+    // biting, but "public, keyed without the cookie" is one cache-config change away from
+    // handing one client's orders to another. Stated explicitly instead of inherited.
+    reply.header("Cache-Control", "private, no-store");
   });
 
   // Centralized error handling (CLAUDE.md §2). Route handlers throw typed errors and never
@@ -312,8 +320,8 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
       .header("Content-Type", download.document.contentType ?? "application/octet-stream")
       .header("Content-Disposition", contentDisposition(download.document.name))
       .header("Content-Length", download.body.byteLength)
-      // Client paperwork is private to one client — keep it out of shared caches.
-      .header("Cache-Control", "private, no-store")
+      // `Cache-Control: private, no-store` is applied to every response by the onSend hook
+      // above — client paperwork was the reason it started here.
       .send(download.body);
   });
 

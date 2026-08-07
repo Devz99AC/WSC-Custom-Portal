@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Login } from "./components/Login";
@@ -11,7 +12,11 @@ import { LearningCenterPage } from "./components/LearningCenterPage";
 import { SupportPage } from "./components/SupportPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { useOrders } from "./hooks/useOrders";
-import { UnauthorizedError, logout } from "./api/client";
+import { OutdatedClientError, UnauthorizedError, logout } from "./api/client";
+
+/** Marks that this tab has already reloaded itself once for a schema mismatch. Session
+ *  scope, so it clears with the tab and never leaks between clients on a shared machine. */
+const RELOAD_MARKER = "wsc.reloaded-for-outdated-client";
 
 /**
  * Root: the session cookie (ADR-0005), not local state, is the source of truth for
@@ -24,6 +29,32 @@ import { UnauthorizedError, logout } from "./api/client";
 export function App() {
   const { data, isPending, isError, error } = useOrders();
   const queryClient = useQueryClient();
+
+  /**
+   * Self-heal a tab that outlived a deploy. The SPA and the BFF ship separately, so a tab
+   * left open — or restored with Ctrl+Shift+T — can be running JavaScript older than the
+   * API, and no amount of retrying fixes that: only fetching the new bundle does.
+   *
+   * Reloads at most **once per tab**. Without that guard, a genuine server-side payload
+   * bug would put the client in an endless reload loop, which is far worse than an error
+   * message — so the second occurrence falls through and is displayed instead.
+   */
+  const isOutdated = error instanceof OutdatedClientError;
+  useEffect(() => {
+    if (!isOutdated || sessionStorage.getItem(RELOAD_MARKER) !== null) {
+      return;
+    }
+    sessionStorage.setItem(RELOAD_MARKER, "1");
+    window.location.reload();
+  }, [isOutdated]);
+
+  // Once a response parses again the tab is on the current bundle, so let the next deploy
+  // have its own reload rather than spending this tab's only attempt permanently.
+  useEffect(() => {
+    if (data !== undefined) {
+      sessionStorage.removeItem(RELOAD_MARKER);
+    }
+  }, [data]);
 
   if (isPending) {
     return (

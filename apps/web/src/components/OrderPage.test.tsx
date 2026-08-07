@@ -38,7 +38,8 @@ describe("OrderPage", () => {
   it("resolves the order from the :id route param and renders its detail", async () => {
     await renderPage();
     expect(screen.getByText("2016 Wyoming LLC")).toBeInTheDocument();
-    expect(fetch).toHaveBeenCalledWith("/api/orders/o2");
+    // Second argument is the shared abort signal + no-store; the path is what matters here.
+    expect(fetch).toHaveBeenCalledWith("/api/orders/o2", expect.anything());
   });
 
   it("shows the corp and order detail fields that come straight from Salesforce", async () => {
