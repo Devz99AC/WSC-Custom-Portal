@@ -88,6 +88,24 @@ const MAX_PAYMENTS = 100;
 const MAX_DOCUMENTS = 200;
 const MAX_FEATURES = 200;
 
+/**
+ * Trash-data filter — stakeholder rule (2026-08-07): the portal must NEVER surface
+ * **Cancelled orders** or **Inactive clients**. Nothing is deleted in Salesforce; these
+ * records simply never get read. The five `Cancelled - *` order statuses all share the
+ * "Cancelled" prefix, so one prefix match covers every variant; `FU_User__c.Status__c` is
+ * New / Active / Inactive. Both filters deliberately keep NULL-status records IN — a null
+ * status is neither "Cancelled" nor "Inactive", and a half-filled record must not vanish.
+ *
+ * The Cancelled filter rides on every order/payment read. The Inactive filter rides on
+ * `findClientByEmail` ALONE, on purpose: that is the identity gate the magic-link sign-in
+ * passes through (request-magic-link.ts), so an Inactive client never receives a link,
+ * never gets a session, and therefore never reaches any data read — one choke point
+ * instead of a client-status check copy-pasted onto every query.
+ */
+const ORDER_NOT_CANCELLED = "(NOT Status__c LIKE 'Cancelled%')";
+const PAYMENT_ORDER_NOT_CANCELLED = "(NOT Online_Order__r.Status__c LIKE 'Cancelled%')";
+const CLIENT_NOT_INACTIVE = "(Status__c != 'Inactive' OR Status__c = null)";
+
 /** Renders ids as a SOQL `IN` list. Ids come from Salesforce itself (never from the
  *  caller), but they're escaped anyway so this can't become an injection point if a
  *  future caller passes one through. */
@@ -111,7 +129,7 @@ export class SalesforcePortalRepository implements PortalRepository {
     const orderRecords = await this.query(
       `SELECT ${ORDER_SELECT}
        FROM Online_Order__c
-       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}'
+       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}' AND ${ORDER_NOT_CANCELLED}
        ORDER BY Order_Date__c DESC NULLS LAST
        LIMIT ${MAX_ORDERS}`,
     );
@@ -136,7 +154,7 @@ export class SalesforcePortalRepository implements PortalRepository {
     const orders = await this.query(
       `SELECT ${ORDER_SELECT}
        FROM Online_Order__c
-       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}' AND Id = '${safeOrderId}'
+       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}' AND ${ORDER_NOT_CANCELLED} AND Id = '${safeOrderId}'
        LIMIT 1`,
     );
 
@@ -157,7 +175,7 @@ export class SalesforcePortalRepository implements PortalRepository {
               Online_Order__c, Online_Order__r.Name, Online_Order__r.Corp_Name__c,
               Online_Order__r.Corp__r.Name
        FROM Online_Payment__c
-       WHERE Online_Order__r.Brand__c = 'WSC' AND Online_Order__r.Client__r.E_Mail__c = '${safeEmail}'
+       WHERE Online_Order__r.Brand__c = 'WSC' AND Online_Order__r.Client__r.E_Mail__c = '${safeEmail}' AND ${PAYMENT_ORDER_NOT_CANCELLED}
        ORDER BY Status_Date__c DESC NULLS LAST
        LIMIT ${MAX_PAYMENTS}`,
     );
@@ -233,7 +251,7 @@ export class SalesforcePortalRepository implements PortalRepository {
     const records = await this.query(
       `SELECT Id, Name, Corp__c
        FROM Online_Order__c
-       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}'
+       WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}' AND ${ORDER_NOT_CANCELLED}
        ORDER BY Order_Date__c DESC NULLS LAST
        LIMIT ${MAX_ORDERS}`,
     );
@@ -275,7 +293,7 @@ export class SalesforcePortalRepository implements PortalRepository {
   async findClientByEmail(email: string): Promise<ClientIdentity | null> {
     const safeEmail = soqlEscape(email);
     const clients = await this.query(
-      `SELECT Id, Name, E_Mail__c FROM FU_User__c WHERE E_Mail__c = '${safeEmail}' LIMIT 1`,
+      `SELECT Id, Name, E_Mail__c FROM FU_User__c WHERE E_Mail__c = '${safeEmail}' AND ${CLIENT_NOT_INACTIVE} LIMIT 1`,
     );
     const record = clients[0];
     if (!record) {
