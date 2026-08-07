@@ -37,7 +37,6 @@ export interface ShelfCorp {
   price: number | null; // Client_Price__c
   duns: string | null; // DUNS__c
   creditReadyFeatures: string[]; // derived from Paid_Features_Selected__c
-  corpNumber: string | null; // Corp__c — WSC's corp reference (e.g. "SCC415386")
   registrationNumber: string | null; // Registration__c — state filing number
   // Deliberately absent: Credit_Score__c and Funding_Capacity__c. Both were mapped and
   // shown on the order page until 2026-08-07, when the stakeholder had them removed —
@@ -45,7 +44,9 @@ export interface ShelfCorp {
   // the "commercial data stays out of the client DTO" rule above.
   lastAnnualReportDate: string | null; // Last_Annual_Report__c (ISO-8601)
   nextRenewalDate: string | null; // Next_Annual_Report__c — "Next Renewal Date" (ISO-8601)
-  registeredAgentStatus: string | null; // RA_Status__c
+  // Also deliberately absent, removed 2026-08-07: `Corp__c` (WSC's internal corp reference,
+  // e.g. "SCC415386" — a WSC filing handle, not something the buyer transacts with) and
+  // `RA_Status__c`.
 }
 
 /**
@@ -97,17 +98,56 @@ export const STAFF_ROLE_PURPOSE: Record<StaffRole, string> = {
 };
 
 /**
- * `wa.me` deep link from a stored phone number. Salesforce stores these as free-form
- * phone text (`+1 (720) 534-2065`, `720-658-0593`…), and wa.me accepts digits only, so
- * everything else is stripped. Returns null when nothing usable is left, rather than
- * producing a link that opens WhatsApp on a broken number.
+ * The digits of a stored phone number in **E.164 order — country code first** — or null
+ * when they can't be resolved to a country. The single place any dialable link is built
+ * from, because both `wa.me` and `tel:` are unforgiving in the same way and were getting
+ * it wrong differently.
+ *
+ * Salesforce keeps these as free-form text (`+1 (720) 534-2065`, `720-658-0593`,
+ * `(720) 598-0685`…), so stripping to digits is not enough: `(720) 598-0685` strips to
+ * `7205980685`, and a consumer that reads leading digits as a country code sees **7** —
+ * Russia/Kazakhstan. That failure is silent, since the resulting link works fine, it just
+ * reaches a stranger.
+ *
+ * Null rather than a guess when the digits are too short to carry a country: a missing
+ * button is a nuisance, a working button to the wrong country is a client contacting
+ * someone who isn't WSC.
  */
-export function whatsAppLink(rawNumber: string | null): string | null {
+function e164Digits(rawNumber: string | null): string | null {
   if (!rawNumber) {
     return null;
   }
-  const digits = rawNumber.replace(/\D/g, "");
-  return digits.length >= 7 ? `https://wa.me/${digits}` : null;
+  const trimmed = rawNumber.trim();
+  const digits = trimmed.replace(/\D/g, "");
+
+  // An explicit "+" means whoever typed it supplied the country code — trust it verbatim.
+  if (trimmed.startsWith("+")) {
+    return digits.length >= 10 ? digits : null;
+  }
+  // Bare 10 digits: US/Canada, missing its country code. This is the case that dialled +7.
+  if (digits.length === 10) {
+    return `1${digits}`;
+  }
+  // 11+ digits without a "+" already carry a country code (`17205342065`, `447911123456`).
+  if (digits.length >= 11) {
+    return digits;
+  }
+  // Fewer than 10 digits has neither country nor area code — nothing safe to build.
+  return null;
+}
+
+/** `wa.me` deep link. Takes bare digits: **no `+`, no separators.** */
+export function whatsAppLink(rawNumber: string | null): string | null {
+  const digits = e164Digits(rawNumber);
+  return digits === null ? null : `https://wa.me/${digits}`;
+}
+
+/** `tel:` URI. The inverse of wa.me: RFC 3966 wants the **`+`** on a global number, and
+ *  without it the digits are a *local* number that only connects from inside the same
+ *  country — so a client dialling from abroad gets nowhere. */
+export function telLink(rawNumber: string | null): string | null {
+  const digits = e164Digits(rawNumber);
+  return digits === null ? null : `tel:+${digits}`;
 }
 
 export type PaymentMethod =
@@ -156,12 +196,12 @@ export interface Order {
   backEndSupport: StaffContact | null; // Back_End_Worker__c → SEOX3_Team_Member__c
   paymentMethod: PaymentMethod | null; // Payment_Method__c
   paymentFrequency: string | null; // Payment_Frequency__c (e.g. "One-Time")
-  /** The corp's federal tax ID — `EIN__c`, formatted `XX-XXXXXXX` from the raw SF number.
-   *  Sensitive PII (CLAUDE.md §3): it reaches the client only because row-level authz
-   *  guarantees this is their OWN order, it is never logged, and the UI keeps it masked
-   *  behind an explicit reveal. Do not add it to list endpoints or to any log line. */
-  ein: string | null;
-  // `EIN_Date_Issued__c` is deliberately not mapped — removed from the portal 2026-08-07.
+  /* Neither `EIN__c` nor `EIN_Date_Issued__c` is mapped — both were removed from the portal
+   * on 2026-08-07. The EIN is the corp's federal tax ID and the single most sensitive value
+   * in this model (CLAUDE.md §3), so with nothing rendering it there is no reason for it to
+   * leave Salesforce at all: it is off the DTO, off the schema and out of the SOQL, not
+   * merely hidden in the UI. **Do not re-add it to satisfy a display need without saying so
+   * out loud** — that is a PII decision, not a formatting one. */
   shelfCorp: ShelfCorp | null; // Corp__c → SC_Corp__c
   clientId: string; // Client__c → FU_User__c
 }

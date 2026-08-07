@@ -91,12 +91,26 @@ cuenta como **verificado** cuando `Status__c ∈ { Cleared, Paid }`.
 | `price` | `Client_Price__c` |
 | `duns` | `DUNS__c` · `Experian_BIN__c` · `Equifax_Business_ID__c` |
 
-> **No mapeados a propósito (2026-08-07):** `Credit_Score__c` y `Funding_Capacity__c` en
-> `SC_Corp__c`, y `EIN_Date_Issued__c` en `Online_Order__c`. Se mostraron en la ficha de
-> pedido hasta esa fecha; el stakeholder pidió quitarlos, así que salieron también del DTO y
-> del SOQL — no basta con ocultarlos en la UI, viajaban en el JSON. La fila "Incorporated"
+> **No mapeados a propósito (2026-08-07):** en `SC_Corp__c` → `Credit_Score__c`,
+> `Funding_Capacity__c`, `Corp__c` (la referencia interna tipo `SCC415386`) y `RA_Status__c`;
+> en `Online_Order__c` → `EIN__c` y `EIN_Date_Issued__c`. Se mostraron en la ficha de pedido
+> hasta esa fecha; el stakeholder pidió quitarlos, así que salieron también del DTO y del
+> SOQL — no basta con ocultarlos en la UI, viajaban en el JSON. **El EIN ya no sale de
+> Salesforce**: eso eliminó `formatEin()` y fusionó `ORDER_DETAIL_SELECT` con `ORDER_SELECT`
+> (solo existía para mantener `EIN__c` fuera del listado). Volver a añadirlo es una decisión
+> de PII, no de maquetado.
+>
+> ⚠️ Ojo con `Corp__c`: hay **dos campos distintos con ese nombre**. El de `Online_Order__c`
+> es el lookup al corp y **sigue haciendo falta** (`shelfCorp.id`, agrupación de documentos);
+> el que se quitó es `Corp__r.Corp__c`, el número de referencia del propio corp. La fila "Incorporated"
 > combina ambos campos en un solo valor: `Incorporation_Date__c` con `Age__c` detrás entre
 > paréntesis — `March 15, 2016 (8 Years Old)`.
+>
+> ⚠️ **`Age__c` viene fraccionado, no entero.** `Devin LLC` (`a2TVF000000wNM12AM`,
+> incorporado 2026-07-19) devuelve **`0.05`**, no `0`. El portal lo trunca hacia abajo, y por
+> debajo del año escribe `(Less than 1 Year Old)` en vez de `(0 Years Old)`. Ese texto solo
+> se añade si hay fecha de incorporación: `agedYears` también cae a 0 cuando `Age__c` está
+> vacío, y sin ninguno de los dos la fila muestra `—`.
 
 ## DTO `Client` ← `FU_User__c`  (identidad del portal)
 

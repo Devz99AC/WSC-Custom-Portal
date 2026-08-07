@@ -33,11 +33,9 @@ export const shelfCorpSchema = z.object({
   price: z.number().nullable(),
   duns: z.string().nullable(),
   creditReadyFeatures: z.array(z.string()),
-  corpNumber: z.string().nullable(),
   registrationNumber: z.string().nullable(),
   lastAnnualReportDate: z.string().nullable(),
   nextRenewalDate: z.string().nullable(),
-  registeredAgentStatus: z.string().nullable(),
 });
 
 export const staffContactSchema = z.object({
@@ -78,7 +76,6 @@ export const orderSchema = z.object({
   backEndSupport: staffContactSchema.nullable(),
   paymentMethod: paymentMethodSchema.nullable(),
   paymentFrequency: z.string().nullable(),
-  ein: z.string().nullable(),
   shelfCorp: shelfCorpSchema.nullable(),
   clientId: z.string().min(1),
 });

@@ -765,24 +765,6 @@ a:hover {
   margin-top: 2px;
   overflow-wrap: anywhere;
 }
-/* Inline "Show/Hide" toggle for masked values (EIN) — reads as a link, not a form button. */
-.kv .v .reveal {
-  margin-left: 8px;
-  padding: 0;
-  border: none;
-  background: none;
-  font: inherit;
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--wsc-navy);
-  cursor: pointer;
-}
-.kv .v .reveal:hover {
-  text-decoration: underline;
-}
-
 /* ---------- TABLE ----------
  * Two layouts from one markup. Wide: an ordinary table. At ≤640px each row becomes a
  * stacked card whose fields are labelled from the `data-label` attribute the cells carry

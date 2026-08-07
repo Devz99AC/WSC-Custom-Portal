@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useOrder } from "../hooks/useOrder";
 import { UnauthorizedError } from "../api/client";
@@ -35,34 +35,27 @@ function DetailGrid({ items }: { items: (Detail | null)[] }) {
 
 /** "Incorporated" reads as the filing date with the corp's age beside it — the date is the
  *  fact, the age is what the client actually bought (CLAUDE.md §3, "Aged Corp"), and
- *  showing both saves them doing the subtraction. `Age__c` can arrive fractional, so it is
- *  floored: a corp is "5 Years Old" until it turns six. Either half can be missing on a
- *  half-populated record, so each is appended only when present. */
+ *  showing both saves them doing the subtraction. `Age__c` arrives fractional (a corp filed
+ *  18 days ago reads 0.05), so it is floored: a corp is "5 Years Old" until it turns six.
+ *
+ *  Under a year it says "Less than 1 Year Old" rather than "0 Years Old", which reads like
+ *  missing data. That wording is only safe when a filing date backs it, because `agedYears`
+ *  also lands on 0 when `Age__c` itself is empty — with neither, the row shows an em-dash
+ *  instead of claiming an age nothing in the record supports. */
 const incorporatedLabel = (incorporationDate: string | null, agedYears: number): string => {
+  const date = formatSalesforceDate(incorporationDate, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
   const years = Math.floor(agedYears);
-  const parts = [
-    formatSalesforceDate(incorporationDate, { month: "long", day: "numeric", year: "numeric" }),
-    years >= 1 ? `(${years} ${years === 1 ? "Year" : "Years"} Old)` : null,
-  ].filter((part): part is string => part !== null);
-  return parts.length > 0 ? parts.join(" ") : "—";
+
+  if (years >= 1) {
+    const age = `(${years} ${years === 1 ? "Year" : "Years"} Old)`;
+    return date ? `${date} ${age}` : age;
+  }
+  return date ? `${date} (Less than 1 Year Old)` : "—";
 };
-
-const MASKED_EIN = "••-•••••••";
-
-/** The EIN is the corporation's federal tax ID — the client genuinely needs it (their bank
- *  asks for it when opening the business account), but it is PII that shouldn't sit in
- *  plain view during a screen share, so it starts masked behind an explicit reveal. */
-function EinValue({ ein }: { ein: string }) {
-  const [revealed, setRevealed] = useState(false);
-  return (
-    <>
-      {revealed ? ein : MASKED_EIN}
-      <button type="button" className="reveal" onClick={() => setRevealed(!revealed)}>
-        {revealed ? "Hide" : "Show"}
-      </button>
-    </>
-  );
-}
 
 /**
  * Order detail — one order, resolved from the `:id` route param and scoped server-side
@@ -158,17 +151,10 @@ export function OrderPage() {
                   k: "Incorporated",
                   v: incorporatedLabel(corp.incorporationDate, corp.agedYears),
                 },
-                corp.corpNumber ? { k: "Corp #", v: corp.corpNumber } : null,
                 corp.registrationNumber
                   ? { k: "Registration #", v: corp.registrationNumber }
                   : null,
-                // EIN lives on Online_Order__c, but it identifies the corporation — this is
-                // where a client looks for "my company's tax ID".
-                order.ein ? { k: "EIN", v: <EinValue ein={order.ein} /> } : null,
                 corp.duns ? { k: "D-U-N-S", v: corp.duns } : null,
-                corp.registeredAgentStatus
-                  ? { k: "Registered agent", v: corp.registeredAgentStatus }
-                  : null,
                 corp.lastAnnualReportDate
                   ? { k: "Last annual report", v: formatDate(corp.lastAnnualReportDate) }
                   : null,

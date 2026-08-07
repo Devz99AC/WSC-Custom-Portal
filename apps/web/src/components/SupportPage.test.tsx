@@ -87,14 +87,18 @@ describe("SupportPage", () => {
 
     expect(screen.getByRole("link", { name: "(720) 534-2065" })).toHaveAttribute(
       "href",
-      "tel:7205342065",
+      // "+1", not a bare "720…" — RFC 3966 needs the country code, or the number only
+      // connects from inside the US.
+      "tel:+17205342065",
     );
     expect(
       screen.getByRole("link", { name: "Support@WholesaleShelfCorporations.com" }),
     ).toHaveAttribute("href", "mailto:Support@WholesaleShelfCorporations.com");
+    // 1-720…, not 720… — wa.me reads a bare "720…" as country code 7 (Russia). This is the
+    // company's own card, so getting it wrong sends every client to a stranger.
     expect(screen.getByRole("link", { name: "Message us" })).toHaveAttribute(
       "href",
-      "https://wa.me/7205342065",
+      "https://wa.me/17205342065",
     );
     expect(screen.getByText("5500 Greenwood Plaza Blvd, Suite 130")).toBeInTheDocument();
     expect(screen.getByText("Greenwood Village, CO 80111")).toBeInTheDocument();

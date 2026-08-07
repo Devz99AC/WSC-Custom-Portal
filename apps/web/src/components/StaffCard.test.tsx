@@ -60,6 +60,45 @@ describe("StaffCard", () => {
     );
   });
 
+  // Salesforce's phone fields are free text and plenty of records omit the country code.
+  // wa.me takes bare digits, so "7205980685" is read as country code 7 — Russia — and the
+  // link silently opens a chat with a stranger instead of failing. `tel:` fails the other
+  // way: without the "+" it is a local number that won't connect from abroad.
+  it("adds the US country code to numbers stored without one, on both channels", () => {
+    render(
+      <StaffCard
+        order={makePendingOrder({
+          advisor: makeStaff("advisor", {
+            phone: "(720) 598-0685",
+            whatsAppNumber: "(720) 598-0685",
+          }),
+        })}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "WhatsApp" })).toHaveAttribute(
+      "href",
+      "https://wa.me/17205980685",
+    );
+    expect(screen.getByRole("link", { name: "(720) 598-0685" })).toHaveAttribute(
+      "href",
+      "tel:+17205980685",
+    );
+  });
+
+  // Showing the digits is still useful — the client can dial them by hand — but a link
+  // built from them would ring somewhere unpredictable.
+  it("shows an undialable number as plain text rather than a link", () => {
+    render(
+      <StaffCard
+        order={makePendingOrder({
+          advisor: makeStaff("advisor", { phone: "ext. 4021", whatsAppNumber: null }),
+        })}
+      />,
+    );
+    expect(screen.getByText("ext. 4021")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "ext. 4021" })).not.toBeInTheDocument();
+  });
+
   it("omits a channel the team member hasn't filled in rather than rendering a dead link", () => {
     render(
       <StaffCard

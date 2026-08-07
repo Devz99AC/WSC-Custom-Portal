@@ -50,17 +50,6 @@ const isVerified = (statusSf: string | null): boolean =>
 
 const soqlEscape = (value: string): string => value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 
-/** `Online_Order__c.EIN__c` is a NUMBER in Salesforce, so a leading zero is lost — pad back
- *  to the 9 digits an EIN always has before formatting `XX-XXXXXXX`. Anything that isn't a
- *  clean 9-digit value is dropped rather than shown half-formatted. */
-const formatEin = (value: unknown): string | null => {
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    return null;
-  }
-  const digits = String(Math.trunc(value)).padStart(9, "0");
-  return digits.length === 9 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : null;
-};
-
 /** The staff fields, identical for all three roles — they're the same object
  *  (`SEOX3_Team_Member__c`) reached through three different lookups. */
 const staffSelect = (relationship: string): string =>
@@ -79,16 +68,17 @@ const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Status_
               Client__r.Name, Client__r.E_Mail__c, Client__r.Phone__c, Client__r.Cell_Phone__c,
               Client__r.Legal_Name_of_Business__c, Client__r.Trade_Name__c,
               Corp__r.Name, Corp__r.Type__c, Corp__r.Jurisdiction__c, Corp__r.Incorporation_Date__c,
-              Corp__r.Age__c, Corp__r.Client_Price__c, Corp__r.DUNS__c, Corp__r.Corp__c,
+              Corp__r.Age__c, Corp__r.Client_Price__c, Corp__r.DUNS__c,
               Corp__r.Registration__c,
-              Corp__r.Last_Annual_Report__c, Corp__r.Next_Annual_Report__c, Corp__r.RA_Status__c,
+              Corp__r.Last_Annual_Report__c, Corp__r.Next_Annual_Report__c,
               ${staffSelect("Sales_Rep__r")}, ${staffSelect("QC_Agent__r")},
               ${staffSelect("Back_End_Worker__r")}`;
 
-/** Detail-only projection. The EIN is sensitive PII (CLAUDE.md §3), so it is fetched only
- *  for the single-order view that actually displays it and never travels in the list
- *  payload — `Order.ein` is therefore always `null` on orders returned by `listOrders*`. */
-const ORDER_DETAIL_SELECT = `${ORDER_SELECT}, EIN__c`;
+/* There is no longer a separate detail projection. It existed solely to keep `EIN__c` out
+ * of the list payload; with the EIN gone from the portal entirely (2026-08-07) the list and
+ * detail reads want exactly the same fields. If a detail-only field is ever added back,
+ * re-split rather than widening ORDER_SELECT — the list endpoint returns every order the
+ * client owns, so anything added there is multiplied across all of them. */
 
 // List queries stay bounded per CLAUDE.md §1 — a client with more orders/payments than
 // these only sees the most recent MAX_* in the relevant list.
@@ -142,7 +132,7 @@ export class SalesforcePortalRepository implements PortalRepository {
     const safeEmail = soqlEscape(email);
     const safeOrderId = soqlEscape(orderId);
     const orders = await this.query(
-      `SELECT ${ORDER_DETAIL_SELECT}
+      `SELECT ${ORDER_SELECT}
        FROM Online_Order__c
        WHERE Brand__c = 'WSC' AND Client__r.E_Mail__c = '${safeEmail}' AND Id = '${safeOrderId}'
        LIMIT 1`,
@@ -338,11 +328,9 @@ export class SalesforcePortalRepository implements PortalRepository {
           price: typeof corpRel.Client_Price__c === "number" ? corpRel.Client_Price__c : null,
           duns: str(corpRel.DUNS__c),
           creditReadyFeatures: features,
-          corpNumber: str(corpRel.Corp__c),
           registrationNumber: str(corpRel.Registration__c),
           lastAnnualReportDate: str(corpRel.Last_Annual_Report__c),
           nextRenewalDate: str(corpRel.Next_Annual_Report__c),
-          registeredAgentStatus: str(corpRel.RA_Status__c),
         }
       : null;
 
@@ -376,8 +364,6 @@ export class SalesforcePortalRepository implements PortalRepository {
       backEndSupport: this.mapStaff("backend-support", obj(orderRecord.Back_End_Worker__r), null),
       paymentMethod: str(orderRecord.Payment_Method__c) ? toMethod(orderRecord.Payment_Method__c) : null,
       paymentFrequency: str(orderRecord.Payment_Frequency__c),
-      // Absent from the list projection by design (ORDER_DETAIL_SELECT) — resolves to null there.
-      ein: formatEin(orderRecord.EIN__c),
       shelfCorp,
       clientId: str(orderRecord.Client__c) ?? "",
     };

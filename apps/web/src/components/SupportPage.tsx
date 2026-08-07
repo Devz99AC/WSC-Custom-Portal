@@ -2,6 +2,7 @@ import {
   STAFF_ROLE_LABELS,
   STAFF_ROLE_PURPOSE,
   WSC_CONTACT,
+  telLink,
   whatsAppLink,
 } from "@wsc/shared";
 import { useOrders } from "../hooks/useOrders";
@@ -9,8 +10,11 @@ import { UnauthorizedError } from "../api/client";
 import { activeSupportContacts } from "../lib/support";
 import { ContactRow } from "./ContactRow";
 
-/** Same rule as a person's channels: a link that can't be built simply isn't rendered. */
+/** Same rule as a person's channels: a link that can't be built simply isn't rendered.
+ *  Both go through the shared builders so the company's own card can't drift from the
+ *  staff cards — it did, and shipped a `wa.me` link to the wrong country. */
 const companyWhatsApp = whatsAppLink(WSC_CONTACT.phone);
+const companyTel = telLink(WSC_CONTACT.phone);
 
 const errorMessage = (error: unknown): string =>
   error instanceof UnauthorizedError
@@ -98,7 +102,11 @@ export function SupportPage() {
           <div>
             <div className="k">Phone</div>
             <div className="v">
-              <a href={`tel:${WSC_CONTACT.phone.replace(/\D/g, "")}`}>{WSC_CONTACT.phone}</a>
+              {companyTel ? (
+                <a href={companyTel}>{WSC_CONTACT.phone}</a>
+              ) : (
+                WSC_CONTACT.phone
+              )}
             </div>
           </div>
           <div>

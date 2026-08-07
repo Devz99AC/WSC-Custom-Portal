@@ -1,4 +1,4 @@
-import { STAFF_ROLE_LABELS, whatsAppLink, type StaffContact } from "@wsc/shared";
+import { STAFF_ROLE_LABELS, telLink, whatsAppLink, type StaffContact } from "@wsc/shared";
 
 const initials = (name: string): string =>
   name
@@ -28,6 +28,7 @@ interface ContactRowProps {
  */
 export function ContactRow({ contact, purpose, covers }: ContactRowProps) {
   const whatsApp = whatsAppLink(contact.whatsAppNumber);
+  const tel = telLink(contact.phone);
 
   return (
     <div className="prod">
@@ -40,7 +41,10 @@ export function ContactRow({ contact, purpose, covers }: ContactRowProps) {
         {purpose !== undefined && <div className="sup-purpose">{purpose}</div>}
         <div className="contact-lines">
           {contact.email && <a href={`mailto:${contact.email}`}>{contact.email}</a>}
-          {contact.phone && <a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a>}
+          {/* A number too mangled to dial still gets shown — the client can read it out —
+              but not as a link that would silently ring the wrong place. */}
+          {contact.phone &&
+            (tel ? <a href={tel}>{contact.phone}</a> : <span>{contact.phone}</span>)}
           {whatsApp && (
             <a href={whatsApp} target="_blank" rel="noreferrer">
               WhatsApp

@@ -49,11 +49,9 @@ export const makeShelfCorp = (overrides: Partial<ShelfCorp> = {}): ShelfCorp => 
   price: 8750,
   duns: "07-891-2345",
   creditReadyFeatures: [],
-  corpNumber: "SCC415386",
   registrationNumber: null,
   lastAnnualReportDate: "2026-01-15",
   nextRenewalDate: "2027-01-15",
-  registeredAgentStatus: "Active - Initial Free Period",
   ...overrides,
 });
 
@@ -78,7 +76,6 @@ export const makeOrder = (overrides: Partial<Order> = {}): Order => ({
   backEndSupport: makeStaff("backend-support", { name: "Rinki Gurjar" }),
   paymentMethod: "Wire Transfer",
   paymentFrequency: "One-Time",
-  ein: "88-1234567",
   shelfCorp: makeShelfCorp(),
   clientId: TEST_CLIENT.id,
   ...overrides,
@@ -99,7 +96,6 @@ export const makePendingOrder = (overrides: Partial<Order> = {}): Order =>
     initialContactAt: null,
     completedAt: null,
     paymentMethod: "Credit Card",
-    ein: null,
     shelfCorp: null,
     ...overrides,
   });
