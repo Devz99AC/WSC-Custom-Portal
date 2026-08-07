@@ -1,6 +1,18 @@
 import { useState, type FormEvent } from "react";
+import { WSC_ESTABLISHED_YEAR, yearsInBusiness } from "@wsc/shared";
 import { requestMagicLink } from "../api/client";
 import { WscLogo } from "./WscLogo";
+
+/**
+ * Counted from the real founding date at render rather than typed into the markup, so the
+ * number is still true after the next anniversary instead of quietly aging into a false
+ * claim. Reading the clock here is the side effect at the edge; the arithmetic itself is
+ * pure and lives in `@wsc/shared`.
+ */
+function establishedMark(): string {
+  const years = yearsInBusiness(new Date());
+  return `Established ${WSC_ESTABLISHED_YEAR} — ${years} ${years === 1 ? "Year" : "Years"} of Experience`;
+}
 
 /**
  * Passwordless magic-link login (ADR-0005). Submitting posts to the BFF, which emails a
@@ -50,7 +62,7 @@ export function Login() {
             Use a different email
           </button>
         </div>
-        <div className="login-mark">Established 2010 — 16 Years of Experience</div>
+        <div className="login-mark">{establishedMark()}</div>
       </div>
     );
   }
@@ -94,7 +106,7 @@ export function Login() {
           <a href="tel:+17205342065">+1 (720) 534-2065</a>
         </p>
       </form>
-      <div className="login-mark">Established 2010 — 16 Years of Experience</div>
+      <div className="login-mark">{establishedMark()}</div>
     </div>
   );
 }
