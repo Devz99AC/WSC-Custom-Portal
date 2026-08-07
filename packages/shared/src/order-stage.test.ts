@@ -135,7 +135,6 @@ describe("orderDetailSchema", () => {
           stateOfFormation: "Wyoming",
           incorporationDate: "2016-03-15",
           agedYears: 8,
-          price: 8750,
           duns: "07-891-2345",
           creditReadyFeatures: [],
           registrationNumber: null,

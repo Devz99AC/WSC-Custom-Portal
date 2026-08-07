@@ -30,7 +30,6 @@ export const shelfCorpSchema = z.object({
   stateOfFormation: z.string(),
   incorporationDate: z.string().nullable(),
   agedYears: z.number().nonnegative(),
-  price: z.number().nullable(),
   duns: z.string().nullable(),
   creditReadyFeatures: z.array(z.string()),
   registrationNumber: z.string().nullable(),

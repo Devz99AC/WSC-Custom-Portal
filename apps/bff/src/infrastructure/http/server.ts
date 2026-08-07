@@ -11,10 +11,16 @@ import type { RequestMagicLink } from "../../application/request-magic-link.js";
 import type { VerifyMagicLink } from "../../application/verify-magic-link.js";
 import {
   SESSION_COOKIE_NAME,
+  SESSION_TTL_SECONDS,
   signSessionJwt,
   verifySessionJwt,
   type SessionJwtConfig,
 } from "../auth/session-jwt.js";
+import {
+  FixedWindowRateLimiter,
+  REQUEST_LINK_EMAIL_RULE,
+  REQUEST_LINK_IP_RULE,
+} from "./rate-limiter.js";
 import { DomainError, RateLimitedError, ValidationError } from "../../domain/errors.js";
 
 /**
@@ -41,6 +47,8 @@ export interface ServerDeps {
   requestMagicLink: RequestMagicLink;
   verifyMagicLink: VerifyMagicLink;
   sessionConfig: SessionJwtConfig;
+  /** Optional so tests can inject a fake clock and assert window expiry without sleeping. */
+  rateLimiter?: FixedWindowRateLimiter;
 }
 
 const requestLinkBodySchema = z.object({ email: z.string().email() });
@@ -78,8 +86,29 @@ function readSession(request: FastifyRequest, config: SessionJwtConfig) {
  * framework-free (hexagonal — CLAUDE.md §2).
  */
 export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
-  const app = Fastify({ logger: { level: env.LOG_LEVEL } });
+  const app = Fastify({
+    logger: { level: env.LOG_LEVEL },
+    // Required for the per-IP rule below to mean anything. Vercel rewrites `/api` and
+    // `/auth` to Railway, so the socket address every request arrives from is the proxy's:
+    // without this, all traffic shares one bucket and the IP rule locks out the world at
+    // request 16. With it, `request.ip` comes from `X-Forwarded-For`.
+    //
+    // The trade-off is that a caller can prepend a forged `X-Forwarded-For` and evade
+    // their own IP bucket. That is why the per-email rule — which reads the request body
+    // and cannot be forged — is the strict one; the IP rule is a quota guard, not an
+    // access control. Nothing but rate limiting reads `request.ip`.
+    trustProxy: true,
+  });
   app.register(fastifyCookie);
+
+  const rateLimiter = deps.rateLimiter ?? new FixedWindowRateLimiter();
+
+  // Applies to every response, but earns its place on the download route: a Salesforce
+  // attachment whose stored ContentType is wrong or absent could otherwise be sniffed as
+  // HTML by the browser and executed inside the portal's own origin.
+  app.addHook("onSend", async (_request, reply) => {
+    reply.header("X-Content-Type-Options", "nosniff");
+  });
 
   // Centralized error handling (CLAUDE.md §2). Route handlers throw typed errors and never
   // build status codes themselves; the upstream detail is logged here and dropped from the
@@ -138,6 +167,21 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
       return reply.code(400).send({ error: "A valid email is required" });
     }
 
+    // Deliberately BEFORE the client lookup. A limiter that only counted real clients
+    // would answer instantly for an unknown address and 429 for a known one — turning
+    // itself into exactly the account-existence oracle REQUEST_LINK_RESPONSE prevents.
+    const retryAfter =
+      rateLimiter.hit(`ip:${request.ip}`, REQUEST_LINK_IP_RULE) ||
+      rateLimiter.hit(`email:${parsed.data.email.trim().toLowerCase()}`, REQUEST_LINK_EMAIL_RULE);
+    if (retryAfter > 0) {
+      request.log.warn({ retryAfter }, "sign-in link rate limited");
+      reply.header("Retry-After", retryAfter);
+      return reply.code(429).send({
+        error: "Too many sign-in requests. Please wait a few minutes and try again.",
+        code: "RATE_LIMITED",
+      });
+    }
+
     try {
       await deps.requestMagicLink.execute(parsed.data.email);
     } catch (error) {
@@ -168,9 +212,16 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     reply.setCookie(SESSION_COOKIE_NAME, sessionJwt, {
       path: "/",
       httpOnly: true,
-      secure: env.NODE_ENV === "production",
+      // Derived from APP_BASE_URL, not NODE_ENV. The portal's own base URL is what actually
+      // states whether this deployment is served over TLS, and it is guaranteed present —
+      // the magic link is built from it, and a malformed value fails the boot (it once
+      // crash-looped the BFF, which is how we know). NODE_ENV, by contrast, is easy to
+      // leave unset on a host: the cookie would then quietly ship without `Secure` and
+      // nothing would look wrong.
+      secure: env.APP_BASE_URL.startsWith("https://"),
       sameSite: "lax",
-      maxAge: 45 * 60,
+      // Same constant the JWT is signed with — see SESSION_TTL_SECONDS.
+      maxAge: SESSION_TTL_SECONDS,
     });
     return reply.redirect(env.APP_BASE_URL);
   });

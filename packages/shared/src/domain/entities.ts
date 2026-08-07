@@ -34,7 +34,10 @@ export interface ShelfCorp {
   stateOfFormation: string; // Jurisdiction__c
   incorporationDate: string | null; // Incorporation_Date__c (ISO-8601)
   agedYears: number; // Age__c
-  price: number | null; // Client_Price__c
+  // `Client_Price__c` is deliberately not mapped (2026-08-07). Nothing rendered it, and
+  // it is the corp's own price sitting in the same payload as `Order.amount`, the figure
+  // the client was actually invoiced — two numbers that need not agree, one of which is
+  // WSC's commercial position. `amount` is the client's number; this one isn't.
   duns: string | null; // DUNS__c
   creditReadyFeatures: string[]; // derived from Paid_Features_Selected__c
   registrationNumber: string | null; // Registration__c — state filing number
