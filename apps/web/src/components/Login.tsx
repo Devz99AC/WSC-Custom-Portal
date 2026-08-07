@@ -7,7 +7,11 @@ import { requestMagicLink } from "../api/client";
  * (anti-enumeration; the BFF's response is intentionally generic either way).
  */
 export function Login() {
-  const [email, setEmail] = useState("m.brown@acmeholdings.com");
+  // Starts empty on purpose. This field used to be pre-filled with the sandbox demo client
+  // (`m.brown@acmeholdings.com`) as a dev convenience, which on a public login screen shows
+  // a real-looking stranger's address to every visitor and invites them to request a link
+  // for an account that isn't theirs.
+  const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const linkWasInvalid = new URLSearchParams(window.location.search).has("login_error");
 
