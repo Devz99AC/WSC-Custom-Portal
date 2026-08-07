@@ -5,11 +5,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TEST_CLIENT, makeOrder, makeShelfCorp } from "../test/fixtures";
 import { OrderPage } from "./OrderPage";
 
-const respondWith = (order = makeOrder()) => {
+const respondWith = (
+  order = makeOrder(),
+  creditReadyFeatures: { feature: string; status: string }[] = [],
+) => {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ client: TEST_CLIENT, order, payments: [] }), { status: 200 }),
+      new Response(
+        JSON.stringify({ client: TEST_CLIENT, order, payments: [], creditReadyFeatures }),
+        { status: 200 },
+      ),
     ),
   );
 };
@@ -107,6 +113,29 @@ describe("OrderPage", () => {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }
     expect(screen.queryByText(/88-1234567/)).not.toBeInTheDocument();
+  });
+
+  // Only the WSC_Feature_Order__c records that exist show — named by their record type,
+  // with their status, and never the internal Feature Order # (the SCF... autonumber).
+  // "Working"/"Waiting on Client" are used because "Complete"/"Unpaid"/"Work Started" also
+  // appear as pipeline steps in the tracker above.
+  it("lists the credit-ready features that exist with their status, and no Feature Order #", async () => {
+    respondWith(makeOrder(), [
+      { feature: "IRS Company Registration", status: "Working" },
+      { feature: "411 Directory Listing", status: "Waiting on Client" },
+    ]);
+    await renderPage();
+    expect(screen.getByText("IRS Company Registration")).toBeInTheDocument();
+    expect(screen.getByText("411 Directory Listing")).toBeInTheDocument();
+    expect(screen.getByText("Working")).toBeInTheDocument();
+    expect(screen.getByText("Waiting on Client")).toBeInTheDocument();
+    expect(screen.queryByText(/SCF\d/)).not.toBeInTheDocument();
+  });
+
+  it("shows an honest empty state when the order has no credit-ready features", async () => {
+    respondWith(makeOrder(), []);
+    await renderPage();
+    expect(screen.getByText(/No credit-ready features have been set up/i)).toBeInTheDocument();
   });
 
   it("omits detail rows Salesforce hasn't filled in rather than showing em-dashes", async () => {

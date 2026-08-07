@@ -4,6 +4,7 @@ import { useOrder } from "../hooks/useOrder";
 import { UnauthorizedError } from "../api/client";
 import { formatSalesforceDate } from "../lib/date";
 import { orderStatusBadgeClass, orderStatusLabel } from "../lib/order-status";
+import { featureStatusBadgeClass } from "../lib/credit-ready";
 import { OrderTracker } from "./OrderTracker";
 import { StaffCard } from "./StaffCard";
 
@@ -83,7 +84,7 @@ export function OrderPage() {
     );
   }
 
-  const { order, payments } = data;
+  const { order, payments, creditReadyFeatures } = data;
   const corp = order.shelfCorp;
   const verifiedCount = payments.filter((payment) => payment.isVerified).length;
 
@@ -166,6 +167,29 @@ export function OrderPage() {
           </>
         ) : (
           <p className="statusnote">No shelf corporation is linked to this order yet.</p>
+        )}
+      </div>
+
+      {/* Credit-ready features — the WSC_Feature_Order__c records that exist for this order,
+          named by their Salesforce record type. Only the created ones show (never the full
+          43-item catalogue), and never the internal Feature Order #. */}
+      <div className="card">
+        <div className="card-h">Credit-ready features</div>
+        {creditReadyFeatures.length > 0 ? (
+          <div className="feature-list">
+            {creditReadyFeatures.map((feature, index) => (
+              <div className="feature-row" key={`${feature.feature}-${index}`}>
+                <span className="feature-name">{feature.feature}</span>
+                <span className={`badge ${featureStatusBadgeClass(feature.status)}`}>
+                  {feature.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="statusnote">
+            No credit-ready features have been set up for this order yet.
+          </p>
         )}
       </div>
 

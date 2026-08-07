@@ -209,11 +209,34 @@ export interface Order {
   clientId: string; // Client__c → FU_User__c
 }
 
-/** Aggregate returned by the order-detail endpoint — one specific order + its payments. */
+/**
+ * A credit-ready feature the client paid for — Salesforce `WSC_Feature_Order__c`.
+ *
+ * The feature's identity is its **record type** (the org defines 43; the record type's
+ * name IS the feature — "IRS Company Registration", "Dun & Bradstreet (DUNS) #", "411
+ * Directory Listing"…). Only records that actually exist for the order are surfaced — never
+ * the full 43-item catalogue, and never the internal Feature Order # (the autonumber `Name`).
+ *
+ * Deliberately just two fields. `WSC_Feature_Order__c` also holds credentials, PINs and
+ * money the buyer must never see — `Password__c`, `Username__c`, `DNB_Secret_PIN__c`,
+ * `EIN_Number__c`, `Security_Answers__c`, `Price_Charged__c`/`Value__c`, merchant/bank
+ * details — none of which leave Salesforce (the same rule as the corp's commercial fields).
+ */
+export interface CreditReadyFeature {
+  feature: string; // RecordType.Name — the feature the client bought
+  status: string; // Status__c (raw; "Complete" | "Working" | "Waiting on Client" | …). "Cancelled" is dropped upstream.
+}
+
+/** Aggregate returned by the order-detail endpoint — one specific order, its payments, and
+ *  the credit-ready features ordered for it. */
 export interface OrderDetail {
   client: Client;
   order: Order;
   payments: Payment[];
+  /** The order's `WSC_Feature_Order__c` records that exist (one per record type) — the
+   *  client's path to funding. Empty when none exist or all are cancelled. On the detail
+   *  aggregate only, never the list, to avoid a per-order feature query (CLAUDE.md §1). */
+  creditReadyFeatures: CreditReadyFeature[];
 }
 
 /** Aggregate returned by the "My Orders" list endpoint. */

@@ -79,10 +79,19 @@ export const orderSchema = z.object({
   clientId: z.string().min(1),
 });
 
+export const creditReadyFeatureSchema = z.object({
+  feature: z.string().min(1),
+  status: z.string(),
+});
+
 export const orderDetailSchema = z.object({
   client: clientSchema,
   order: orderSchema,
   payments: z.array(paymentSchema),
+  // `.default([])` keeps a response from a BFF that predates this field valid, rather than
+  // throwing OutdatedClientError at an open tab mid-deploy — this field is purely additive,
+  // unlike the `ein` *removal* that did break tabs (see client.ts OutdatedClientError).
+  creditReadyFeatures: z.array(creditReadyFeatureSchema).default([]),
 });
 
 export type OrderDetailDto = z.infer<typeof orderDetailSchema>;

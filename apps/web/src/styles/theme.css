@@ -765,6 +765,34 @@ a:hover {
   margin-top: 2px;
   overflow-wrap: anywhere;
 }
+/* ---------- CREDIT-READY FEATURES ----------
+ * One row per WSC_Feature_Order__c record: the feature (its record-type name) on the left,
+ * its status badge on the right. Names run long ("Merchant Account Setup – accept all credit
+ * cards and eChecks"), so the name wraps and the badge keeps its size. */
+.feature-list {
+  display: flex;
+  flex-direction: column;
+}
+.feature-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--wsc-line);
+}
+.feature-row:last-child {
+  border-bottom: none;
+}
+.feature-name {
+  font-size: 12.5px;
+  color: var(--wsc-ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.feature-row .badge {
+  flex-shrink: 0;
+}
 /* ---------- TABLE ----------
  * Two layouts from one markup. Wide: an ordinary table. At ≤640px each row becomes a
  * stacked card whose fields are labelled from the `data-label` attribute the cells carry

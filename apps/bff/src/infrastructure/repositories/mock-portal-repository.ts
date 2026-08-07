@@ -1,5 +1,6 @@
 import type {
   Client,
+  CreditReadyFeature,
   DocumentsList,
   Order,
   OrderDetail,
@@ -156,6 +157,28 @@ const DEMO_PAYMENTS_BY_ORDER: Record<string, Payment[]> = {
   a0Odemo00000000002: [],
 };
 
+/**
+ * Credit-ready features for the paid order (UO1423102) — `WSC_Feature_Order__c` records,
+ * labelled by their REAL Salesforce record-type names, in a spread of statuses so every
+ * badge tone shows. The unpaid order (UO1423103) has none, which exercises the honest
+ * empty state. Feature Order # (the autonumber) is deliberately not here — the portal never
+ * shows it.
+ */
+const DEMO_FEATURES_BY_ORDER: Record<string, CreditReadyFeature[]> = {
+  a0Odemo00000000001: [
+    { feature: "IRS Company Registration", status: "Complete" },
+    { feature: "Dun & Bradstreet (DUNS) #", status: "Complete" },
+    { feature: "411 Directory Listing", status: "Complete" },
+    { feature: "Yellow Pages Listing", status: "Complete" },
+    { feature: "Google Search Engine Listing", status: "Working" },
+    { feature: "Bing Search Engine Listing", status: "Working" },
+    { feature: "1st Annual Report – Secretary of State Officer/Address Update", status: "Working" },
+    { feature: "Registered Agent Service in State of Incorporation (Yearly)", status: "Waiting on Client" },
+    { feature: "Merchant Account Setup – accept all credit cards and eChecks", status: "Waiting on Supplier" },
+  ],
+  a0Odemo00000000002: [],
+};
+
 /** Mirrors the real model: attachments hang off the ORDER, filed under that order's corp. */
 const DEMO_DOCUMENTS: PortalDocument[] = [
   {
@@ -209,6 +232,7 @@ export class MockPortalRepository implements PortalRepository {
       client: DEMO_CLIENT,
       order,
       payments: DEMO_PAYMENTS_BY_ORDER[order.id] ?? [],
+      creditReadyFeatures: DEMO_FEATURES_BY_ORDER[order.id] ?? [],
     });
   }
 

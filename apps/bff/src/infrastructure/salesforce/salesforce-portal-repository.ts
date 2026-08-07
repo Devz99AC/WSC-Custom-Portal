@@ -1,6 +1,7 @@
 import {
   VERIFIED_PAYMENT_STATUSES,
   type Client,
+  type CreditReadyFeature,
   type DocumentsList,
   type Order,
   type OrderDetail,
@@ -85,6 +86,7 @@ const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Status_
 const MAX_ORDERS = 50;
 const MAX_PAYMENTS = 100;
 const MAX_DOCUMENTS = 200;
+const MAX_FEATURES = 200;
 
 /** Renders ids as a SOQL `IN` list. Ids come from Salesforce itself (never from the
  *  caller), but they're escaped anyway so this can't become an injection point if a
@@ -144,7 +146,8 @@ export class SalesforcePortalRepository implements PortalRepository {
     }
 
     const paymentRecords = await this.paymentsFor(orderRecord);
-    return this.toOrderDetail(email, orderRecord, paymentRecords);
+    const features = await this.featuresFor(orderRecord);
+    return this.toOrderDetail(email, orderRecord, paymentRecords, features);
   }
 
   async listPaymentsByEmail(email: string): Promise<PaymentsList | null> {
@@ -295,6 +298,32 @@ export class SalesforcePortalRepository implements PortalRepository {
     );
   }
 
+  /**
+   * Credit-ready features ordered for one order — `WSC_Feature_Order__c`, one record per
+   * feature, identified by its record type. Only the record-type NAME and `Status__c` leave
+   * Salesforce; the object also holds credentials, PINs and prices (`Password__c`,
+   * `DNB_Secret_PIN__c`, `EIN_Number__c`, `Price_Charged__c`…) that never reach the client
+   * (entities.ts `CreditReadyFeature`). `Cancelled` is dropped — a cancelled item isn't part
+   * of the package. Scoped by the order id alone, exactly like `paymentsFor`: the order was
+   * already fetched under the caller's own email, so its children are transitively theirs.
+   */
+  private async featuresFor(orderRecord: SalesforceRecord): Promise<CreditReadyFeature[]> {
+    const orderId = str(orderRecord.Id) ?? "";
+    const records = await this.query(
+      `SELECT RecordType.Name, Status__c
+       FROM WSC_Feature_Order__c
+       WHERE Online_Order__c = '${soqlEscape(orderId)}' AND Status__c != 'Cancelled'
+       ORDER BY RecordType.Name
+       LIMIT ${MAX_FEATURES}`,
+    );
+    return records.flatMap((record) => {
+      const feature = str(obj(record.RecordType)?.Name);
+      // The record type is what NAMES the feature; a missing one means its FLS is closed for
+      // the integration user, not that the feature is nameless — drop it over a blank row.
+      return feature ? [{ feature, status: str(record.Status__c) ?? "—" }] : [];
+    });
+  }
+
   private mapClient(email: string, clientRel: SalesforceRecord | null, orderRecord: SalesforceRecord): Client {
     return {
       id: str(orderRecord.Client__c) ?? "",
@@ -421,6 +450,7 @@ export class SalesforcePortalRepository implements PortalRepository {
     email: string,
     orderRecord: SalesforceRecord,
     paymentRecords: SalesforceRecord[],
+    creditReadyFeatures: CreditReadyFeature[],
   ): OrderDetail {
     const client = this.mapClient(email, obj(orderRecord.Client__r), orderRecord);
     const order = this.mapOrder(orderRecord, paymentRecords);
@@ -428,6 +458,6 @@ export class SalesforcePortalRepository implements PortalRepository {
     const orderNumber = str(orderRecord.Name) ?? "—";
     const productName = order.shelfCorp?.name ?? null;
     const payments = paymentRecords.map((record) => this.mapPayment(orderId, orderNumber, productName, record));
-    return { client, order, payments };
+    return { client, order, payments, creditReadyFeatures };
   }
 }
