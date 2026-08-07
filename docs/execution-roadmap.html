@@ -260,12 +260,15 @@
       <span class="done-chip">Dashboard eliminado</span>
       <span class="done-chip">Documents por producto</span>
       <span class="done-chip">Payments agregado cross-order</span>
+      <span class="done-chip">Learning Center</span>
+      <span class="done-chip">Support (hub de contacto)</span>
+      <span class="done-chip">Dominio propio + correo real</span>
     </div>
   </div>
 
   <div class="progress-row">
     <div class="progress-track"><div class="progress-fill" style="width: 0%"></div></div>
-    <div class="progress-label">9 / 14</div>
+    <div class="progress-label">10 / 14</div>
   </div>
 
   <!-- ================= FENCE 1 — LECTURA ================= -->
@@ -412,12 +415,13 @@
       </div>
     </div>
 
-    <div class="step">
+    <div class="step done">
       <div class="num">9</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">DNS — dominio propio + remitente real</span><span class="tag ya">Ya</span></div>
+          <div class="warn">✅ <strong>Hecho el 2026-08-06 — el bloqueante del go-live queda resuelto.</strong> Portal en <code>portal.wholesaleshelfcorporations.com</code>, correo saliendo desde <code>noreply@wholesaleshelfcorporations.com</code>.<br>🔑 <strong>El SPF nunca hizo falta fusionarlo:</strong> Resend pide su SPF en el subdominio <code>send</code> y alinea el <code>From:</code> por DKIM, así que el registro de la raíz no había que tocarlo. La regla de decisión del runbook §1.2 funcionó.<br>🆕 <strong>Se descartó SendGrid</strong> pese a tener el dominio ya autenticado (ver runbook §0.5): sus listas de supresión son de cuenta entera y WSC mete ahí mucho marketing — un cliente que rebotó una campaña no recibiría su magic link, <em>en silencio</em>. La salida correcta era un subusuario dedicado y el plan no lo permite.<br>📧 Remitente <code>noreply@</code> con <strong>Reply-To a <code>support@</code></strong> (nuevo <code>SMTP_REPLY_TO_EMAIL</code>, opcional): un cliente al que le falla el acceso pulsa Responder, no busca un teléfono.<br>⚠️ <strong>Dos tropiezos que dejaron rastro:</strong> (1) el SPF fusionado se añadió como registro <em>nuevo</em> en vez de editar el existente, y el dominio quedó unos minutos con <strong>dos SPF</strong> — que invalida ambos, incluido el correo normal del equipo; (2) <code>APP_BASE_URL</code> se guardó sin <code>https://</code> y el BFF entró en <strong>bucle de reinicio</strong> (<code>z.string().url()</code> lo rechaza), lo que dejaba el portal colgado en "Loading your portal…". El síntoma en el navegador no señalaba en absoluto a la causa.<br>🔎 <strong>Trampa de diagnóstico:</strong> el dominio tiene un <strong>comodín <code>*</code></strong>, así que cualquier subdominio inventado responde y parece existir. Comprobar registros contra el resolutor público engaña — hay que preguntarle al nameserver autoritativo (<code>gina.ns.cloudflare.com</code>).</div>
           <div class="desc"><strong>Dos cambios de DNS que conviene hacer juntos:</strong></div>
           <div class="desc">a) <strong>Vercel</strong>: Settings → Domains + registro DNS. Actualizar <code>APP_BASE_URL</code> en Railway al terminar (es lo que arma la URL del link de acceso).</div>
           <div class="desc">b) <strong>Resend</strong>: verificar <code>wholesaleshelfcorporations.com</code> para poder enviar desde <code>support@…</code> en vez de <code>onboarding@resend.dev</code> — sin esto solo llega correo al dueño de la cuenta de Resend, o sea ningún cliente real. Luego cambiar <code>SMTP_FROM_EMAIL</code> en Railway.</div>
@@ -477,10 +481,17 @@
     <div class="checkpoint">
       <div class="flag">🚦</div>
       <div class="box">
-        <div class="ct">Checkpoint — Luz verde final</div>
+        <div class="ct">Checkpoint — Luz verde final · <b>es lo único que falta</b></div>
         <div class="cd">
-          Dominio propio confirmado · contenido del Learning Center listo · aprobación
-          explícita del CEO para abrir el portal al público.
+          ✅ <s>Dominio propio confirmado</s> — hecho el 2026-08-06, paso 9.<br />
+          ⏳ <b>Contenido del Learning Center</b> — el stakeholder decidió añadirlo <b>al final</b>;
+          para salir antes, la sección mostrará un "Coming Soon…". No bloquea.<br />
+          🔴 <b>Aprobación explícita del CEO para abrir el portal al público</b> — esto sí bloquea,
+          y <b>ya no queda nada técnico por delante</b>.<br /><br />
+          💰 <b>Llevar también a esa conversación:</b> la cuenta de Vercel está en plan
+          <b>Hobby</b>, cuyos términos son para uso <b>no comercial</b>. Un portal de clientes con
+          el dominio corporativo apuntando ahí es uso comercial y es visible. Conviene pasar a Pro
+          <em>antes</em> de abrirlo, no el día que suspendan el despliegue.
         </div>
       </div>
     </div>
@@ -557,8 +568,13 @@
 
   <footer>
     Ábrelo directamente en el navegador (doble click) — no depende de ningún servidor.<br />
-    Última actualización: 2026-08-06 — Refer a Friend salió de la secuencia numerada y pasó
-    entero a la cerca de escritura (W2), así que el total bajó de 15 a 14 pasos.
+    Última actualización: <strong>2026-08-06</strong> — cerrado el paso 9 (DNS): el portal vive en
+    <code>portal.wholesaleshelfcorporations.com</code> y el correo sale desde
+    <code>noreply@wholesaleshelfcorporations.com</code>. <strong>Ya no queda nada técnico
+    bloqueando el go-live</strong>, solo la aprobación del CEO (paso 14).<br />
+    Ese mismo día Refer a Friend salió de la secuencia numerada y pasó entero a la cerca de
+    escritura (W2), así que el total bajó de 15 a 14 pasos. Runbook de DNS en
+    <code>docs/dns-runbook.md</code>.
   </footer>
 </div>
 
