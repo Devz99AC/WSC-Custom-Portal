@@ -129,7 +129,6 @@ describe("orderDetailSchema", () => {
         paymentMethod: "Wire Transfer",
         paymentFrequency: "One-Time",
         ein: "88-1234567",
-        einIssuedAt: "2026-05-14",
         shelfCorp: {
           id: "s1",
           name: "2016 Wyoming LLC",
@@ -142,8 +141,6 @@ describe("orderDetailSchema", () => {
           creditReadyFeatures: [],
           corpNumber: "SCC415386",
           registrationNumber: null,
-          creditScore: "80 Paydex",
-          fundingCapacity: 250000,
           lastAnnualReportDate: "2026-01-15",
           nextRenewalDate: "2027-01-15",
           registeredAgentStatus: "Active - Initial Free Period",

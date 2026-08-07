@@ -39,8 +39,10 @@ export interface ShelfCorp {
   creditReadyFeatures: string[]; // derived from Paid_Features_Selected__c
   corpNumber: string | null; // Corp__c — WSC's corp reference (e.g. "SCC415386")
   registrationNumber: string | null; // Registration__c — state filing number
-  creditScore: string | null; // Credit_Score__c (free text, e.g. "80 Paydex")
-  fundingCapacity: number | null; // Funding_Capacity__c — credit the corp can support
+  // Deliberately absent: Credit_Score__c and Funding_Capacity__c. Both were mapped and
+  // shown on the order page until 2026-08-07, when the stakeholder had them removed —
+  // they are WSC's own assessment of the corp, not a fact about it, so they fall under
+  // the "commercial data stays out of the client DTO" rule above.
   lastAnnualReportDate: string | null; // Last_Annual_Report__c (ISO-8601)
   nextRenewalDate: string | null; // Next_Annual_Report__c — "Next Renewal Date" (ISO-8601)
   registeredAgentStatus: string | null; // RA_Status__c
@@ -159,7 +161,7 @@ export interface Order {
    *  guarantees this is their OWN order, it is never logged, and the UI keeps it masked
    *  behind an explicit reveal. Do not add it to list endpoints or to any log line. */
   ein: string | null;
-  einIssuedAt: string | null; // EIN_Date_Issued__c (ISO-8601)
+  // `EIN_Date_Issued__c` is deliberately not mapped — removed from the portal 2026-08-07.
   shelfCorp: ShelfCorp | null; // Corp__c → SC_Corp__c
   clientId: string; // Client__c → FU_User__c
 }

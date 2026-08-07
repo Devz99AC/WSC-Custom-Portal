@@ -33,6 +33,20 @@ function DetailGrid({ items }: { items: (Detail | null)[] }) {
   );
 }
 
+/** "Incorporated" reads as the filing date with the corp's age beside it — the date is the
+ *  fact, the age is what the client actually bought (CLAUDE.md §3, "Aged Corp"), and
+ *  showing both saves them doing the subtraction. `Age__c` can arrive fractional, so it is
+ *  floored: a corp is "5 Years Old" until it turns six. Either half can be missing on a
+ *  half-populated record, so each is appended only when present. */
+const incorporatedLabel = (incorporationDate: string | null, agedYears: number): string => {
+  const years = Math.floor(agedYears);
+  const parts = [
+    formatSalesforceDate(incorporationDate, { month: "long", day: "numeric", year: "numeric" }),
+    years >= 1 ? `(${years} ${years === 1 ? "Year" : "Years"} Old)` : null,
+  ].filter((part): part is string => part !== null);
+  return parts.length > 0 ? parts.join(" ") : "—";
+};
+
 const MASKED_EIN = "••-•••••••";
 
 /** The EIN is the corporation's federal tax ID — the client genuinely needs it (their bank
@@ -130,20 +144,20 @@ export function OrderPage() {
           <>
             <div className="prod">
               <div className="prod-ic">🏛️</div>
+              {/* Company name only — the entity type and age it used to repeat are both
+                  already rows in the grid below. */}
               <div>
                 <div className="pn">{corp.name}</div>
-                <div className="pd">
-                  {corp.agedYears > 0
-                    ? `${corp.agedYears}-year aged ${corp.entityType}, Credit-Ready package.`
-                    : `Newly formed ${corp.entityType}. Credit-ready feature setup has not started yet.`}
-                </div>
               </div>
             </div>
             <DetailGrid
               items={[
                 { k: "Entity type", v: corp.entityType },
                 { k: "State of formation", v: corp.stateOfFormation },
-                { k: "Incorporated", v: formatDate(corp.incorporationDate) },
+                {
+                  k: "Incorporated",
+                  v: incorporatedLabel(corp.incorporationDate, corp.agedYears),
+                },
                 corp.corpNumber ? { k: "Corp #", v: corp.corpNumber } : null,
                 corp.registrationNumber
                   ? { k: "Registration #", v: corp.registrationNumber }
@@ -151,12 +165,7 @@ export function OrderPage() {
                 // EIN lives on Online_Order__c, but it identifies the corporation — this is
                 // where a client looks for "my company's tax ID".
                 order.ein ? { k: "EIN", v: <EinValue ein={order.ein} /> } : null,
-                order.einIssuedAt ? { k: "EIN issued", v: formatDate(order.einIssuedAt) } : null,
                 corp.duns ? { k: "D-U-N-S", v: corp.duns } : null,
-                corp.creditScore ? { k: "Credit score", v: corp.creditScore } : null,
-                corp.fundingCapacity !== null
-                  ? { k: "Funding capacity", v: money(corp.fundingCapacity) }
-                  : null,
                 corp.registeredAgentStatus
                   ? { k: "Registered agent", v: corp.registeredAgentStatus }
                   : null,

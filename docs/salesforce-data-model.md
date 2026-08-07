@@ -90,7 +90,13 @@ cuenta como **verificado** cuando `Status__c ∈ { Cleared, Paid }`.
 | `status` | `Status__c` (Available/Reserved/Sold-like) |
 | `price` | `Client_Price__c` |
 | `duns` | `DUNS__c` · `Experian_BIN__c` · `Equifax_Business_ID__c` |
-| `creditScore` | `Credit_Score__c` · `Funding_Capacity__c` |
+
+> **No mapeados a propósito (2026-08-07):** `Credit_Score__c` y `Funding_Capacity__c` en
+> `SC_Corp__c`, y `EIN_Date_Issued__c` en `Online_Order__c`. Se mostraron en la ficha de
+> pedido hasta esa fecha; el stakeholder pidió quitarlos, así que salieron también del DTO y
+> del SOQL — no basta con ocultarlos en la UI, viajaban en el JSON. La fila "Incorporated"
+> combina ambos campos en un solo valor: `Incorporation_Date__c` con `Age__c` detrás entre
+> paréntesis — `March 15, 2016 (8 Years Old)`.
 
 ## DTO `Client` ← `FU_User__c`  (identidad del portal)
 

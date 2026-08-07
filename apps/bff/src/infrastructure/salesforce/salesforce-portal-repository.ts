@@ -80,7 +80,7 @@ const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Status_
               Client__r.Legal_Name_of_Business__c, Client__r.Trade_Name__c,
               Corp__r.Name, Corp__r.Type__c, Corp__r.Jurisdiction__c, Corp__r.Incorporation_Date__c,
               Corp__r.Age__c, Corp__r.Client_Price__c, Corp__r.DUNS__c, Corp__r.Corp__c,
-              Corp__r.Registration__c, Corp__r.Credit_Score__c, Corp__r.Funding_Capacity__c,
+              Corp__r.Registration__c,
               Corp__r.Last_Annual_Report__c, Corp__r.Next_Annual_Report__c, Corp__r.RA_Status__c,
               ${staffSelect("Sales_Rep__r")}, ${staffSelect("QC_Agent__r")},
               ${staffSelect("Back_End_Worker__r")}`;
@@ -88,7 +88,7 @@ const ORDER_SELECT = `Id, Name, Amount__c, Total_Payments__c, Status__c, Status_
 /** Detail-only projection. The EIN is sensitive PII (CLAUDE.md §3), so it is fetched only
  *  for the single-order view that actually displays it and never travels in the list
  *  payload — `Order.ein` is therefore always `null` on orders returned by `listOrders*`. */
-const ORDER_DETAIL_SELECT = `${ORDER_SELECT}, EIN__c, EIN_Date_Issued__c`;
+const ORDER_DETAIL_SELECT = `${ORDER_SELECT}, EIN__c`;
 
 // List queries stay bounded per CLAUDE.md §1 — a client with more orders/payments than
 // these only sees the most recent MAX_* in the relevant list.
@@ -340,9 +340,6 @@ export class SalesforcePortalRepository implements PortalRepository {
           creditReadyFeatures: features,
           corpNumber: str(corpRel.Corp__c),
           registrationNumber: str(corpRel.Registration__c),
-          creditScore: str(corpRel.Credit_Score__c),
-          fundingCapacity:
-            typeof corpRel.Funding_Capacity__c === "number" ? corpRel.Funding_Capacity__c : null,
           lastAnnualReportDate: str(corpRel.Last_Annual_Report__c),
           nextRenewalDate: str(corpRel.Next_Annual_Report__c),
           registeredAgentStatus: str(corpRel.RA_Status__c),
@@ -381,7 +378,6 @@ export class SalesforcePortalRepository implements PortalRepository {
       paymentFrequency: str(orderRecord.Payment_Frequency__c),
       // Absent from the list projection by design (ORDER_DETAIL_SELECT) — resolves to null there.
       ein: formatEin(orderRecord.EIN__c),
-      einIssuedAt: str(orderRecord.EIN_Date_Issued__c),
       shelfCorp,
       clientId: str(orderRecord.Client__c) ?? "",
     };

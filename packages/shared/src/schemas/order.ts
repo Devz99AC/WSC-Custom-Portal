@@ -35,8 +35,6 @@ export const shelfCorpSchema = z.object({
   creditReadyFeatures: z.array(z.string()),
   corpNumber: z.string().nullable(),
   registrationNumber: z.string().nullable(),
-  creditScore: z.string().nullable(),
-  fundingCapacity: z.number().nullable(),
   lastAnnualReportDate: z.string().nullable(),
   nextRenewalDate: z.string().nullable(),
   registeredAgentStatus: z.string().nullable(),
@@ -81,7 +79,6 @@ export const orderSchema = z.object({
   paymentMethod: paymentMethodSchema.nullable(),
   paymentFrequency: z.string().nullable(),
   ein: z.string().nullable(),
-  einIssuedAt: z.string().nullable(),
   shelfCorp: shelfCorpSchema.nullable(),
   clientId: z.string().min(1),
 });
