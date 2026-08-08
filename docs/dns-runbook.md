@@ -295,8 +295,21 @@ ahí está toda la separación.
 
 | Variable | Production | Preview |
 | --- | --- | --- |
-| `BFF_ORIGIN` | `https://wscbff-production.up.railway.app` | la URL del servicio de staging |
-| `BASIC_AUTH_USER` / `_PASSWORD` | quitar en el go-live | **dejar siempre** |
+| `BFF_ORIGIN` | **sin poner** (ver abajo) | `https://wscbff-development.up.railway.app` |
+
+⚠️ **`BFF_ORIGIN` no debe marcarse `Sensitive` en Vercel.** Una variable sensible se excluye
+del entorno de *build*, y ahí es justo donde las Edge Functions resuelven `process.env` — el
+middleware la ve como `undefined` y el preview responde 503 aunque la variable exista. Costó un
+rato averiguarlo (2026-08-08). Tampoco es un secreto: es un nombre de host público.
+
+⚠️ En Production se deja **sin poner** a propósito: así producción sigue por el rewrite literal
+de `vercel.json` y un error en esta variable no puede tumbarla.
+
+🧹 `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` **están muertas — bórralas de Vercel.** El
+middleware que las leía se borró el 2026-08-07; hoy no las lee nada (verificado por grep). Los
+previews ya no dependen de ellas: los protege el **Deployment Protection** de Vercel, que exige
+sesión de Vercel con acceso al proyecto. Esto también corrige una afirmación anterior de este
+runbook y de CLAUDE.md — los previews **no** eran URLs públicas.
 
 ### 3. Código — ✅ HECHO 2026-08-08 (commit `4293cea`)
 
