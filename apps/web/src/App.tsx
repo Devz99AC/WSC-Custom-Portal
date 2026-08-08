@@ -89,8 +89,12 @@ export function App() {
     await queryClient.invalidateQueries({ queryKey: ["orders"] });
   }
 
+  // No `future` prop on the router any more: `v7_startTransition` and
+  // `v7_relativeSplatPath` were opt-ins under react-router 6 and are simply how 7 behaves,
+  // so the prop no longer exists. Nothing was given up — we had already opted into both,
+  // which is what made the major upgrade a three-line change.
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <BrowserRouter>
       <Routes>
         <Route element={<AppShell client={data.client} onSignOut={handleSignOut} />}>
           <Route index element={<Navigate to="/orders" replace />} />

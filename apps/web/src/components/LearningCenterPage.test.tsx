@@ -6,10 +6,7 @@ import { LearningCenterPage } from "./LearningCenterPage";
 
 const renderAt = (path: string) =>
   render(
-    <MemoryRouter
-      initialEntries={[path]}
-      future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-    >
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/learning" element={<LearningCenterPage />} />
         <Route path="/learning/:slug" element={<LearningCenterPage />} />

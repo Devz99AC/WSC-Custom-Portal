@@ -16,10 +16,7 @@ describe("AppShell", () => {
   it("renders the signed-in client and every nav link, and fires sign-out", () => {
     const onSignOut = vi.fn();
     render(
-      <MemoryRouter
-        initialEntries={["/orders"]}
-        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-      >
+      <MemoryRouter initialEntries={["/orders"]}>
         <Routes>
           <Route element={<AppShell client={demoClient} onSignOut={onSignOut} />}>
             <Route path="orders" element={<p>Order page content</p>} />
