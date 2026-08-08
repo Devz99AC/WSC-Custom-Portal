@@ -268,8 +268,8 @@
   </div>
 
   <div class="progress-row">
-    <div class="progress-track"><div class="progress-fill" style="width: 78%"></div></div>
-    <div class="progress-label">14 / 18</div>
+    <div class="progress-track"><div class="progress-fill" style="width: 82%"></div></div>
+    <div class="progress-label">14 / 17</div>
   </div>
 
   <!-- ================= FENCE 1 — LECTURA ================= -->
@@ -432,8 +432,8 @@
         <div class="body">
           <div class="top"><span class="title">Descubrimiento del modelo REAL de producción</span><span class="tag ya">Hecho</span></div>
           <div class="desc">Antes de planificar nada más: verificar que producción se parece al sandbox. Es barato (son consultas de lectura) y evita construir sobre una suposición.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-08-07.</strong> El sandbox resultó ser una <strong>copia del mismo día de la última versión de prod</strong>, así que los API names de objetos y campos <strong>coinciden</strong> — probado empíricamente: el change set del permission set (<strong>44 field perms + 6 objetos</strong>) <strong>validó limpio en producción al primer intento</strong>. Volúmenes reales de prod: <strong>~24.3k órdenes · ~18.3k pagos · ~31.9k clientes · ~31.4k corps · ~16.5k feature orders</strong> — esto vuelve urgentes los pasos 13 y 14. 🔴 <strong>Documents: producción usa Files (<code>ContentDocument</code>), NO <code>Attachment</code></strong> → el adaptador actual (<code>FROM Attachment</code>) no muestra nada en prod; reescribirlo es trabajo pendiente. <code>FU_User__c.E_Mail__c</code> confirmado poblado (el login real funcionó). Los IDs de record type difieren entre orgs, pero el código lee por <code>RecordType.Name</code>, así que no afecta.</div>
-          <div class="warn">🔴 <strong>La comprobación más urgente: ¿producción usa <code>Attachment</code> o <code>ContentDocument</code>?</strong> Los <code>Attachment</code> del sandbox <strong>los sembramos nosotros</strong>. Las orgs modernas de Salesforce usan Files (<code>ContentDocument</code>), y el <code>Attachment</code> clásico es legado. <strong>Si producción usa Files, la sección de Documents no muestra absolutamente nada</strong> y hay trabajo de adaptador que hoy no está contemplado.<br>Lo demás a verificar, por orden de riesgo:<br>· <strong>Los IDs de record type son distintos</strong> — todo el mapeo del pipeline depende del filtrado por record type; hay que re-consultar los valores reales, no asumir los del sandbox.<br>· <strong><code>FU_User__c.E_Mail__c</code> en clientes reales</strong> — el login entero depende de ese campo. Vacío o inconsistente = nadie entra.<br>· <strong>Las 3 figuras de personal</strong> — de Lua sabemos que está (visto en captura de producción); de <code>Sales_Rep__c</code> y <code>Back_End_Worker__c</code>, no.<br>· <strong><code>Paid_Features_Selected__c</code></strong> — el cabo suelto del paso 3. El stakeholder lo consulta con el admin de funding.<br>· <strong>Volumen</strong> — cuántas órdenes y pagos tiene un cliente real. Es lo que decide si los pasos 13 y 14 son urgentes.</div>
+          <div class="warn">✅ <strong>Hecho el 2026-08-07.</strong> El sandbox resultó ser una <strong>copia del mismo día de la última versión de prod</strong>, así que los API names de objetos y campos <strong>coinciden</strong> — probado empíricamente: el change set del permission set (<strong>44 field perms + 6 objetos</strong>) <strong>validó limpio en producción al primer intento</strong>. Volúmenes reales de prod: <strong>~24.3k órdenes · ~18.3k pagos · ~31.9k clientes · ~31.4k corps · ~16.5k feature orders</strong> — pero el volumen REAL visible es mucho menor (Brand=WSC + no-Cancelled ≈ <strong>2,643 órdenes en total</strong>), así que la paginación se descartó; el paso 13 (caché) sigue por el presupuesto de API compartido. 🔴 <strong>Documents: producción usa Files (<code>ContentDocument</code>), NO <code>Attachment</code></strong> → el adaptador actual (<code>FROM Attachment</code>) no muestra nada en prod; reescribirlo es trabajo pendiente. <code>FU_User__c.E_Mail__c</code> confirmado poblado (el login real funcionó). Los IDs de record type difieren entre orgs, pero el código lee por <code>RecordType.Name</code>, así que no afecta.</div>
+          <div class="warn">🔴 <strong>La comprobación más urgente: ¿producción usa <code>Attachment</code> o <code>ContentDocument</code>?</strong> Los <code>Attachment</code> del sandbox <strong>los sembramos nosotros</strong>. Las orgs modernas de Salesforce usan Files (<code>ContentDocument</code>), y el <code>Attachment</code> clásico es legado. <strong>Si producción usa Files, la sección de Documents no muestra absolutamente nada</strong> y hay trabajo de adaptador que hoy no está contemplado.<br>Lo demás a verificar, por orden de riesgo:<br>· <strong>Los IDs de record type son distintos</strong> — todo el mapeo del pipeline depende del filtrado por record type; hay que re-consultar los valores reales, no asumir los del sandbox.<br>· <strong><code>FU_User__c.E_Mail__c</code> en clientes reales</strong> — el login entero depende de ese campo. Vacío o inconsistente = nadie entra.<br>· <strong>Las 3 figuras de personal</strong> — de Lua sabemos que está (visto en captura de producción); de <code>Sales_Rep__c</code> y <code>Back_End_Worker__c</code>, no.<br>· <strong><code>Paid_Features_Selected__c</code></strong> — el cabo suelto del paso 3. El stakeholder lo consulta con el admin de funding.<br>· <strong>Volumen</strong> — cuántas órdenes y pagos tiene un cliente real. Resultó bajo por cliente → la paginación se descartó; el paso 13 (caché) sigue por presupuesto de API.</div>
         </div>
       </div>
     </div>
@@ -446,25 +446,20 @@
           <div class="top"><span class="title">Separar entornos + credenciales de producción</span><span class="tag ya">Hecho</span></div>
           <div class="desc">Son el mismo trabajo, no dos: <strong>staging apunta al sandbox, producción a la org real</strong>. Hacerlo por separado sería hacerlo dos veces.</div>
           <div class="warn">✅ <strong>Conexión a prod hecha el 2026-08-07 — el portal vivo lee producción.</strong> En prod se creó: <strong>integration user</strong> (<code>wsc.integration@wholesaleshelfcorporations.com</code>, licencia Salesforce Integration, API-only), una <strong>External Client App</strong> (framework nuevo, NO Connected App clásica) con el cert JWT subido y OAuth Policies = "Admin approved users are pre-authorized", el permission set <code>WSC_Portal_Read_Only</code> <strong>desplegado por change set y asignado</strong> al user, y Railway con <code>PORTAL_DATA_SOURCE=salesforce-jwt</code> + <code>SF_LOGIN_URL=login.salesforce.com</code> + <code>SF_CLIENT_ID</code> + <code>SF_INTEGRATION_USERNAME</code> + <code>SF_JWT_PRIVATE_KEY</code> + <code>SF_API_VERSION=v67.0</code>. <strong>Verificado en vivo.</strong> ⚠️ Sigue abierto de este paso: el defecto de <code>vercel.json</code> (abajo) y el <strong>trim del EIN</strong> (el user quedó assigned a un permset que aún concede <code>EIN__c</code>, que el BFF ya no lee). <code>SF_LOGIN_URL</code> distingue entornos: <code>login</code>=prod, <code>test</code>=sandbox.</div>
-          <div class="warn">🐞 <strong>Defecto conocido que esto arregla:</strong> <code>apps/web/vercel.json</code> tiene la URL de Railway <strong>escrita a fuego</strong>, y Vercel crea un Preview Deployment por cada rama — así que <strong>hoy cualquier rama experimental habla con el backend de producción y con Salesforce</strong>. <code>vercel.json</code> <strong>no puede leer variables de entorno</strong> (limitación de Vercel), así que el plan era mover esos dos rewrites al Edge Middleware y leer <code>process.env.BFF_ORIGIN</code>, que Vercel sí scopea por entorno.<br>🔴 <strong>Ese plan caducó el 2026-08-07: el middleware ya no existe</strong> (se borró en el paso 16). Ya no hay dónde alojar los rewrites, así que esto necesita una salida nueva — recrear un middleware solo para esto, o generar <code>vercel.json</code> en tiempo de build. <strong>El defecto sigue vivo y ahora es peor</strong>: sin middleware, los Preview Deployments tampoco están tapados por Basic Auth, así que cualquier rama es una URL pública hablando con el backend de producción.<br><strong>En Salesforce hay que rehacer, no copiar:</strong> External Client App nueva con su propio certificado X.509, usuario de integración nuevo pre-autorizado por Permission Set, y <strong>el Permission Set entero</strong> — esta es la parte que más va a doler, porque los FLS los fuimos abriendo campo a campo durante semanas reaccionando a fallos, y en producción tienen que estar <strong>todos al primer intento</strong>.<br><code>SF_LOGIN_URL</code> pasa a <code>https://login.salesforce.com</code>. <code>SESSION_JWT_SECRET</code> <strong>distinto</strong> en cada entorno: si se comparte, una sesión de staging vale en producción.<br>El Basic Auth <em>iba</em> a quedarse <strong>para siempre</strong> en Preview y quitarse solo de Production — pero al borrarse el middleware se fue de los dos a la vez. Si se quiere recuperar en Preview, hay que reponer el archivo.</div>
+          <div class="warn">🐞 <strong>Defecto conocido que esto arregla:</strong> <code>apps/web/vercel.json</code> tiene la URL de Railway <strong>escrita a fuego</strong>, y Vercel crea un Preview Deployment por cada rama — así que <strong>hoy cualquier rama experimental habla con el backend de producción y con Salesforce</strong>. <code>vercel.json</code> <strong>no puede leer variables de entorno</strong> (limitación de Vercel), así que el plan era mover esos dos rewrites al Edge Middleware y leer <code>process.env.BFF_ORIGIN</code>, que Vercel sí scopea por entorno.<br>🔴 <strong>Ese plan caducó el 2026-08-07: el middleware ya no existe</strong> (se borró en el paso 15). Ya no hay dónde alojar los rewrites, así que esto necesita una salida nueva — recrear un middleware solo para esto, o generar <code>vercel.json</code> en tiempo de build. <strong>El defecto sigue vivo y ahora es peor</strong>: sin middleware, los Preview Deployments tampoco están tapados por Basic Auth, así que cualquier rama es una URL pública hablando con el backend de producción.<br><strong>En Salesforce hay que rehacer, no copiar:</strong> External Client App nueva con su propio certificado X.509, usuario de integración nuevo pre-autorizado por Permission Set, y <strong>el Permission Set entero</strong> — esta es la parte que más va a doler, porque los FLS los fuimos abriendo campo a campo durante semanas reaccionando a fallos, y en producción tienen que estar <strong>todos al primer intento</strong>.<br><code>SF_LOGIN_URL</code> pasa a <code>https://login.salesforce.com</code>. <code>SESSION_JWT_SECRET</code> <strong>distinto</strong> en cada entorno: si se comparte, una sesión de staging vale en producción.<br>El Basic Auth <em>iba</em> a quedarse <strong>para siempre</strong> en Preview y quitarse solo de Production — pero al borrarse el middleware se fue de los dos a la vez. Si se quiere recuperar en Preview, hay que reponer el archivo.</div>
         </div>
       </div>
     </div>
+
+    <!-- El paso de "Paginación real en las listas" (originalmente el 13) fue DESCARTADO el
+         2026-08-07 — no se muestra a propósito. El volumen real lo vuelve irreal: solo ~2,643
+         órdenes WSC no-canceladas en total, repartidas entre todos los clientes; nunca ha habido
+         un cliente que compre tanto, nadie se acerca al tope de 50/100 (que se queda como cota de
+         seguridad). Decisión y detalle en CLAUDE.md §0.5. Al descartarlo, los pasos siguientes se
+         renumeraron para quedar secuenciales: el antiguo 14→13, 15→14, 16→15, 17→16, 18→17. -->
 
     <div class="step">
       <div class="num">13</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Paginación real en las listas</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Hoy hay un tope fijo (50 órdenes / 100 pagos) sin aviso al usuario. Cambiar a paginación keyset para que un cliente con mucho historial lo vea completo.</div>
-          <div class="warn">📈 <strong>Dejó de ser prematuro el 2026-08-06.</strong> Con dos órdenes en el sandbox daba igual; con el volumen real de producción, ese tope fijo <strong>trunca en silencio</strong> y un cliente deja de ver parte de su historial sin que nada se lo diga. Eso es un fallo de <em>corrección</em>, no una optimización. El paso 11 dirá cuán urgente es.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step">
-      <div class="num">14</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -479,11 +474,11 @@
       <div class="num">🔧</div>
       <div class="card">
         <div class="body">
-          <div class="top"><span class="title">Separación de entornos: staging→sandbox + fix de <code>vercel.json</code></span><span class="tag extra">Extra · tras 13/14</span></div>
-          <div class="desc">La <strong>2ª mitad del paso 12</strong>. La conexión a prod ya está; falta que <strong>los cambios de la app se prueben primero contra el sandbox</strong> antes de tocar producción. <strong>Diferido a después de los pasos 13 y 14</strong> por decisión del stakeholder (2026-08-07). No suma a la barra — es un extra hasta que se retome.</div>
+          <div class="top"><span class="title">Separación de entornos: staging→sandbox + fix de <code>vercel.json</code></span><span class="tag extra">Extra · tras 13</span></div>
+          <div class="desc">La <strong>2ª mitad del paso 12</strong>. La conexión a prod ya está; falta que <strong>los cambios de la app se prueben primero contra el sandbox</strong> antes de tocar producción. <strong>Diferido a después del paso 13</strong> por decisión del stakeholder (2026-08-07). No suma a la barra — es un extra hasta que se retome.</div>
           <div class="desc"><strong>Contexto:</strong> para <em>Salesforce</em> el flujo ya existe (change set sandbox→prod, probado con el permission set). Lo que falta es la separación del lado <em>app</em>. Y hay un <strong>defecto activo</strong>: los <em>preview deployments</em> de Vercel apuntan al BFF de <strong>producción</strong> (la URL de Railway está hardcodeada en <code>vercel.json</code>), así que hoy cualquier rama experimental habla con prod y datos reales.</div>
           <div class="desc"><strong>Paso a paso cuando se retome:</strong></div>
-          <div class="desc"><strong>1. Arreglar <code>vercel.json</code></strong> — mover los dos rewrites a algo que lea <code>process.env.BFF_ORIGIN</code> (Vercel lo scopea por entorno). ⚠️ El plan original era el Edge middleware, pero <strong>se borró con el Basic Auth (paso 16)</strong> → ya no tiene casa: hay que <strong>recrear un middleware</strong> solo para esto, o <strong>generar <code>vercel.json</code> en build</strong>.</div>
+          <div class="desc"><strong>1. Arreglar <code>vercel.json</code></strong> — mover los dos rewrites a algo que lea <code>process.env.BFF_ORIGIN</code> (Vercel lo scopea por entorno). ⚠️ El plan original era el Edge middleware, pero <strong>se borró con el Basic Auth (paso 15)</strong> → ya no tiene casa: hay que <strong>recrear un middleware</strong> solo para esto, o <strong>generar <code>vercel.json</code> en build</strong>.</div>
           <div class="desc"><strong>2. Levantar un staging</strong> — un 2º servicio de Railway (BFF) + entorno de Vercel, con <code>PORTAL_DATA_SOURCE=salesforce-jwt</code> + creds del <strong>SANDBOX</strong> (<code>SF_LOGIN_URL=https://test.salesforce.com</code> + el client_id / user / key del sandbox, que <strong>ya existen</strong>). Resultado: <strong>staging→sandbox, prod→prod</strong>.</div>
           <div class="desc"><strong>3. Verificar</strong> — un cambio de prueba en staging que lea del sandbox sin tocar prod, y confirmar que un preview deployment ya no pega a producción.</div>
           <div class="warn">🔑 <strong>La pieza urgente de las tres es el <code>vercel.json</code>.</strong> El staging hospedado no corre prisa con un portal read-only y un solo usuario, pero los previews tocando prod sí es un riesgo real y vivo. Ese se puede arreglar solo, sin montar el staging completo todavía.</div>
@@ -530,7 +525,7 @@
     </div>
 
     <div class="step">
-      <div class="num">15</div>
+      <div class="num">14</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -541,14 +536,14 @@
     </div>
 
     <div class="step done">
-      <div class="num">16</div>
+      <div class="num">15</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
           <div class="top"><span class="title">Quitar Basic Auth → público real</span><span class="tag ceo">Hecho sin el CEO</span></div>
           <div class="desc">Y después: prueba de humo con un cliente real (que entre y confirme que ve sus órdenes), y avisar a ventas y soporte de que el portal existe.</div>
           <div class="warn">✅ <strong>Hecho el 2026-08-07 — por instrucción directa del stakeholder («quita el middleware»).</strong> Se borró <code>apps/web/middleware.ts</code>, más su entrada en <code>tsconfig.json</code> y el <code>globalPassThroughEnv</code> de <code>turbo.json</code>. <strong>El siguiente despliegue queda abierto a cualquiera que tenga la URL.</strong><br>
-          🔴 <strong>Marcado hecho porque la acción ocurrió, no porque el lanzamiento esté aprobado.</strong> El checkpoint del CEO <strong>no se hizo</strong>, el paso 15 sigue abierto. <strong>El portal ya lee PRODUCCIÓN</strong> (pasos 11–12 cerrados el mismo 2026-08-07), así que quien entre ahora llega a <strong>datos reales de clientes</strong>. Del propio paso queda pendiente avisar a ventas y soporte (la prueba de humo con un cliente real ya se hizo: el stakeholder entró con su email y vio su orden real).<br>
+          🔴 <strong>Marcado hecho porque la acción ocurrió, no porque el lanzamiento esté aprobado.</strong> El checkpoint del CEO <strong>no se hizo</strong>, el paso 14 sigue abierto. <strong>El portal ya lee PRODUCCIÓN</strong> (pasos 11–12 cerrados el mismo 2026-08-07), así que quien entre ahora llega a <strong>datos reales de clientes</strong>. Del propio paso queda pendiente avisar a ventas y soporte (la prueba de humo con un cliente real ya se hizo: el stakeholder entró con su email y vio su orden real).<br>
           ⚠️ <strong>Se hizo justo al revés de lo que este paso recomendaba</strong> (el consejo original está debajo): se borró el archivo en vez de solo quitar las variables, así que <strong>ya no existe el rollback de 30 segundos</strong>. Volver a tapar el portal ahora exige recuperar el archivo del historial (<code>git show 0cc87d9:apps/web/middleware.ts</code>) y desplegar.<br>
           🧹 <strong>Cabos sueltos:</strong> <code>BASIC_AUTH_USER</code>/<code>BASIC_AUTH_PASSWORD</code> siguen en Vercel sin usarse (ya se pueden borrar), y <code>@vercel/edge</code> sigue en <code>apps/web/package.json</code> — quitarlo requiere un <code>pnpm install</code> que refresque el lockfile, o los despliegues con <code>--frozen-lockfile</code> se rompen.<br>
           <em>Consejo original, ya no aplicable: «Borra las variables en Vercel, NO el archivo <code>middleware.ts</code>. El middleware falla cerrado: dejándolo en el código, si algo sale mal vuelves a poner las variables y el portal queda tapado en 30 segundos, sin desplegar nada.»</em></div>
@@ -570,7 +565,7 @@
     </div>
 
     <div class="step">
-      <div class="num">17</div>
+      <div class="num">16</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -582,7 +577,7 @@
     </div>
 
     <div class="step done">
-      <div class="num">18</div>
+      <div class="num">17</div>
       <div class="card">
         <div class="check"></div>
         <div class="body">
@@ -666,14 +661,14 @@
     Railway, verificada en vivo). El sandbox era copia del mismo día de prod, así que el esquema
     coincidió y el change set del permission set validó limpio al primer intento; volúmenes reales
     ~24k órdenes / ~32k clientes. <strong>Documents queda vacío en prod</strong> (usa Files, no
-    Attachment). Ese mismo día se cerraron el paso 18 (responsividad + pulido visual) y el paso 16:
+    Attachment). Ese mismo día se cerraron el paso 17 (responsividad + pulido visual) y el paso 15:
     <strong>el Basic Auth ya no existe</strong>, borrado por el stakeholder <em>sin</em> el checkpoint
     del CEO. Eso dejó sin sitio al arreglo del defecto de los Preview Deployments — ver paso 12.<br />
     Antes, el <strong>2026-08-06 — reestructuración completa.</strong> El eje pasó de
     <em>lectura vs escritura</em> a <em>camino a producción</em>, y se incorporó la fase que
     faltaba en todos los planes anteriores: <strong>el portal leía de un SANDBOX</strong>, así que
     entre ese estado y un cliente real había una migración entera (pasos 11 y 12, ya cerrados el 2026-08-07). Los pasos
-    hechos se renumeraron 1–10 de corrido; la paginación y la caché dejaron de ser prematuras
+    hechos se renumeraron 1–10 de corrido; la caché dejó de ser prematura (la paginación, en cambio, se descartó el 2026-08-07 por volumen irreal)
     porque en producción cambian de categoría.<br />
     Ese mismo día se cerró el DNS (paso 7) — el portal vive en
     <code>portal.wholesaleshelfcorporations.com</code> y el correo sale desde

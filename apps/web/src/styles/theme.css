@@ -186,6 +186,27 @@ a:hover {
   margin-bottom: 22px;
   line-height: 1.5;
 }
+/* First-load splash spinner (App.tsx), reusing the login card. A hairline ring with a
+   crimson head — brand colours, no new asset. Only shows on the genuine initial fetch. */
+.wsc-spinner {
+  width: 26px;
+  height: 26px;
+  margin: 4px auto 16px;
+  border-radius: 50%;
+  border: 3px solid var(--wsc-line);
+  border-top-color: var(--wsc-red);
+  animation: wsc-spin 0.7s linear infinite;
+}
+@keyframes wsc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wsc-spinner {
+    animation: none;
+  }
+}
 .field {
   text-align: left;
   margin-bottom: 16px;

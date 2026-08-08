@@ -12,6 +12,7 @@ import { LearningCenterPage } from "./components/LearningCenterPage";
 import { SupportPage } from "./components/SupportPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { useOrders } from "./hooks/useOrders";
+import { WscLogo } from "./components/WscLogo";
 import { OutdatedClientError, UnauthorizedError, logout } from "./api/client";
 
 /** Marks that this tab has already reloaded itself once for a schema mismatch. Session
@@ -56,10 +57,17 @@ export function App() {
     }
   }, [data]);
 
+  // Only reached on a genuine first load (no cached data). Tab/app switches no longer land
+  // here — the QueryClient no longer refetches on window focus (see main.tsx) — so this is a
+  // one-time splash, branded to match the login card rather than a bare line of text.
   if (isPending) {
     return (
-      <div className="wsc-shell">
-        <p className="wsc-sub">Loading your portal…</p>
+      <div className="login">
+        <div className="login-card">
+          <WscLogo variant="full" />
+          <div className="wsc-spinner" aria-hidden="true" />
+          <p className="sub">Loading your portal…</p>
+        </div>
       </div>
     );
   }
