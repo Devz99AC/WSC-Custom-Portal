@@ -17,10 +17,16 @@ export interface RenderMagicLinkEmail {
 }
 
 /**
- * Use-case: request a magic-link (ADR-0005, ARCHITECTURE.md §3.2). Always completes the
- * same way regardless of whether the email matches a client — the HTTP layer must return
- * an identical response either way (anti account-enumeration). Unknown emails simply
- * result in no email being sent; nothing here reveals that distinction to the caller.
+ * Use-case: request a magic-link (ADR-0005, ARCHITECTURE.md §3.2). Resolves the sign-in
+ * identity (`findClientByEmail`, which now also gates on the client having a live order —
+ * see the repository) and, when it matches, sends the link.
+ *
+ * Returns whether a link was sent (`true`) or the email had no portal access (`false`).
+ * The HTTP layer turns that boolean into the granted/denied message the login screen shows
+ * (server.ts). ⚠️ This is a deliberate REVERSAL of the earlier anti-enumeration stance:
+ * the stakeholder chose (2026-08-08) to tell a denied visitor they have no access, trading
+ * account-existence hiding for clearer UX. The reveal decision lives in the HTTP layer; this
+ * use-case only reports the fact.
  */
 export class RequestMagicLink {
   constructor(
@@ -34,10 +40,10 @@ export class RequestMagicLink {
     private readonly config: RequestMagicLinkConfig,
   ) {}
 
-  async execute(email: string): Promise<void> {
+  async execute(email: string): Promise<boolean> {
     const client = await this.repository.findClientByEmail(email.trim().toLowerCase());
     if (!client) {
-      return;
+      return false;
     }
 
     const rawToken = generateMagicLinkToken();
@@ -52,5 +58,6 @@ export class RequestMagicLink {
     const { subject, html, text } = this.renderEmail({ name: client.name, verifyUrl, ttlMinutes });
 
     await this.sendEmail({ to: client.email, subject, html, text });
+    return true;
   }
 }

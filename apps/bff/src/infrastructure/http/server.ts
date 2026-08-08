@@ -69,11 +69,30 @@ function contentDisposition(filename: string): string {
   return `attachment; filename="${safe || "document"}"; filename*=UTF-8''${encodeURIComponent(filename)}`;
 }
 
-// Always the same response regardless of whether the email matched a client — prevents
-// account enumeration (ARCHITECTURE.md §3.2).
-const REQUEST_LINK_RESPONSE = {
-  message: "If that email is on file, a sign-in link is on its way.",
+// The login screen now tells a visitor whether this email has portal access: a granted
+// address gets "check your email", a denied one gets "no access" (stakeholder decision,
+// 2026-08-08). This is a DELIBERATE reversal of the earlier anti-enumeration stance — the
+// response differs by account existence, so a stranger can probe emails to learn who is a
+// WSC client. The rate limiter below is now the main brake on doing that at scale; the
+// magic-link send stays the one thing an attacker can't observe (they can't read the inbox).
+// `status` is what the SPA keys off (Login.tsx); `message` is for non-SPA callers.
+const REQUEST_LINK_GRANTED = {
+  status: "sent" as const,
+  message: "If that email has portal access, a sign-in link is on its way.",
 };
+const REQUEST_LINK_DENIED = {
+  status: "denied" as const,
+  message: "This email isn't linked to an active order. Contact your advisor if you think this is a mistake.",
+};
+
+/** Redacts an email for logs (CLAUDE.md §4 — never write full PII to a log). Keeps the
+ *  first two characters of the local part and the whole domain: `de***@gmail.com`. Enough
+ *  for an operator to recognize a denied sign-in without storing the address in the clear. */
+function redactEmail(email: string): string {
+  const [local = "", domain = ""] = email.split("@");
+  const head = local.slice(0, 2);
+  return domain ? `${head}***@${domain}` : `${head}***`;
+}
 
 function readSession(request: FastifyRequest, config: SessionJwtConfig) {
   const token = request.cookies[SESSION_COOKIE_NAME];
@@ -167,20 +186,25 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     pipelineStages: ORDER_PIPELINE.length,
   }));
 
-  // Step 1 of the magic-link flow (ADR-0005): always resolves the same way — see
-  // REQUEST_LINK_RESPONSE. Never reveals whether the email exists.
+  // Step 1 of the magic-link flow (ADR-0005). Tells the caller whether the email has portal
+  // access (granted → link sent; denied → no active order), which the login screen renders
+  // as two different messages. See REQUEST_LINK_GRANTED/DENIED for the reversed-enumeration
+  // trade-off this accepts.
   app.post("/auth/request-link", async (request, reply) => {
     const parsed = requestLinkBodySchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.code(400).send({ error: "A valid email is required" });
     }
 
-    // Deliberately BEFORE the client lookup. A limiter that only counted real clients
-    // would answer instantly for an unknown address and 429 for a known one — turning
-    // itself into exactly the account-existence oracle REQUEST_LINK_RESPONSE prevents.
+    const email = parsed.data.email.trim().toLowerCase();
+
+    // BEFORE the lookup. Now that the response reveals whether an email has access, this
+    // limiter is the main brake on someone enumerating the client base by probing addresses,
+    // on top of its original job: protecting a client's inbox from a flood of sign-in links
+    // and WSC's Salesforce quota from a flood of lookups (every call costs one SOQL).
     const retryAfter =
       rateLimiter.hit(`ip:${request.ip}`, REQUEST_LINK_IP_RULE) ||
-      rateLimiter.hit(`email:${parsed.data.email.trim().toLowerCase()}`, REQUEST_LINK_EMAIL_RULE);
+      rateLimiter.hit(`email:${email}`, REQUEST_LINK_EMAIL_RULE);
     if (retryAfter > 0) {
       request.log.warn({ retryAfter }, "sign-in link rate limited");
       reply.header("Retry-After", retryAfter);
@@ -190,17 +214,27 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
       });
     }
 
+    let granted: boolean;
     try {
-      await deps.requestMagicLink.execute(parsed.data.email);
+      granted = await deps.requestMagicLink.execute(email);
     } catch (error) {
-      // A delivery failure must NOT change the response: we only ever attempt a send for
-      // an email that matched a client, so surfacing the error (or a 5xx) here would leak
-      // exactly the account-existence bit REQUEST_LINK_RESPONSE exists to hide. Log it
-      // server-side for the operator and stay silent to the caller (CLAUDE.md §2 — never
-      // bubble raw upstream errors to the client).
-      request.log.error({ err: error }, "magic-link delivery failed");
+      // Fail toward "granted": we only reach here for an email already being processed, and
+      // a Salesforce hiccup telling a real client they have no account is worse than an
+      // unhelpful "check your email". Log it server-side (CLAUDE.md §2 — never bubble raw
+      // upstream errors to the client) and show the granted response.
+      request.log.error({ err: error }, "magic-link request failed");
+      granted = true;
     }
-    return REQUEST_LINK_RESPONSE;
+
+    if (!granted) {
+      // Private + redacted: lets an operator confirm the access gate is doing its job (a
+      // stakeholder asked to see denials) without writing full emails to the log.
+      request.log.info(
+        { email: redactEmail(email) },
+        "sign-in denied: email has no portal access",
+      );
+    }
+    return granted ? REQUEST_LINK_GRANTED : REQUEST_LINK_DENIED;
   });
 
   // Step 2: the link the user clicked in their email. Sets the session cookie and

@@ -162,6 +162,12 @@ a:hover {
   font-weight: 800;
   line-height: 42px;
 }
+/* Denied sign-in — the same circle as the confirmation tick, recoloured to the error
+   palette so "no access" reads with the same weight as "check your email". */
+.login-cross {
+  background: var(--wsc-red-bg);
+  color: var(--wsc-red-d);
+}
 /* The address is echoed back for checking, so it must not be cut off or push the card
    wide, however long it is. */
 .login-echo {

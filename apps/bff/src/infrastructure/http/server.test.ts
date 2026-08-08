@@ -45,9 +45,13 @@ class FailingRepository implements PortalRepository {
 
 function buildApp(
   failure: unknown,
-  options: { appBaseUrl?: string; magicLinkStore?: InMemoryMagicLinkStore } = {},
+  options: {
+    appBaseUrl?: string;
+    magicLinkStore?: InMemoryMagicLinkStore;
+    repository?: PortalRepository;
+  } = {},
 ) {
-  const repository = new FailingRepository(failure);
+  const repository = options.repository ?? new FailingRepository(failure);
   return buildServer(
     loadEnv({
       LOG_LEVEL: "silent",
@@ -128,9 +132,9 @@ describe("error handling at the HTTP boundary", () => {
     expect(response.statusCode).toBe(401);
   });
 
-  it("keeps the magic-link response identical when the lookup itself blows up", async () => {
-    // Anti-enumeration outranks error reporting: a failing repository must not turn into a
-    // different status than a successful one, or the difference becomes the oracle.
+  it("falls back to the granted response when the lookup itself blows up — never 'no access'", async () => {
+    // A Salesforce hiccup must not tell a real client they have no account: the failure is
+    // logged server-side and the visitor still sees the granted ("check your email") reply.
     const response = await buildApp(INVALID_FIELD).inject({
       method: "POST",
       url: "/auth/request-link",
@@ -138,9 +142,60 @@ describe("error handling at the HTTP boundary", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({
-      message: "If that email is on file, a sign-in link is on its way.",
+    expect(response.json()).toMatchObject({ status: "sent" });
+  });
+});
+
+/**
+ * The login screen now reveals whether an email has portal access (stakeholder decision
+ * 2026-08-08): a granted address is told the link is on its way, a denied one is told the
+ * email has no active order. This reverses the old anti-enumeration response on purpose.
+ */
+describe("sign-in link reveals whether an email has portal access", () => {
+  const WITH_ACCESS = "m.brown@acme.com";
+
+  /** Resolves a client only for WITH_ACCESS — stands in for the access gate (a live order).
+   *  The other reads are never hit on the request-link path, so they just return empty. */
+  class ResolvingRepository implements PortalRepository {
+    findClientByEmail(email: string) {
+      return Promise.resolve(
+        email === WITH_ACCESS ? { id: "c1", email: WITH_ACCESS, name: "Marcus" } : null,
+      );
+    }
+    listOrdersByEmail() {
+      return Promise.resolve(null);
+    }
+    getOrderByEmailAndId() {
+      return Promise.resolve(null);
+    }
+    listPaymentsByEmail() {
+      return Promise.resolve(null);
+    }
+    listDocumentsByEmail() {
+      return Promise.resolve(null);
+    }
+    getDocumentForDownload() {
+      return Promise.resolve(null);
+    }
+  }
+
+  const requestLink = (email: string) =>
+    buildApp(undefined, { repository: new ResolvingRepository() }).inject({
+      method: "POST",
+      url: "/auth/request-link",
+      payload: { email },
     });
+
+  it("tells a client with access their link is on its way", async () => {
+    const response = await requestLink(WITH_ACCESS);
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ status: "sent" });
+  });
+
+  it("tells a visitor with no access that the email isn't linked to an active order", async () => {
+    const response = await requestLink("stranger@example.com");
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({ status: "denied" });
   });
 });
 

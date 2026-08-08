@@ -138,9 +138,12 @@ export function documentDownloadUrl(documentId: string): string {
   return `/api/documents/${encodeURIComponent(documentId)}/download`;
 }
 
-/** Step 1 of the magic-link flow — always resolves, regardless of whether the email
- *  matched an account (anti-enumeration; the BFF response is intentionally generic). */
-export async function requestMagicLink(email: string): Promise<void> {
+/** Step 1 of the magic-link flow. Returns whether the email has portal access: `"sent"`
+ *  when a sign-in link is on its way, `"denied"` when it isn't linked to an active order.
+ *  The login screen shows a different message for each (stakeholder decision, 2026-08-08 —
+ *  a deliberate reversal of the old anti-enumeration silence). Defaults to `"sent"` if the
+ *  body is missing `status`, so an unexpected shape errs toward the neutral message. */
+export async function requestMagicLink(email: string): Promise<"sent" | "denied"> {
   const response = await fetch("/auth/request-link", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -149,6 +152,8 @@ export async function requestMagicLink(email: string): Promise<void> {
   if (!response.ok) {
     throw new Error(`Request failed (${response.status}).`);
   }
+  const body = (await response.json().catch(() => null)) as { status?: unknown } | null;
+  return body?.status === "denied" ? "denied" : "sent";
 }
 
 export async function logout(): Promise<void> {

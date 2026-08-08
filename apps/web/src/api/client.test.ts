@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { OutdatedClientError, UnauthorizedError, fetchOrders } from "./client";
+import { OutdatedClientError, UnauthorizedError, fetchOrders, requestMagicLink } from "./client";
 import { TEST_CLIENT, makeOrder } from "../test/fixtures";
 
 const respondWith = (body: unknown, status = 200) =>
@@ -86,5 +86,27 @@ describe("BFF client", () => {
       "/api/orders",
       expect.objectContaining({ cache: "no-store" }),
     );
+  });
+});
+
+/**
+ * The login screen tells a visitor whether their email has portal access (stakeholder
+ * decision 2026-08-08). requestMagicLink surfaces the BFF's `status` so Login can render
+ * "check your email" vs "no access".
+ */
+describe("requestMagicLink", () => {
+  it("reports 'sent' when the BFF grants access", async () => {
+    respondWith({ status: "sent", message: "on its way" });
+    await expect(requestMagicLink("m.brown@acmeholdings.com")).resolves.toBe("sent");
+  });
+
+  it("reports 'denied' when the email has no active order", async () => {
+    respondWith({ status: "denied", message: "no access" });
+    await expect(requestMagicLink("stranger@example.com")).resolves.toBe("denied");
+  });
+
+  it("defaults to 'sent' for an unexpected body, never a false 'no access'", async () => {
+    respondWith({});
+    await expect(requestMagicLink("someone@example.com")).resolves.toBe("sent");
   });
 });

@@ -28,18 +28,21 @@ function buildUseCase(sent: EmailMessage[]): RequestMagicLink {
 }
 
 describe("RequestMagicLink", () => {
-  it("emails a link with a token for a known email", async () => {
+  it("emails a link for a known email and reports it was sent", async () => {
     const sent: EmailMessage[] = [];
-    await buildUseCase(sent).execute(KNOWN_EMAIL);
+    await expect(buildUseCase(sent).execute(KNOWN_EMAIL)).resolves.toBe(true);
 
     expect(sent).toHaveLength(1);
     expect(sent[0]?.to).toBe(KNOWN_EMAIL);
     expect(sent[0]?.text).toContain("http://localhost:5173/auth/verify?token=");
   });
 
-  it("sends nothing for an unknown email, without throwing (anti-enumeration)", async () => {
+  // The email→client resolution now doubles as the access gate: an address with no live
+  // order returns null from the repository, so execute reports `false` and sends nothing.
+  // The HTTP layer turns that into the "no access" message (stakeholder decision 2026-08-08).
+  it("reports false and sends nothing for an email with no access", async () => {
     const sent: EmailMessage[] = [];
-    await expect(buildUseCase(sent).execute("nobody@example.com")).resolves.toBeUndefined();
+    await expect(buildUseCase(sent).execute("nobody@example.com")).resolves.toBe(false);
     expect(sent).toHaveLength(0);
   });
 });
