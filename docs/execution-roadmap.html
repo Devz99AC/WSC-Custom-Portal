@@ -12,224 +12,268 @@
     --red-d: #a50d26;
     --red-bg: #fbe7ea;
     --gold: #c4a259;
-    --gold-d: #a3863d;
+    --gold-d: #9a7d33;
     --gold-bg: #f6efdf;
     --ok: #2e7d52;
     --ok-d: #235f3f;
     --ok-bg: #e6f2eb;
-    --read: #1f6f8b;
-    --read-d: #175467;
-    --read-bg: #e3eff3;
     --write: #6b4d8f;
     --write-d: #533a70;
     --write-bg: #ede7f4;
-    --bg: #f3f5f8;
+    --bg: #eef1f5;
     --surface: #ffffff;
+    --surface-2: #f6f8fb;
     --ink: #1c2331;
-    --mut: #6a7689;
+    --mut: #67728a;
     --line: #dde2ea;
     --heading: var(--navy);
+    --shadow: 0 1px 2px rgba(22,34,63,.05), 0 8px 24px -16px rgba(22,34,63,.28);
+    --shadow-lg: 0 2px 6px rgba(22,34,63,.06), 0 24px 48px -24px rgba(22,34,63,.4);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0e1524;
-      --surface: #161f33;
+      --bg: #0c1220;
+      --surface: #151e30;
+      --surface-2: #1b2740;
       --ink: #e7ebf3;
-      --mut: #93a0b8;
-      --line: #2a3550;
+      --mut: #94a1b9;
+      --line: #29344e;
       --red-bg: #3a1620;
       --gold-bg: #362c17;
-      --ok-bg: #123526;
-      --read-bg: #12303a;
-      --read-d: #7fc3d8;
-      --write-bg: #2a2140;
-      --write-d: #b9a3d8;
       --gold-d: #d8bd7e;
+      --ok-bg: #123526;
       --ok-d: #6fbd92;
       --red-d: #f08a9c;
+      --write-bg: #2a2140;
+      --write-d: #bda6dc;
       --heading: #f2f4f9;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -16px rgba(0,0,0,.6);
+      --shadow-lg: 0 2px 6px rgba(0,0,0,.35), 0 24px 48px -24px rgba(0,0,0,.7);
     }
   }
 
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    background: var(--bg);
+    background:
+      radial-gradient(1200px 400px at 100% -5%, rgba(196,162,89,.10), transparent 60%),
+      radial-gradient(1000px 380px at -10% 0%, rgba(200,16,46,.07), transparent 55%),
+      var(--bg);
     color: var(--ink);
-    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
   }
-  .wrap { max-width: 780px; margin: 0 auto; padding: 40px 20px 80px; }
-  header { margin-bottom: 24px; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 48px 22px 88px; }
+
+  /* ---------------- HEADER ---------------- */
+  header { margin-bottom: 26px; }
   .kicker {
-    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-    font-weight: 800; color: var(--red); margin-bottom: 8px;
+    font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
+    font-weight: 800; color: var(--red-d); margin-bottom: 10px;
   }
   h1 {
     font-family: "Arial Black", "Helvetica Neue", Arial, sans-serif;
-    font-size: 26px; font-weight: 800; letter-spacing: -0.01em;
-    color: var(--heading); margin: 0 0 6px;
+    font-size: 34px; font-weight: 800; letter-spacing: -0.02em;
+    color: var(--heading); margin: 0 0 8px; line-height: 1.04;
   }
-  header p.sub { font-size: 13.5px; color: var(--mut); margin: 0; line-height: 1.55; }
+  header p.sub { font-size: 13.5px; color: var(--mut); margin: 0; max-width: 62ch; }
+  header p.sub a, footer a { color: var(--red-d); font-weight: 700; text-decoration: none; }
+  header p.sub a:hover, footer a:hover { text-decoration: underline; }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 26px; }
+  /* ---------------- HERO / PROGRESS ---------------- */
+  .hero {
+    display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center;
+    background: linear-gradient(140deg, var(--navy), var(--navy-700));
+    border-radius: 18px; padding: 26px 30px; margin: 24px 0 14px;
+    box-shadow: var(--shadow-lg); color: #fff;
+  }
+  .hero-num {
+    font-family: "Arial Black", Arial, sans-serif; font-weight: 800;
+    font-size: 60px; line-height: 0.9; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .hero-num small { font-size: 24px; color: rgba(255,255,255,.5); font-weight: 800; }
+  .hero-right { min-width: 0; }
+  .hero-top {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 12px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .hero-label {
+    font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    font-weight: 800; color: rgba(255,255,255,.62);
+  }
+  .hero-pct {
+    font-size: 13px; font-weight: 800; color: var(--gold);
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-track {
+    height: 10px; border-radius: 6px; background: rgba(255,255,255,.15); overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 6px;
+    background: linear-gradient(90deg, var(--ok), #46b07d 70%, var(--gold));
+    transition: width .5s ease;
+  }
+  .hero-sub { font-size: 12px; color: rgba(255,255,255,.72); margin-top: 11px; }
+  .hero-sub b { color: #fff; }
+  .progress-label { display: none; } /* valor real inyectado en .hero-num por el script */
+
+  /* ---------------- REMAINING CALLOUT ---------------- */
+  .remaining {
+    background: var(--surface); border: 1px solid var(--line);
+    border-left: 4px solid var(--gold); border-radius: 12px;
+    padding: 15px 18px; margin: 18px 0 34px; box-shadow: var(--shadow);
+  }
+  .remaining h2 {
+    font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 800; color: var(--gold-d); margin: 0 0 10px;
+  }
+  .remaining ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+  .remaining li { font-size: 13px; display: flex; gap: 9px; align-items: baseline; }
+  .remaining li .rn {
+    flex-shrink: 0; font-weight: 800; font-size: 11px; color: var(--mut);
+    font-variant-numeric: tabular-nums; min-width: 26px;
+  }
+  .remaining li b { color: var(--heading); font-weight: 800; }
+  .remaining li span { color: var(--mut); }
+
+  /* ---------------- LEGEND ---------------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 30px; }
   .pill {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px;
-    font-weight: 800; padding: 5px 11px; border-radius: 20px; letter-spacing: 0.02em;
+    display: inline-flex; align-items: center; gap: 5px; font-size: 10px;
+    font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
   .pill.ya { background: var(--ok-bg); color: var(--ok-d); }
   .pill.ceo { background: var(--red-bg); color: var(--red-d); }
   .pill.extra { background: var(--gold-bg); color: var(--gold-d); }
-  .pill.blocked { background: var(--red-bg); color: var(--red-d); }
 
-  .done-strip {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: 12px; padding: 16px 18px; margin-bottom: 26px;
-  }
-  .done-strip .dh {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em;
-    font-weight: 800; color: var(--ok-d); margin-bottom: 10px;
-  }
-  .done-list { display: flex; flex-wrap: wrap; gap: 8px; }
-  .done-chip {
-    font-size: 11.5px; padding: 6px 11px; border-radius: 8px;
-    background: var(--ok-bg); color: var(--ok-d); font-weight: 700;
-  }
-  .done-chip::before { content: "✓ "; }
-
-  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; }
-  .progress-track {
-    flex: 1; height: 8px; border-radius: 6px; background: var(--line); overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%; background: linear-gradient(90deg, var(--ok), var(--read));
-    border-radius: 6px;
-  }
-  .progress-label {
-    font-size: 11.5px; font-weight: 800; color: var(--mut);
-    white-space: nowrap; font-variant-numeric: tabular-nums;
-  }
-
-  /* ---------- FENCE (read / infra / write) ---------- */
-  .fence { margin-bottom: 38px; }
-  .fence-h {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 14px 16px; border-radius: 12px; margin-bottom: 22px;
-  }
-  .fence-h .ic {
-    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-size: 16px;
-  }
-  .fence-h .ft {
-    font-size: 14.5px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 3px;
-  }
-  .fence-h .fd { font-size: 12px; line-height: 1.55; }
-
-  .fence.read .fence-h { background: var(--read-bg); border: 1px solid rgba(31, 111, 139, 0.28); }
-  .fence.read .fence-h .ic { background: var(--read); color: #fff; }
-  .fence.read .fence-h .ft { color: var(--read-d); }
-  .fence.read .fence-h .fd { color: var(--ink); }
-
-  .fence.infra .fence-h { background: var(--surface); border: 1px solid var(--line); }
-  .fence.infra .fence-h .ic { background: var(--navy-700); color: #fff; }
-  .fence.infra .fence-h .ft { color: var(--heading); }
-  .fence.infra .fence-h .fd { color: var(--mut); }
-
-  .fence.write .fence-h { background: var(--write-bg); border: 1px solid rgba(107, 77, 143, 0.3); }
-  .fence.write .fence-h .ic { background: var(--write); color: #fff; }
-  .fence.write .fence-h .ft { color: var(--write-d); }
-  .fence.write .fence-h .fd { color: var(--ink); }
-
-  .phase-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 0.09em;
-    font-weight: 800; color: var(--mut); margin: 0 0 12px 52px;
-  }
-
-  /* ---------- STEPS ---------- */
-  .step, .wstep { display: flex; gap: 16px; position: relative; padding-bottom: 22px; }
-  .step:not(:last-child)::before, .wstep:not(:last-child)::before {
-    content: ""; position: absolute; left: 17px; top: 38px; bottom: -4px;
-    width: 2px; background: var(--line);
-  }
-  .step.done:not(:last-child)::before { background: var(--ok); }
-  .num {
-    flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
-    background: var(--surface); border: 2px solid var(--line);
+  /* ---------------- PHASE ---------------- */
+  .phase { margin-bottom: 30px; }
+  .phase-h { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
+  .phase-h .ic {
+    width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; font-size: 15px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 800; color: var(--mut);
-    font-variant-numeric: tabular-nums; z-index: 1;
+    background: var(--navy); color: #fff;
   }
+  .phase.done-phase .ic { background: var(--ok); }
+  .phase.write-phase .ic { background: var(--write); }
+  .phase-h .pt {
+    font-size: 13.5px; font-weight: 800; color: var(--heading); letter-spacing: -0.01em;
+  }
+  .phase-h .pmeta { font-size: 11px; color: var(--mut); font-weight: 600; margin-left: 2px; }
+  .phase-h .rule { flex: 1; height: 1px; background: var(--line); }
+
+  /* ---------------- STEP (base) ---------------- */
+  .steps { display: grid; gap: 8px; }
+  .step { display: flex; align-items: stretch; gap: 12px; }
+  .marker { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .num {
+    width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums;
+    background: var(--surface); border: 2px solid var(--line); color: var(--mut);
+  }
+  .connector { flex: 1; width: 2px; background: var(--line); margin: 2px 0; min-height: 4px; }
+  .step:last-child .connector { display: none; }
+
+  /* DONE steps — compact single-line rows */
   .step.done .num { background: var(--ok); border-color: var(--ok); color: #fff; }
-  .wstep .num { border-color: rgba(107, 77, 143, 0.4); color: var(--write-d); font-size: 11.5px; }
+  .step.done .connector { background: var(--ok); opacity: .5; }
+  .row-done {
+    flex: 1; display: flex; align-items: center; gap: 10px;
+    padding: 9px 13px; border-radius: 10px;
+    background: var(--surface-2); border: 1px solid var(--line);
+    min-width: 0;
+  }
+  .row-done .rd-main { flex: 1; min-width: 0; }
+  .row-done .rd-title {
+    font-size: 12.5px; font-weight: 800; color: var(--heading); margin-right: 7px;
+  }
+  .row-done .rd-key { font-size: 11.5px; color: var(--mut); }
+  .row-done .rd-key code, .card code, .remaining code, .ckpt code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 10.5px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
+    padding: 0 4px;
+  }
+  .rd-check { flex-shrink: 0; color: var(--ok); font-weight: 800; font-size: 13px; }
+
+  /* OPEN steps — elevated cards */
+  .step.open .num { border-color: var(--gold); color: var(--gold-d); border-style: solid; }
   .card {
     flex: 1; background: var(--surface); border: 1px solid var(--line);
-    border-radius: 11px; padding: 14px 16px;
-    display: flex; align-items: flex-start; gap: 12px;
+    border-left: 3px solid var(--gold); border-radius: 12px;
+    padding: 14px 16px; box-shadow: var(--shadow); min-width: 0;
   }
-  .step.done .card { opacity: 0.6; }
-  .wstep .card { opacity: 0.82; }
-  .check {
-    flex-shrink: 0; width: 20px; height: 20px; border-radius: 5px;
-    border: 2px solid var(--line); margin-top: 2px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; color: #fff;
-  }
-  .step.done .check { background: var(--ok); border-color: var(--ok); }
-  .step.done .check::after { content: "✓"; }
-  .body { flex: 1; min-width: 0; }
-  .body .top {
-    display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;
-  }
-  .body .title { font-size: 14px; font-weight: 800; color: var(--heading); }
-  .body .desc { font-size: 12px; color: var(--mut); line-height: 1.5; }
-  .body .desc + .desc { margin-top: 6px; }
-  .body .desc code {
-    font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 11px;
-    background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
-    padding: 1px 5px; color: var(--ink);
-  }
-  .body .warn {
-    font-size: 11.5px; line-height: 1.5; margin-top: 8px; padding: 8px 10px;
-    border-radius: 7px; background: var(--red-bg); color: var(--red-d); font-weight: 700;
-  }
+  .step.ceo-open .num { border-color: var(--red); color: var(--red-d); }
+  .step.ceo-open .card { border-left-color: var(--red); }
+  .card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; }
+  .card-h .ct { font-size: 14px; font-weight: 800; color: var(--heading); }
+  .card .cd { font-size: 12px; color: var(--mut); line-height: 1.55; }
+  .card .cd + .cd { margin-top: 6px; }
+  .card .cd b, .card .cd strong { color: var(--ink); }
+
   .tag {
-    font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 20px;
-    text-transform: uppercase; letter-spacing: 0.04em;
+    font-size: 8.5px; font-weight: 800; padding: 3px 7px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.05em; flex-shrink: 0;
   }
   .tag.ya { background: var(--ok-bg); color: var(--ok-d); }
   .tag.extra { background: var(--gold-bg); color: var(--gold-d); }
+  .tag.ceo { background: var(--red-bg); color: var(--red-d); }
+
+  /* ---------------- CHECKPOINT ---------------- */
+  .ckpt {
+    background: var(--surface); border: 1px solid rgba(200,16,46,.28);
+    border-top: 3px solid var(--red); border-radius: 13px;
+    padding: 18px 20px; margin: 4px 0 8px; box-shadow: var(--shadow);
+  }
+  .ckpt-h {
+    display: flex; align-items: center; gap: 9px; margin-bottom: 13px;
+  }
+  .ckpt-h .cf {
+    width: 26px; height: 26px; border-radius: 50%; background: var(--red); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;
+  }
+  .ckpt-h .cth {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em;
+    font-weight: 800; color: var(--red-d);
+  }
+  .ckpt-item { display: flex; gap: 11px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .ckpt-item:first-of-type { border-top: none; }
+  .ckpt-item .ci {
+    flex-shrink: 0; font-size: 15px; line-height: 1.3;
+  }
+  .ckpt-item .cx { font-size: 12.5px; color: var(--ink); line-height: 1.5; }
+  .ckpt-item .cx b { color: var(--heading); }
+  .ckpt-closed {
+    font-size: 11.5px; color: var(--mut); margin-top: 12px; padding-top: 11px;
+    border-top: 1px dashed var(--line); line-height: 1.6;
+  }
+  .ckpt-closed s { color: var(--ok-d); opacity: .85; }
+  .ckpt-closed b { color: var(--ok-d); }
+
+  /* ---------------- WRITE ---------------- */
+  .wstep .num { border-color: rgba(107,77,143,.45); color: var(--write-d); font-size: 10px; }
+  .wcard {
+    flex: 1; background: var(--write-bg); border: 1px solid rgba(107,77,143,.24);
+    border-radius: 11px; padding: 11px 15px; min-width: 0;
+  }
+  .wcard .ct { font-size: 12.5px; font-weight: 800; color: var(--write-d); margin-right: 7px; }
+  .wcard .cd { font-size: 11.5px; color: var(--mut); line-height: 1.5; margin-top: 3px; }
+  .wcard .cd code { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; font-family: ui-monospace, Consolas, monospace; font-size: 10.5px; }
   .tag.blocked { background: var(--red-bg); color: var(--red-d); }
 
-  /* ---------- CHECKPOINT ---------- */
-  .checkpoint { position: relative; margin: 6px 0 28px; padding-left: 52px; }
-  .checkpoint::before {
-    content: ""; position: absolute; left: 17px; top: -14px;
-    height: 14px; width: 2px; background: var(--red);
-  }
-  .checkpoint .box {
-    background: var(--red-bg); border: 1px solid rgba(200, 16, 46, 0.25);
-    border-radius: 11px; padding: 14px 16px;
-  }
-  .checkpoint .flag {
-    width: 36px; height: 36px; border-radius: 50%; background: var(--red); color: #fff;
-    display: flex; align-items: center; justify-content: center; font-size: 15px;
-    position: absolute; left: 0; top: 0;
-  }
-  .checkpoint .ct {
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em;
-    font-weight: 800; color: var(--red-d); margin-bottom: 6px;
-  }
-  .checkpoint .cd { font-size: 12.5px; color: var(--ink); line-height: 1.6; }
-  .checkpoint .cd b { color: var(--red-d); }
-  .checkpoint .cd code {
-    font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 11px;
-    background: var(--surface); border: 1px solid rgba(200, 16, 46, 0.25);
-    border-radius: 4px; padding: 1px 5px; color: var(--ink);
+  footer {
+    margin-top: 42px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 11.5px; color: var(--mut); line-height: 1.7;
   }
 
-  footer {
-    margin-top: 36px; font-size: 11px; color: var(--mut);
-    text-align: center; line-height: 1.6;
+  @media (max-width: 560px) {
+    h1 { font-size: 27px; }
+    .hero { grid-template-columns: 1fr; gap: 16px; padding: 22px; text-align: left; }
+    .hero-num { font-size: 48px; }
+    .row-done { flex-wrap: wrap; }
   }
 </style>
 </head>
@@ -239,457 +283,238 @@
     <div class="kicker">WSC Customer Portal</div>
     <h1>Ruta de ejecución</h1>
     <p class="sub">
-      <strong>Reestructurado el 2026-08-06.</strong> El eje anterior (lectura vs escritura) ya
-      cumplió: la lectura está terminada. El que ordenó el trabajo después fue
-      <strong>el camino a producción</strong> — y <strong>ya se recorrió</strong>: desde el
-      2026-08-07 el portal <strong>lee PRODUCCIÓN</strong>, no el sandbox (pasos 11 y 12
-      cerrados, verificado en vivo). Marca <code>class="step done"</code> en un paso al
-      completarlo; la barra de progreso se recalcula sola.
+      El portal está <b>vivo y leyendo producción</b> desde el 2026-08-07. El detalle de cada
+      paso completado (decisiones, hallazgos, trampas) vive en
+      <a href="roadmap-completed-notes.md">roadmap-completed-notes.md</a>; el estado vigente, en
+      <a href="../CLAUDE.md">CLAUDE.md §0.5</a>. La barra se recalcula sola desde los pasos marcados.
     </p>
-    <div class="legend">
-      <span class="pill ya">🟢 Arrancable ya</span>
-      <span class="pill ceo">🔴 Depende del CEO</span>
-      <span class="pill extra">🎁 Extra</span>
-      <span class="pill blocked">⚠️ Bloqueado por datos</span>
-    </div>
   </header>
 
-  <div class="done-strip">
-    <div class="dh">✅ Ya completado</div>
-    <div class="done-list">
-      <span class="done-chip">My Orders (lista + detalle)</span>
-      <span class="done-chip">Dashboard eliminado</span>
-      <span class="done-chip">Documents por producto</span>
-      <span class="done-chip">Payments agregado cross-order</span>
-      <span class="done-chip">Learning Center</span>
-      <span class="done-chip">Support (hub de contacto)</span>
-      <span class="done-chip">Dominio propio + correo real</span>
+  <!-- ===== HERO / PROGRESO ===== -->
+  <section class="hero">
+    <div class="hero-num" data-heronum>14<small>/17</small></div>
+    <div class="hero-right">
+      <div class="hero-top">
+        <span class="hero-label">Pasos completados</span>
+        <span class="hero-pct" data-pct>82%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:82%"></div></div>
+      <div class="progress-label">14 / 17</div>
+      <div class="hero-sub">
+        <b data-remaining>3 restantes</b> · quedan la caché de Redis, los preparativos de
+        lanzamiento y los tests e2e — más la conversación con el CEO.
+      </div>
     </div>
+  </section>
+
+  <!-- ===== LO QUE FALTA ===== -->
+  <div class="remaining">
+    <h2>🎯 Lo que falta</h2>
+    <ul>
+      <li><span class="rn">💬</span><span><b>Checkpoint CEO</b> — abrir al público, Vercel Pro, Q3 (referidos), Q4 (chat/AI).</span></li>
+      <li><span class="rn">13</span><span><b>Caché de lectura en Redis</b> — el presupuesto de API se comparte con toda la org en producción.</span></li>
+      <li><span class="rn">14</span><span><b>Preparativos de lanzamiento</b> — "Coming Soon" del Learning Center + Vercel Pro antes de abrir.</span></li>
+      <li><span class="rn">16</span><span><b>Playwright e2e</b> — deuda de tests (el flujo ya se verificó a mano).</span></li>
+    </ul>
   </div>
 
-  <div class="progress-row">
-    <div class="progress-track"><div class="progress-fill" style="width: 82%"></div></div>
-    <div class="progress-label">14 / 17</div>
+  <div class="legend">
+    <span class="pill ya">Arrancable ya</span>
+    <span class="pill ceo">Depende del CEO</span>
+    <span class="pill extra">Extra</span>
   </div>
 
-  <!-- ================= FENCE 1 — LECTURA ================= -->
-  <div class="fence read">
-    <div class="fence-h">
+  <!-- ===== FASE 1 — SANDBOX ===== -->
+  <section class="phase done-phase">
+    <div class="phase-h">
       <div class="ic">👁️</div>
-      <div>
-        <div class="ft">✅ COMPLETADO — el portal, funcionando contra el sandbox</div>
-        <div class="fd">
-          Las seis secciones del portal, el login por magic link, el dominio propio y el
-          correo real. Todo verificado en vivo. Cada paso conserva la nota de qué se decidió
-          y por qué — es el rastro de razonamiento del proyecto, no decoración.
-        </div>
+      <div class="pt">El portal, funcionando <span class="pmeta">· pasos 1–10 · completado</span></div>
+      <div class="rule"></div>
+    </div>
+    <div class="steps">
+      <div class="step done">
+        <div class="marker"><div class="num">1</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Staff card</span><span class="rd-key">Advisor real + Implementation Manager; traspaso venta→soporte.</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">2</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Documents</span><span class="rd-key">Adjuntos de la orden por producto; descarga reautorizada en el BFF.</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">3</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Detalle de orden enriquecido</span><span class="rd-key">Campos del corp + orden; EIN retirado del todo (PII).</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">4</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Pipeline — mapping de display</span><span class="rd-key">4 pasos, labels como data. <b>Q1 cerrado.</b></span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">5</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Contacto real (3 figuras)</span><span class="rd-key">Lookups a <code>SEOX3_Team_Member__c</code>; soporte aparece al pagar. <b>Q2 cerrado.</b></span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">6</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Envío de correo (Resend)</span><span class="rd-key">Magic link por API HTTPS — Railway bloquea SMTP.</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">7</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">DNS — dominio + remitente</span><span class="rd-key"><code>portal.wholesaleshelfcorporations.com</code> + <code>noreply@</code>; Cloudflare.</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">8</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Soporte + WhatsApp</span><span class="rd-key">6ª sección: lista de personas (no de órdenes) + <code>wa.me</code>.</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">9</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Learning Center</span><span class="rd-key">5ª sección: acordeón, video en la URL; contenido real pendiente.</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">10</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Errores de Salesforce tipados</span><span class="rd-key"><code>errorCode</code> → HTTP; el SOQL nunca se serializa.</span></div><span class="rd-check">✓</span></div>
       </div>
     </div>
+  </section>
 
-    <div class="step done">
-      <div class="num">1</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Staff card (Advisor / Implementation Manager)</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Lee <code>advisorName</code> + <code>statusSf</code> de la orden y decide a quién mostrar. El Advisor es dato real; el Implementation Manager es mock hasta que se confirme su campo (paso 7).</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">2</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Documents — Notes &amp; Attachments reales</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Leer los adjuntos de la orden (<code>Attachment</code>) y listarlos por producto, con descarga servida a través del BFF (nunca exponiendo credenciales de Salesforce al navegador).</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Regla del stakeholder: <strong>los documentos SIEMPRE cuelgan de <code>Online_Order__c</code></strong>, nunca del corp; lo que se muestra como agrupador es el nombre del producto, resuelto vía <code>Corp__c</code> de esa orden. Endpoints nuevos: <code>GET /api/documents</code> y <code>GET /api/documents/:id/download</code>. La descarga pasa por el BFF (el navegador nunca ve una URL ni un token de Salesforce) y <strong>reautoriza en el servidor</strong>: se rederiva el set de documentos del cliente y se rechaza cualquier id fuera de él — verificado en vivo, un id adivinado y otro email devuelven 404. Los archivos de una orden sin corp asignado caen en un grupo aparte en vez de desaparecer.<br>Datos de prueba sembrados vía Apex anónimo (estaba en 0 registros): <strong>5 <code>Attachment</code></strong> con PDFs válidos. El org tiene <code>AttachmentTrigger</code>/<code>NoteTrigger</code> propios y un validation rule <em>"Deletion is prohibited"</em> también sobre <code>Attachment</code>.<br>⚠️ <strong>Los registros <code>Note</code> NO se muestran todavía</strong> — son texto libre del staff y no hay ningún campo que marque cuáles son aptos para el cliente. Decisión pendiente (ver Q6).</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">3</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Detalle de orden enriquecido</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Mostrar campos que <em>ya existen</em> en Salesforce y hoy no se muestran (envío/tracking, features credit-ready, más datos del corp). Es puro agregar campos al SOQL y al Permission Set — cero lógica nueva.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Del corp (<code>SC_Corp__c</code>): Corp #, Registration #, credit score, funding capacity, estado del registered agent, último annual report y próxima renovación. De la orden (<code>Online_Order__c</code>): EIN + fecha de emisión, forma de pago, fecha de pago total y última actualización de estado. El <strong>EIN sale enmascarado</strong> con un botón «Show» y <strong>no viaja en el endpoint de lista</strong> (proyección aparte, es PII — CLAUDE.md §3). Las filas sin dato no se pintan en vez de mostrar «—». Quedan fuera a propósito los campos internos del corp (márgenes, payback, reseller, credenciales WP). <strong>Envío/tracking no se incluyó</strong>: los campos existen pero están vacíos en el sandbox, así que no hay cómo verificarlo.<br>De paso se arregló un bug real: las fechas <em>date-only</em> de Salesforce se renderizaban <strong>un día antes</strong> para cualquier cliente al oeste de UTC (una orden del 2 de mayo salía «May 1»). Estaba duplicado en cuatro componentes; ahora vive en <code>lib/date.ts</code> con test de regresión.<br>🔎 <strong>Cabo suelto detectado el 2026-08-06 — las features credit-ready siguen sin mostrarse.</strong> El BFF ya lee <code>Paid_Features_Selected__c</code> del pedido y lo parte en lista (<code>creditReadyFeatures</code>), pero <strong>ningún componente la pinta</strong>, porque en el sandbox está vacía en los dos pedidos que hay — y dos pedidos no prueban nada. Son las features que el cliente <em>pagó</em> (dirección, teléfono, 411, D-U-N-S) y hoy no puede ver. <strong>Pendiente: el stakeholder lo consulta con el admin de funding</strong> para localizar dónde vive realmente esa información en producción. Si resulta que está en otro campo u otro objeto, el mapeo actual hay que cambiarlo, no solo añadir la vista.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">4</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Pipeline corregido — mapping de display</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Tabla de mapeo en <code>packages/shared</code> según lo acordado en Q1 — labels como data, nunca hardcoded. Sigue siendo solo lectura: no toca el picklist real de Salesforce.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-28 — Q1 quedó cerrado en el proceso.</strong> Mapa final en <code>docs/pipeline-display-map.md</code>: <strong>4 pasos</strong> (Unpaid → Initial Onboarding Call → Work Started → Complete). Se eliminaron dos pasos de la lista original: la "Onboarding call" era duplicado del paso 2, y "Corp docs shipped" no va porque el envío ocurre el mismo día dentro de Work Started.<br>🔑 <strong>El hallazgo que lo destrabó:</strong> <code>Status__c</code> <strong>se filtra por record type</strong>. El describe global devuelve 16 valores, pero el record type WSC solo expone 12 — las 3 etapas de envío que yo había modelado <strong>no pueden ocurrir en una orden WSC</strong>. Con eso, los dos "conflictos" del documento anterior desaparecieron solos. Segunda trampa: el <em>value</em> de <code>ON HOLD - Client's Unresponsive</code> lleva apóstrofo y el <em>label</em> en pantalla no.<br>Los <code>Cancelled - *</code> no se mapean (sin barra, solo aviso; el badge dice "Cancelled" a secas porque los motivos son contabilidad interna). Los <code>ON HOLD - *</code> mantienen la barra con badge y motivo — y como pasar a ON HOLD <strong>sobrescribe</strong> la etapa, el progreso se re-deriva de los timestamps (<code>TimeStamp_Verified_IC__c</code>, <code>TimeStamp_Verified_Complete__c</code>) en vez de adivinarse.<br>Los 3 campos nuevos necesitaron FLS en el Permission Set — <strong>detectado antes de desplegar</strong> esta vez, verificando con <code>-o wsc-integration</code>.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">5</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Advisor / Soporte — contacto real (3 figuras)</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Reemplaza el mock del paso 1 con los contactos reales de Salesforce, y aplica la regla de traspaso de la venta al soporte.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-28 — Q2 quedó cerrado en el proceso.</strong> El stakeholder definió <strong>3 figuras</strong>, y resultó que las tres ya son lookups al mismo objeto <code>SEOX3_Team_Member__c</code>: <code>Sales_Rep__c</code> (Advisor), <code>QC_Agent__c</code> (Support Manager) y <code>Back_End_Worker__c</code> (Back-End Support). Cada una aporta nombre, e-mail, teléfono y WhatsApp.<br><strong>Regla de traspaso:</strong> antes del pago se ve solo el Advisor; en cuanto el pago se verifica el Advisor <em>desaparece</em> y salen los dos de soporte, con una nota explicando que la comunicación pasa a soporte al cerrarse la venta.<br>🗑️ <strong>Se eliminó el nombre inventado "Lua" del código</strong> — estaba hardcodeado y se le mostraba a clientes reales. Ahora un rol sin asignar dice "not yet assigned" en vez de fabricar una persona.<br>Decisiones: el e-mail sale de <code>WSC_EMail__c</code> con respaldo en <code>Corporate_E_Mail__c</code> — <strong>nunca</strong> del <code>QC_Agent_E_Mail__c</code> de la orden, que pese a su nombre es una fórmula que genera un buzón genérico <code>QC@dominio</code> y haría creer al cliente que escribe a esa persona. El nombre del Advisor cae de vuelta a <code>SR_Name__c</code>, que es lo que las órdenes reales tienen lleno hoy. Los links de WhatsApp se construyen con <code>wa.me</code> quitando todo lo que no sea dígito.<br>⚠️ Requirió <strong>acceso de lectura a un objeto nuevo</strong> (<code>SEOX3_Team_Member__c</code>) en el Permission Set, no solo FLS. Sigue sin <code>ViewAllRecords</code>: el sharing normal alcanza (verificado).</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">6</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Envío de correo real (Resend)</span><span class="tag ya">Ya</span></div>
-          <div class="desc">El link de acceso ya llega por correo en vez de imprimirse en los logs. <strong>No se pudo por SMTP:</strong> Railway bloquea la salida SMTP (verificado — TCP a smtp.gmail.com expira en 587 y en 465, mientras HTTPS funciona), así que se implementó un adaptador de API HTTP. Runbook: <code>docs/resend-setup.md</code>.</div>
-          <div class="desc">⚠️ Pendiente para el go-live: hoy envía desde <code>onboarding@resend.dev</code>, que <strong>solo entrega al correo dueño de la cuenta de Resend</strong>. Ver paso 7.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">7</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">DNS — dominio propio + remitente real</span><span class="tag ya">Ya</span></div>
-          <div class="warn">✅ <strong>Hecho el 2026-08-06 — el bloqueante del go-live queda resuelto.</strong> Portal en <code>portal.wholesaleshelfcorporations.com</code>, correo saliendo desde <code>noreply@wholesaleshelfcorporations.com</code>.<br>🔑 <strong>El SPF nunca hizo falta fusionarlo:</strong> Resend pide su SPF en el subdominio <code>send</code> y alinea el <code>From:</code> por DKIM, así que el registro de la raíz no había que tocarlo. La regla de decisión del runbook §1.2 funcionó.<br>🆕 <strong>Se descartó SendGrid</strong> pese a tener el dominio ya autenticado (ver runbook §0.5): sus listas de supresión son de cuenta entera y WSC mete ahí mucho marketing — un cliente que rebotó una campaña no recibiría su magic link, <em>en silencio</em>. La salida correcta era un subusuario dedicado y el plan no lo permite.<br>📧 Remitente <strong><code>noreply@</code> puro, sin Reply-To</strong> — decisión del stakeholder (2026-08-06): <em>"realmente yo no quiero que respondan a eso, solo es para recibir el enlace"</em>. Se dejó implementado <code>SMTP_REPLY_TO_EMAIL</code> como variable <strong>opcional e inactiva</strong>: no ponerla = no se manda la cabecera. Sirve de interruptor si algún día cambia el criterio, sin tocar ni desplegar código. Al cliente que no pueda entrar el correo ya le da salida: <em>"Trouble signing in? Call us at (720) 534-2065"</em>.<br>⚠️ <strong>Dos tropiezos que dejaron rastro:</strong> (1) el SPF fusionado se añadió como registro <em>nuevo</em> en vez de editar el existente, y el dominio quedó unos minutos con <strong>dos SPF</strong> — que invalida ambos, incluido el correo normal del equipo; (2) <code>APP_BASE_URL</code> se guardó sin <code>https://</code> y el BFF entró en <strong>bucle de reinicio</strong> (<code>z.string().url()</code> lo rechaza), lo que dejaba el portal colgado en "Loading your portal…". El síntoma en el navegador no señalaba en absoluto a la causa.<br>🔎 <strong>Trampa de diagnóstico:</strong> el dominio tiene un <strong>comodín <code>*</code></strong>, así que cualquier subdominio inventado responde y parece existir. Comprobar registros contra el resolutor público engaña — hay que preguntarle al nameserver autoritativo (<code>gina.ns.cloudflare.com</code>).</div>
-          <div class="desc"><strong>Dos cambios de DNS que conviene hacer juntos:</strong></div>
-          <div class="desc">a) <strong>Vercel</strong>: Settings → Domains + registro DNS. Actualizar <code>APP_BASE_URL</code> en Railway al terminar (es lo que arma la URL del link de acceso).</div>
-          <div class="desc">b) <strong>Resend</strong>: verificar <code>wholesaleshelfcorporations.com</code> para poder enviar desde <code>support@…</code> en vez de <code>onboarding@resend.dev</code> — sin esto solo llega correo al dueño de la cuenta de Resend, o sea ningún cliente real. Luego cambiar <code>SMTP_FROM_EMAIL</code> en Railway.</div>
-          <div class="warn">📖 <strong>Runbook completo paso a paso: <code>docs/dns-runbook.md</code></strong> (escrito el 2026-08-06, con el estado del DNS verificado en vivo ese día).<br>🔑 <strong>El DNS se administra en CLOUDFLARE</strong>, no en Vercel ni en el registrador — los nameservers son <code>gina/mark.ns.cloudflare.com</code>. Añadir registros en Vercel no haría absolutamente nada.<br>⚠️ Cuidado con el SPF: el dominio ya tiene <code>v=spf1 include:_spf.google.com include:_spf.salesforce.com include:formstack.com -all</code>. Un dominio admite <strong>un solo registro SPF</strong>; dos invalidan ambos y tumban también el correo normal del equipo. <strong>Pero el riesgo es menor de lo que parecía</strong>: Resend suele poner su SPF en el subdominio <code>send.</code> y alinear por DKIM, en cuyo caso no hay que fusionar nada. La regla de decisión está en el runbook §1.2. Si tocara fusionar, hay margen: <strong>5 de 10</strong> consultas DNS consumidas, y Resend suma 1.<br>🔴 <strong>Trampa de Cloudflare:</strong> el CNAME de Vercel debe quedar en <strong>DNS only</strong> (nube gris). Proxied (naranja) impide emitir el certificado.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">8</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Sección de Soporte + WhatsApp deep link</span><span class="tag extra">Extra</span></div>
-          <div class="desc"><code>wa.me/&lt;número&gt;</code> como botón de contacto. Gratis, inmediato, cero backend.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-29.</strong> El deep link ya existía desde el paso 5 dentro del detalle de una orden; lo que faltaba era el sitio donde un cliente pregunta <em>"¿a quién le escribo?"</em>. Sexta sección del portal, en <code>/support</code>.<br>🔑 <strong>Es una lista de personas, no de órdenes.</strong> Un cliente con una corp en Pending Balance y otra en Work Started tiene tres personas distintas y ningún sitio que diga cuál es cuál; la vista orden-por-orden repite a la misma gente y sigue sin responder la pregunta. Cada persona sale una vez, con los productos que cubre debajo (nombrados por la corp, como en Documents). La línea de cobertura se oculta cuando hay una sola orden, porque ahí no desambigua nada.<br>🆕 <strong>Se añadió a qué corresponde cada rol</strong> (<code>STAFF_ROLE_PURPOSE</code>), según lo que fijó el stakeholder: todo entra por el Support Manager (hay subagentes detrás, pero el punto de entrada del cliente no cambia) y toda la documentación va a Back-End. Salesforce guarda <em>quién</em> ocupa un rol pero no tiene ningún campo para <em>qué</em> atiende ese rol, así que es lo único del contacto que no se puede leer del org. Va indexado <strong>por rol, nunca por persona</strong>: escribir "Lua" ahí sería devolver un nombre humano al código, justo lo que quitó el paso 5.<br>📇 Bloque de contacto de la empresa (teléfono, correo, oficina en Greenwood Village) en <code>WSC_CONTACT</code>, dentro de <code>packages/shared</code> porque el correo de acceso del BFF citaba el mismo teléfono a mano — dos copias de un teléfono son un teléfono que acaba contradiciéndose. De paso se corrigió ese correo, que decía "llama a tu advisor" sobre un número que es la línea general.<br>🚫 <strong>Sin formulario de tickets a propósito</strong> — eso escribe, y el objeto que se asumía no se usa en producción (Q5). Un formulario que no llega a ningún sitio es peor que no tenerlo. Tampoco hay horarios ni promesas de tiempo de respuesta: no tenemos ese dato y un SLA que WSC no cumpla hace más daño que el silencio.<br>Los teléfonos de demo pasaron al bloque <code>555-01xx</code> reservado para ficción: uno de ellos era la línea real de WSC puesta como si fuera de una persona.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">9</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Learning Center — contenido de video</span><span class="tag extra">Extra</span></div>
-          <div class="desc">Grid de videos embebidos (YouTube unlisted / Vimeo = $0). El contenido lo produce WSC; el portal solo lo muestra.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-29 — la parte del portal.</strong> Quinta sección del portal, en <code>/learning</code>. <strong>Patrón elegido: índice que despliega el video en el sitio</strong> (acordeón), no una página por video — con videos cortos, mandar al cliente a otra pantalla le cuesta 3 interacciones llegar al segundo video en vez de 1, y mete un "atrás" propio que compite con el del navegador.<br>🔑 <strong>Pero el video abierto vive en la URL</strong> (<code>/learning/&lt;slug&gt;</code>, misma página con un video expandido): eso recupera lo único bueno del patrón de página aparte — soporte puede mandarle a un cliente el link de un video concreto — y hace que el botón atrás del navegador cierre el reproductor. Cerrar usa <code>replace</code> para no expulsar del portal a quien llegó por link directo.<br>El <code>&lt;iframe&gt;</code> <strong>solo se monta al abrir</strong>; el índice muestra la miniatura. Cada embed de YouTube arrastra megabytes de JS de terceros y montar los tres para enseñar una lista de títulos es una página que nadie espera en el móvil. Se usa <code>youtube-nocookie.com</code> (no deja cookie de tracking hasta que se le da play) y <code>rel=0</code>, para que las sugerencias del final se queden en el canal de WSC en vez de ofrecerle la competencia a un cliente que ya pagó.<br>⚠️ <strong>Falta el contenido real.</strong> Los 3 videos actuales son marcadores puestos por el stakeholder para ver la estructura: <strong>dos son reseñas de clientes y uno es un caso</strong> — ninguno explica el proceso post-venta, que es para lo que existe esta sección. Los títulos se sacaron del oEmbed de YouTube en vez de escribirse a mano, y las descripciones quedaron vacías a propósito: describir un video que no hemos visto es inventarle contenido. Todo se edita en un solo archivo, <code>apps/web/src/content/learning-center.ts</code>.<br>📌 <strong>Decisión del stakeholder (2026-08-06): el contenido real se añade AL FINAL del proyecto.</strong> Para salir a producción antes de tenerlo, la sección mostrará un <em>"Coming Soon…"</em> en vez de los marcadores. <strong>Hasta entonces no se toca nada</strong> — la base se queda exactamente como está, con los 3 videos actuales. No adelantar el "Coming Soon": es un cambio de una línea en el archivo de contenido y se hace justo antes del go-live, no ahora.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">10</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Errores de Salesforce tipados (no más 500 crudos)</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Mapear los <code>errorCode</code> de Salesforce a errores tipados del dominio y de ahí a códigos HTTP, como exige CLAUDE.md §1/§2.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-07-28.</strong> Motivado por la caída de ese mismo día: el mensaje de un <code>INVALID_FIELD</code> de Salesforce <strong>contiene el SOQL completo</strong>, y salía tal cual en un 500. Ahora <code>salesforce-errors.ts</code> clasifica contra la forma real del error (capturada del org, no supuesta: un <code>HttpApiError</code> con <code>errorCode</code>) → 422 validación · 409 duplicado · 403 sharing/FLS · 429 límite de governor con <code>Retry-After</code> · 503 caída transitoria · 500 configuración nuestra mal puesta. El texto de Salesforce vive solo en <code>detail</code>, que se loguea y <strong>nunca</strong> se serializa. Reintento con backoff en el adaptador para lo transitorio; <strong>a propósito NO se reintenta <code>REQUEST_LIMIT_EXCEEDED</code></strong> — el presupuesto de API es de 24h, reintentar solo quema más del que se acabó. Verificado en vivo contra el sandbox y con el primer test HTTP de extremo a extremo del proyecto (<code>server.test.ts</code>), que incluye que <code>/auth/request-link</code> siga devolviendo lo mismo aunque el repositorio explote — la anti-enumeración manda sobre el reporte de errores.</div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ================= FENCE 2 — CAMINO A PRODUCCIÓN ================= -->
-  <div class="fence read">
-    <div class="fence-h">
+  <!-- ===== FASE 2 — PRODUCCIÓN ===== -->
+  <section class="phase">
+    <div class="phase-h">
       <div class="ic">🚀</div>
-      <div>
-        <div class="ft">CAMINO A PRODUCCIÓN — recorrido (pasos 11 y 12 cerrados 2026-08-07)</div>
-        <div class="fd">
-          <strong>Ya está hecho: el portal lee PRODUCCIÓN.</strong> Los planes anteriores trataban
-          el go-live como «quitar el Basic Auth», y eso era falso — había una migración entera en
-          medio (discovery + conexión JWT). Se recorrió el 2026-08-07 y quedó verificada en vivo
-          (el stakeholder entró con su email real y vio su orden real).
+      <div class="pt">Camino a producción <span class="pmeta">· pasos 11–13</span></div>
+      <div class="rule"></div>
+    </div>
+    <div class="steps">
+      <div class="step done">
+        <div class="marker"><div class="num">11</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Discovery del modelo de prod</span><span class="rd-key">Esquema prod = sandbox; volúmenes reales; Documents usa <b>Files, no Attachment</b>.</span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step done">
+        <div class="marker"><div class="num">12</div><div class="connector"></div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Conexión a producción</span><span class="rd-key">Integration user + ECA <code>WSC Portal BFF</code> + JWT. <b>El portal lee PRODUCCIÓN.</b></span></div><span class="rd-check">✓</span></div>
+      </div>
+      <div class="step wstep">
+        <div class="marker"><div class="num">🔧</div><div class="connector"></div></div>
+        <div class="wcard"><span class="ct">Staging→sandbox + fix de <code>vercel.json</code></span><span class="tag extra">Extra · hecho</span><div class="cd">Los previews ya no hablan con prod: el middleware enruta por entorno y <b>falla cerrado</b> (nunca hereda el backend real). Entorno <code>development</code> en Railway contra el sandbox. Detalle en las notas.</div></div>
+      </div>
+      <div class="step open">
+        <div class="marker"><div class="num">13</div></div>
+        <div class="card">
+          <div class="card-h"><span class="ct">Caché de lectura en Redis</span><span class="tag ya">Ya</span></div>
+          <div class="cd">Read-through de los DTO ya formados — reduce llamadas a la API de Salesforce sin cambiar ninguna vista.</div>
+          <div class="cd">📈 <b>Ya no es opcional:</b> en producción el presupuesto diario de API se comparte con todo lo demás que hace la org (integraciones, marketing, procesos). No es proteger de un límite que no rozamos, es no competir con el resto de la empresa por una cuota común.</div>
         </div>
       </div>
     </div>
+  </section>
 
-    <div class="step done">
-      <div class="num">11</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Descubrimiento del modelo REAL de producción</span><span class="tag ya">Hecho</span></div>
-          <div class="desc">Antes de planificar nada más: verificar que producción se parece al sandbox. Es barato (son consultas de lectura) y evita construir sobre una suposición.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-08-07.</strong> El sandbox resultó ser una <strong>copia del mismo día de la última versión de prod</strong>, así que los API names de objetos y campos <strong>coinciden</strong> — probado empíricamente: el change set del permission set (<strong>44 field perms + 6 objetos</strong>) <strong>validó limpio en producción al primer intento</strong>. Volúmenes reales de prod: <strong>~24.3k órdenes · ~18.3k pagos · ~31.9k clientes · ~31.4k corps · ~16.5k feature orders</strong> — pero el volumen REAL visible es mucho menor (Brand=WSC + no-Cancelled ≈ <strong>2,643 órdenes en total</strong>), así que la paginación se descartó; el paso 13 (caché) sigue por el presupuesto de API compartido. 🔴 <strong>Documents: producción usa Files (<code>ContentDocument</code>), NO <code>Attachment</code></strong> → el adaptador actual (<code>FROM Attachment</code>) no muestra nada en prod; reescribirlo es trabajo pendiente. <code>FU_User__c.E_Mail__c</code> confirmado poblado (el login real funcionó). Los IDs de record type difieren entre orgs, pero el código lee por <code>RecordType.Name</code>, así que no afecta.</div>
-          <div class="warn">🔴 <strong>La comprobación más urgente: ¿producción usa <code>Attachment</code> o <code>ContentDocument</code>?</strong> Los <code>Attachment</code> del sandbox <strong>los sembramos nosotros</strong>. Las orgs modernas de Salesforce usan Files (<code>ContentDocument</code>), y el <code>Attachment</code> clásico es legado. <strong>Si producción usa Files, la sección de Documents no muestra absolutamente nada</strong> y hay trabajo de adaptador que hoy no está contemplado.<br>Lo demás a verificar, por orden de riesgo:<br>· <strong>Los IDs de record type son distintos</strong> — todo el mapeo del pipeline depende del filtrado por record type; hay que re-consultar los valores reales, no asumir los del sandbox.<br>· <strong><code>FU_User__c.E_Mail__c</code> en clientes reales</strong> — el login entero depende de ese campo. Vacío o inconsistente = nadie entra.<br>· <strong>Las 3 figuras de personal</strong> — de Lua sabemos que está (visto en captura de producción); de <code>Sales_Rep__c</code> y <code>Back_End_Worker__c</code>, no.<br>· <strong><code>Paid_Features_Selected__c</code></strong> — el cabo suelto del paso 3. El stakeholder lo consulta con el admin de funding.<br>· <strong>Volumen</strong> — cuántas órdenes y pagos tiene un cliente real. Resultó bajo por cliente → la paginación se descartó; el paso 13 (caché) sigue por presupuesto de API.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">12</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Separar entornos + credenciales de producción</span><span class="tag ya">Hecho</span></div>
-          <div class="desc">Son el mismo trabajo, no dos: <strong>staging apunta al sandbox, producción a la org real</strong>. Hacerlo por separado sería hacerlo dos veces.</div>
-          <div class="warn">✅ <strong>Conexión a prod hecha el 2026-08-07 — el portal vivo lee producción.</strong> En prod se creó: <strong>integration user</strong> (<code>wsc.integration@wholesaleshelfcorporations.com</code>, licencia Salesforce Integration, API-only), una <strong>External Client App</strong> (framework nuevo, NO Connected App clásica) con el cert JWT subido y OAuth Policies = "Admin approved users are pre-authorized", el permission set <code>WSC_Portal_Read_Only</code> <strong>desplegado por change set y asignado</strong> al user, y Railway con <code>PORTAL_DATA_SOURCE=salesforce-jwt</code> + <code>SF_LOGIN_URL=login.salesforce.com</code> + <code>SF_CLIENT_ID</code> + <code>SF_INTEGRATION_USERNAME</code> + <code>SF_JWT_PRIVATE_KEY</code> + <code>SF_API_VERSION=v67.0</code>. <strong>Verificado en vivo.</strong> ⚠️ Sigue abierto de este paso: el defecto de <code>vercel.json</code> (abajo) y el <strong>trim del EIN</strong> (el user quedó assigned a un permset que aún concede <code>EIN__c</code>, que el BFF ya no lee). <code>SF_LOGIN_URL</code> distingue entornos: <code>login</code>=prod, <code>test</code>=sandbox.</div>
-          <div class="warn">🐞 <strong>Defecto conocido que esto arregla:</strong> <code>apps/web/vercel.json</code> tiene la URL de Railway <strong>escrita a fuego</strong>, y Vercel crea un Preview Deployment por cada rama — así que <strong>hoy cualquier rama experimental habla con el backend de producción y con Salesforce</strong>. <code>vercel.json</code> <strong>no puede leer variables de entorno</strong> (limitación de Vercel), así que el plan era mover esos dos rewrites al Edge Middleware y leer <code>process.env.BFF_ORIGIN</code>, que Vercel sí scopea por entorno.<br>🔴 <strong>Ese plan caducó el 2026-08-07: el middleware ya no existe</strong> (se borró en el paso 15). Ya no hay dónde alojar los rewrites, así que esto necesita una salida nueva — recrear un middleware solo para esto, o generar <code>vercel.json</code> en tiempo de build. <strong>El defecto sigue vivo y ahora es peor</strong>: sin middleware, los Preview Deployments tampoco están tapados por Basic Auth, así que cualquier rama es una URL pública hablando con el backend de producción.<br><strong>En Salesforce hay que rehacer, no copiar:</strong> External Client App nueva con su propio certificado X.509, usuario de integración nuevo pre-autorizado por Permission Set, y <strong>el Permission Set entero</strong> — esta es la parte que más va a doler, porque los FLS los fuimos abriendo campo a campo durante semanas reaccionando a fallos, y en producción tienen que estar <strong>todos al primer intento</strong>.<br><code>SF_LOGIN_URL</code> pasa a <code>https://login.salesforce.com</code>. <code>SESSION_JWT_SECRET</code> <strong>distinto</strong> en cada entorno: si se comparte, una sesión de staging vale en producción.<br>El Basic Auth <em>iba</em> a quedarse <strong>para siempre</strong> en Preview y quitarse solo de Production — pero al borrarse el middleware se fue de los dos a la vez. Si se quiere recuperar en Preview, hay que reponer el archivo.</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- El paso de "Paginación real en las listas" (originalmente el 13) fue DESCARTADO el
-         2026-08-07 — no se muestra a propósito. El volumen real lo vuelve irreal: solo ~2,643
-         órdenes WSC no-canceladas en total, repartidas entre todos los clientes; nunca ha habido
-         un cliente que compre tanto, nadie se acerca al tope de 50/100 (que se queda como cota de
-         seguridad). Decisión y detalle en CLAUDE.md §0.5. Al descartarlo, los pasos siguientes se
-         renumeraron para quedar secuenciales: el antiguo 14→13, 15→14, 16→15, 17→16, 18→17. -->
-
-    <div class="step">
-      <div class="num">13</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Caché de lectura en Redis</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Read-through de los DTO ya formados. Reduce llamadas a la API de Salesforce (y protege del límite de governor) sin cambiar ninguna vista.</div>
-          <div class="warn">📈 <strong>También cambió de categoría.</strong> En producción el presupuesto diario de API <strong>se comparte con todo lo demás que hace la org</strong> — integraciones, marketing, procesos. Ya no es «proteger de un límite que no rozamos», es no competir con el resto de la empresa por una cuota común.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="wstep">
-      <div class="num">🔧</div>
-      <div class="card">
-        <div class="body">
-          <div class="top"><span class="title">Separación de entornos: staging→sandbox + fix de <code>vercel.json</code></span><span class="tag extra">Extra · tras 13</span></div>
-          <div class="desc">La <strong>2ª mitad del paso 12</strong>. La conexión a prod ya está; falta que <strong>los cambios de la app se prueben primero contra el sandbox</strong> antes de tocar producción. <strong>Diferido a después del paso 13</strong> por decisión del stakeholder (2026-08-07). No suma a la barra — es un extra hasta que se retome.</div>
-          <div class="desc"><strong>✅ 1. El defecto de <code>vercel.json</code> está ARREGLADO (2026-08-08, commit <code>4293cea</code>).</strong> <code>apps/web/middleware.ts</code> enruta <code>/api</code> y <code>/auth</code> según el entorno; la regla vive aparte en <code>apps/web/src/lib/bff-routing.ts</code> y está cubierta por tests, porque un middleware solo se puede ejercitar desplegándolo. <strong>Deliberadamente asimétrico:</strong> Production devuelve <code>inherit</code> y sigue por el rewrite literal de <code>vercel.json</code>, así que un <code>BFF_ORIGIN</code> ausente o mal escrito <strong>no puede tumbar producción</strong>; todo lo demás <strong>falla cerrado</strong> con un 503 en vez de heredar el backend real. Verificado en vivo: producción responde 401, y el preview pasó de 503 → 401 al configurar la variable.</div>
-          <div class="desc"><strong>✅ 2. Staging levantado</strong> — entorno <code>development</code> en Railway (BFF + su propio Redis) con las credenciales del <strong>sandbox</strong> y <code>SESSION_JWT_SECRET</code> distinto, en <code>wscbff-development.up.railway.app</code>. En Vercel, <code>BFF_ORIGIN</code> apunta ahí <strong>solo en Preview</strong>; en Production se deja sin poner a propósito. Rama permanente <code>staging</code> para tener un alias estable al que apuntar <code>APP_BASE_URL</code>.</div>
-          <div class="warn">🧨 <strong>Tres trampas que costaron tiempo — no las repitas:</strong><br>· <strong>Una variable marcada <code>Sensitive</code> en Vercel no llega al <em>build</em></strong>, y ahí es donde las Edge Functions resuelven <code>process.env</code>. <code>BFF_ORIGIN</code> salía <code>undefined</code> con la variable perfectamente puesta. Tampoco es un secreto: es un hostname público.<br>· <strong>Vercel no reconstruye un commit que ya construyó.</strong> Una rama que apunte al mismo SHA que producción <strong>no genera preview</strong> ni alias. Para probar hace falta un commit propio.<br>· <strong>El "Development" de Vercel es <code>vercel dev</code> en tu portátil</strong>, no los previews — choca de nombre con el entorno <code>development</code> de Railway. <code>BFF_ORIGIN</code> va en <strong>Preview</strong>.</div>
-          <div class="desc"><strong>Queda:</strong> <code>APP_BASE_URL</code> del entorno <code>development</code> apuntando al alias de <code>staging</code> (de él depende a dónde lleva el enlace de acceso), y a futuro un dominio propio para el entorno en vez de depender del nombre de la rama.</div>
-          <div class="warn">📌 <strong>Corrección:</strong> este paso decía que los previews eran URLs públicas apuntando a producción. <strong>Públicas no eran</strong> — Vercel tiene <em>Deployment Protection</em> y exigen sesión con acceso al proyecto. El riesgo era real (cualquiera del equipo probando una rama leía datos reales de clientes) pero menor de lo descrito.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= FENCE 3 — LANZAMIENTO ================= -->
-  <div class="fence infra">
-    <div class="fence-h">
+  <!-- ===== FASE 3 — LANZAMIENTO ===== -->
+  <section class="phase">
+    <div class="phase-h">
       <div class="ic">🎬</div>
-      <div>
-        <div class="ft">LANZAMIENTO — decisiones, no ingeniería</div>
-        <div class="fd">
-          Nada de esto es trabajo técnico. Son permisos, dinero y una conversación.
-        </div>
-      </div>
+      <div class="pt">Lanzamiento <span class="pmeta">· decisiones, no ingeniería</span></div>
+      <div class="rule"></div>
     </div>
 
-    <div class="checkpoint">
-      <div class="flag">💬</div>
-      <div class="box">
-        <div class="ct">Checkpoint — Conversación con el CEO · <b>4 puntos</b></div>
-        <div class="cd">
-          🔴 <b>1. Aprobación para abrir el portal al público.</b> El portal está vivo, con datos
-          reales, en el dominio de la empresa. Solo lo tapa una contraseña de staging.<br /><br />
-          💰 <b>2. Vercel: Hobby → Pro.</b> Los términos del plan gratuito son para uso <b>no
-          comercial</b>. Un portal de clientes con el dominio corporativo apuntando ahí es uso
-          comercial y es visible. Resolverlo <em>antes</em> de abrirlo, no el día que suspendan el
-          despliegue. 20 $/mes.<br /><br />
-          🟠 <b>3. Q3 — reglas de Refer a Friend.</b> Qué cuenta como un "CP", cuánto se paga por
-          cada cosa, cuándo se paga, y cómo se rastrea que un lead vino de un cliente.
-          <b>Bloquea W2 entero.</b><br /><br />
-          🟠 <b>4. Q4 — chat / AI.</b> La org ya tiene LiveChat y Twilio instalados. Es decidir si
-          se usa alguno o no se hace.<br /><br />
-          <b>✅ CERRADAS:</b> <s>Q1 pipeline</s> y <s>Q2 Implementation Manager</s> (2026-07-28,
-          ver <code>docs/checkpoint-q1-q2.md</code>) · <s>Q5 ¿qué es "soporte"?</s> — resuelta
-          <b>por alcance, no por decisión</b>: Support se entregó como hub de contacto ·
-          <s>Q6 ¿se muestran las <code>Note</code>?</s> — <b>NO se muestran</b> (2026-08-06), el
-          stakeholder las declaró no relevantes.
-        </div>
-      </div>
+    <div class="ckpt">
+      <div class="ckpt-h"><div class="cf">💬</div><div class="cth">Conversación con el CEO · 4 puntos</div></div>
+      <div class="ckpt-item"><div class="ci">🔴</div><div class="cx"><b>1 · Aprobación para abrir al público.</b> El portal está vivo, con datos reales, en el dominio de la empresa. Hoy solo lo tapaba una contraseña de staging — que ya se quitó (paso 15) sin este checkpoint.</div></div>
+      <div class="ckpt-item"><div class="ci">💰</div><div class="cx"><b>2 · Vercel: Hobby → Pro ($20/mes).</b> El plan gratuito es para uso <b>no comercial</b>; un portal de clientes en el dominio corporativo es uso comercial y visible. Resolverlo <b>antes</b> de abrir, no el día que suspendan el despliegue.</div></div>
+      <div class="ckpt-item"><div class="ci">🟠</div><div class="cx"><b>3 · Q3 — reglas de Refer a Friend.</b> Qué es un "CP", cuánto y cuándo se paga, cómo se rastrea el origen del lead. <b>Bloquea W2 entero.</b></div></div>
+      <div class="ckpt-item"><div class="ci">🟠</div><div class="cx"><b>4 · Q4 — chat / AI.</b> La org ya tiene LiveChat y Twilio instalados. Es decidir si se usa alguno o no se hace.</div></div>
+      <div class="ckpt-closed"><b>✅ Cerradas:</b> <s>Q1 pipeline</s> · <s>Q2 Implementation Manager</s> (ver <code>docs/checkpoint-q1-q2.md</code>) · <s>Q5 ¿qué es "soporte"?</s> por alcance (Support = hub de contacto) · <s>Q6 ¿se muestran las <code>Note</code>?</s> No se muestran.</div>
     </div>
 
-    <div class="step">
-      <div class="num">14</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Preparativos del lanzamiento</span><span class="tag ceo">Tras el CEO</span></div>
-          <div class="desc">En este orden: <strong>(a)</strong> Learning Center → poner el "Coming Soon…" si no llegó el contenido real (una línea en <code>content/learning-center.ts</code>) · <strong>(b)</strong> pasar Vercel a Pro <em>antes</em> de quitar la contraseña.</div>
+    <div class="steps">
+      <div class="step ceo-open open">
+        <div class="marker"><div class="num">14</div><div class="connector"></div></div>
+        <div class="card">
+          <div class="card-h"><span class="ct">Preparativos del lanzamiento</span><span class="tag ceo">Tras el CEO</span></div>
+          <div class="cd"><b>(a)</b> Learning Center → poner el "Coming Soon…" si no llegó el contenido real (una línea en <code>content/learning-center.ts</code>). <b>(b)</b> Pasar Vercel a Pro <b>antes</b> de quitar la contraseña.</div>
         </div>
       </div>
-    </div>
-
-    <div class="step done">
-      <div class="num">15</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Quitar Basic Auth → público real</span><span class="tag ceo">Hecho sin el CEO</span></div>
-          <div class="desc">Y después: prueba de humo con un cliente real (que entre y confirme que ve sus órdenes), y avisar a ventas y soporte de que el portal existe.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-08-07 — por instrucción directa del stakeholder («quita el middleware»).</strong> Se borró <code>apps/web/middleware.ts</code>, más su entrada en <code>tsconfig.json</code> y el <code>globalPassThroughEnv</code> de <code>turbo.json</code>. <strong>El siguiente despliegue queda abierto a cualquiera que tenga la URL.</strong><br>
-          🔴 <strong>Marcado hecho porque la acción ocurrió, no porque el lanzamiento esté aprobado.</strong> El checkpoint del CEO <strong>no se hizo</strong>, el paso 14 sigue abierto. <strong>El portal ya lee PRODUCCIÓN</strong> (pasos 11–12 cerrados el mismo 2026-08-07), así que quien entre ahora llega a <strong>datos reales de clientes</strong>. Del propio paso queda pendiente avisar a ventas y soporte (la prueba de humo con un cliente real ya se hizo: el stakeholder entró con su email y vio su orden real).<br>
-          ⚠️ <strong>Se hizo justo al revés de lo que este paso recomendaba</strong> (el consejo original está debajo): se borró el archivo en vez de solo quitar las variables, así que <strong>ya no existe el rollback de 30 segundos</strong>. Volver a tapar el portal ahora exige recuperar el archivo del historial (<code>git show 0cc87d9:apps/web/middleware.ts</code>) y desplegar.<br>
-          🧹 <strong>Cabos sueltos:</strong> <code>BASIC_AUTH_USER</code>/<code>BASIC_AUTH_PASSWORD</code> siguen en Vercel sin usarse (ya se pueden borrar). <strong>⚠️ <code>@vercel/edge</code> hay que DEJARLO</strong> — el <code>middleware.ts</code> nuevo (enrutado por entorno, 2026-08-08) lo usa otra vez, así que la nota anterior que decía quitarlo queda anulada.<br>
-          <em>Consejo original, ya no aplicable: «Borra las variables en Vercel, NO el archivo <code>middleware.ts</code>. El middleware falla cerrado: dejándolo en el código, si algo sale mal vuelves a poner las variables y el portal queda tapado en 30 segundos, sin desplegar nada.»</em></div>
-        </div>
+      <div class="step done">
+        <div class="marker"><div class="num">15</div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Quitar Basic Auth → público</span><span class="rd-key"><code>middleware.ts</code> borrado; portal abierto. Hecho <b>sin el checkpoint del CEO</b>.</span></div><span class="rd-check">✓</span></div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ================= FENCE 4 — DESPUÉS DE LANZAR ================= -->
-  <div class="fence infra">
-    <div class="fence-h">
+  <!-- ===== FASE 4 — DESPUÉS DE LANZAR ===== -->
+  <section class="phase">
+    <div class="phase-h">
       <div class="ic">🛡️</div>
-      <div>
-        <div class="ft">DESPUÉS DE LANZAR — endurecer y pulir</div>
-        <div class="fd">
-          No bloquea el lanzamiento. Cobra sentido cuando el portal ya importa de verdad.
+      <div class="pt">Después de lanzar <span class="pmeta">· endurecer y pulir</span></div>
+      <div class="rule"></div>
+    </div>
+    <div class="steps">
+      <div class="step open">
+        <div class="marker"><div class="num">16</div><div class="connector"></div></div>
+        <div class="card">
+          <div class="card-h"><span class="ct">Playwright e2e</span><span class="tag ya">Ya</span></div>
+          <div class="cd">Login por magic link → ver una orden → descargar un documento, en un navegador real contra el sandbox.</div>
+          <div class="cd">Avanzado en parte (ya hay <code>server.test.ts</code> a nivel HTTP y fixtures tipadas). El stakeholder verificó el flujo a mano, así que <b>es deuda de tests, no funcionalidad rota</b> — lo automatizado es lo que avisa el día que se rompa.</div>
         </div>
       </div>
-    </div>
-
-    <div class="step">
-      <div class="num">16</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Playwright e2e (deuda de tests)</span><span class="tag ya">Ya</span></div>
-          <div class="desc">Login por magic link → ver una orden → descargar un documento, en un navegador real contra el sandbox.</div>
-          <div class="warn">Avanzado en parte: ya existe <code>server.test.ts</code> (nivel HTTP, con <code>app.inject</code>) y factories de fixtures tipadas en <code>apps/web/src/test/fixtures.ts</code>.<br>✅ <strong>2026-08-06: el stakeholder verificó el flujo a mano y funciona.</strong> Eso confirma que <em>hoy</em> está bien; lo que falta es la parte automatizada, que es lo que avisa el día que se rompa. <strong>Es deuda, no funcionalidad rota — no hay nada que arreglar aquí.</strong></div>
-        </div>
+      <div class="step done">
+        <div class="marker"><div class="num">17</div></div>
+        <div class="row-done"><div class="rd-main"><span class="rd-title">Responsividad móvil + logo real</span><span class="rd-key">Responsive 375/768/1280 en <code>theme.css</code>; logo real; antigüedad auto-calculada.</span></div><span class="rd-check">✓</span></div>
       </div>
     </div>
+  </section>
 
-    <div class="step done">
-      <div class="num">17</div>
-      <div class="card">
-        <div class="check"></div>
-        <div class="body">
-          <div class="top"><span class="title">Responsividad móvil y pulido visual</span><span class="tag extra">Extra</span></div>
-          <div class="desc">Sesión aparte, pedida por el stakeholder el 2026-08-06. Prioridad: <strong>la pantalla de login</strong> (es lo primero que ve un cliente y hoy es lo más flojo), luego las tablas de Payments y Documents en móvil, StaffCard y el tracker.</div>
-          <div class="warn">✅ <strong>Hecho el 2026-08-06.</strong> Todo dentro de <code>theme.css</code> y sus tokens — ninguna paleta, tipografía ni librería nueva. Verificado en Chrome headless a <strong>375 / 768 / 1280</strong>, y con una auditoría de desbordamiento horizontal que recorre cada elemento de las 8 vistas: <strong>0 desbordamientos en las 24 combinaciones</strong>, sin recurrir a <code>overflow-x:hidden</code> (que no arregla, solo recorta).<br>
-          <strong>Login:</strong> la tarjeta no tenía sombra y se leía como un rectángulo pintado sobre el navy; ahora eleva. El <code>input</code> subió a <strong>16px porque por debajo iOS Safari hace zoom</strong> a la página entera al enfocarlo. El botón tiene estado <code>:disabled</code> visible (antes no cambiaba al pulsarlo, así que invitaba a pulsar dos veces), altura mínima de 46px y el teléfono es un <code>tel:</code>. La clase <code>.err</code> estaba definida <em>solo</em> dentro de <code>.wsc-shell</code>, así que los mensajes de error del login y de <code>.main</code> salían como texto negro por defecto. La pantalla de «Check your email» era un callejón sin salida si te equivocabas de dirección: ahora tiene marca de confirmación y «Use a different email».<br>
-          <strong>Tablas (5):</strong> a 375px las cabeceras se fundían en <code>DATEPRODUCTORDER</code>. Cada fila pasa a ser una tarjeta con su etiqueta por celda (<code>data-label</code>) — no se oculta ninguna columna. Eso obliga a pisar <code>display</code>, lo que hace que el navegador <strong>descarte los roles ARIA implícitos de la tabla</strong>, así que los componentes los declaran explícitos: no quitarlos.<br>
-          <strong>Nav móvil:</strong> la barra lateral envolvía en un bloque roto y <code>.side-foot</code> estaba en <code>display:none</code>, de modo que <strong>en un teléfono no había forma de cerrar sesión</strong>. Ahora es una cabecera con el logo y el botón arriba y los enlaces como pastillas debajo. Además <code>.shell</code> repartía el 100vh entre sus dos filas, así que en una página corta la cabecera crecía hasta media pantalla (<code>grid-template-rows:auto 1fr</code>).<br>
-          <strong>Tracker:</strong> el 2×2 dejaba los 4 pasos sin conectores y se leían como insignias sueltas; se recupera el que une los dos pasos de cada fila. <strong>Contactos:</strong> un correo largo es una sola palabra para el saltador de línea y se salía de la tarjeta.<br>
-          🎨 <strong>El logo real entró el 2026-08-07.</strong> Hasta entonces la marca eran las letras <em>compuestas con Arial Black</em>, porque el repo no tenía ningún archivo de marca; el stakeholder lo notó («yo no veo que eso sea lo que aparezca en la página»). El PNG estaba en <code>Downloads</code>, nunca en el repo. Ahora vive en <code>apps/web/public/</code> en tres recortes generados desde el original: <code>wsc-logo.png</code> (lockup completo, tarjeta de login), <code>wsc-logo-letters.png</code> (solo las letras, favicon) y <code>wsc-logo-letters-light.png</code> (<strong>knockout</strong>). <strong>Hacen falta dos versiones porque el arte es azul marino y carmesí, y la mitad azul desaparecería sobre la barra lateral azul</strong> — en la copia knockout el azul pasa a blanco y la C carmesí se deja intacta. El original traía un margen enorme de transparencia (el contenido ocupaba 821×360 de un lienzo de 1080×1080), así que se recortó. Se añadió también <strong>favicon</strong> (la pestaña no tenía ninguno) y el logo al <strong>correo del magic link</strong>, ahí con el texto de siempre como <code>alt</code> estilizado, porque los clientes de correo bloquean imágenes remotas por defecto. Todo se resuelve en <code>WscLogo.tsx</code>.<br>
-          📅 <strong>Añadido el 2026-08-07 — la antigüedad de la empresa se calcula sola.</strong> El pie del login decía <em>«Established 2010 — 16 Years of Experience»</em> escrito a mano, y estaba mal dos veces: el año no era el real, y un número escrito a mano se convierte en mentira en cuanto pasa un aniversario. La fecha real es <strong>Business Started: 12/8/2017</strong>, confirmada en la ficha del <strong>BBB</strong> de WSC (misma dirección y teléfono que <code>WSC_CONTACT</code>), que además imprime <em>«Years in Business: 8»</em> — o sea que el 8 que muestra ahora el portal coincide con la fuente. <strong>Es 8 de diciembre</strong>, no 12 de agosto: el BBB es estadounidense y escribe las fechas M/D/YYYY.<br>
-          Ahora sale de <code>yearsInBusiness(now)</code> en <code>packages/shared/src/domain/company.ts</code>: función pura que <strong>recibe el reloj en vez de leerlo</strong> (CLAUDE.md §2), comparando campos de calendario y no restando timestamps — que es como se evita la trampa de la medianoche UTC que ya mordió a este proyecto una vez. Las dos mitades de la frase salen de la misma constante, así que el año y la cuenta no pueden desincronizarse. <strong>Pasa a 9 solo el 8 de diciembre de 2026, sin que nadie toque nada</strong>, y hay 4 tests fijando ese límite. ⚠️ Si WSC dice «16 años» en su web o en cualquier otro material, ese texto ahora contradice al portal y al BBB.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ================= FENCE 3 — ESCRITURA ================= -->
-  <div class="fence write">
-    <div class="fence-h">
+  <!-- ===== FASE 5 — ESCRITURA ===== -->
+  <section class="phase write-phase">
+    <div class="phase-h">
       <div class="ic">✍️</div>
-      <div>
-        <div class="ft">Acceso de ESCRITURA — diferido, fuera del alcance actual</div>
-        <div class="fd">
-          Todo esto <strong>crea o modifica registros</strong> en Salesforce. No se
-          construye por ahora. Cuando se retome, cada ítem necesita además: ampliar el
-          Permission Set del usuario de integración (hoy es estrictamente de solo lectura),
-          claves de idempotencia para que un reintento no duplique registros, y una
-          decisión de negocio previa del CEO.
-        </div>
+      <div class="pt">Acceso de escritura <span class="pmeta">· diferido, fuera del alcance actual</span></div>
+      <div class="rule"></div>
+    </div>
+    <div class="steps">
+      <div class="step wstep">
+        <div class="marker"><div class="num">W1</div><div class="connector"></div></div>
+        <div class="wcard"><span class="ct">Support — crear tickets</span><span class="tag blocked">CEO</span><div class="cd">Formulario que escribe en Salesforce; el objeto asumido (<code>Case</code>) no se usa en prod — aclarar qué es "soporte" (Q5).</div></div>
+      </div>
+      <div class="step wstep">
+        <div class="marker"><div class="num">W2</div><div class="connector"></div></div>
+        <div class="wcard"><span class="ct">Refer a Friend — sección completa</span><span class="tag blocked">CEO</span><div class="cd">Lista de "mis referidos" (<code>Supporting_Lead__c</code>) + formulario que crea el lead. Las dos mitades juntas cuando Q3 defina las reglas.</div></div>
+      </div>
+      <div class="step wstep">
+        <div class="marker"><div class="num">W3</div><div class="connector"></div></div>
+        <div class="wcard"><span class="ct">E-firma vía Formstack</span><span class="tag extra">Extra</span><div class="cd">Escribe eventos de firma de vuelta a Salesforce; condicionada a que la suscripción de Formstack cubra e-sign.</div></div>
+      </div>
+      <div class="step wstep">
+        <div class="marker"><div class="num">W4</div></div>
+        <div class="wcard"><span class="ct">Chat / AI en vivo</span><span class="tag blocked">CEO</span><div class="cd">Según Q4. Normalmente escribe la transcripción en la org, por eso queda de este lado de la cerca.</div></div>
       </div>
     </div>
-
-    <div class="wstep">
-      <div class="num">W1</div>
-      <div class="card">
-        <div class="body">
-          <div class="top"><span class="title">Support — crear tickets</span><span class="tag blocked">CEO</span></div>
-          <div class="desc">Formulario de ticket que crea un registro en Salesforce. Doblemente bloqueado: escribe, y el objeto que se asumía (<code>Case</code>) no se usa en producción — hay que aclarar primero qué es "soporte" (Q5).</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="wstep">
-      <div class="num">W2</div>
-      <div class="card">
-        <div class="body">
-          <div class="top"><span class="title">Refer a Friend — la sección completa</span><span class="tag blocked">CEO</span></div>
-          <div class="desc">Las dos mitades: la lista de "mis referidos" (lee <code>Supporting_Lead__c</code> / <code>Supporting_Lead_Allocation__c</code>) y el formulario que crea el lead nuevo.</div>
-          <div class="desc">🔄 <strong>Movido aquí el 2026-08-06 por decisión del stakeholder</strong> — antes era un paso numerado de la secuencia, partido por la costura lectura/escritura. Razón: <em>"better to finish the current stuff"</em>. Se trae también la mitad de lectura <strong>aunque fuese un mockup</strong>, porque construir media sección y dejar la columna de ganancias en blanco esperando a Q3 se ve peor que no tenerla. Las dos mitades vuelven juntas cuando Q3 defina las reglas del negocio (qué es un "CP", montos, cuándo se paga, cómo se rastrea).</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="wstep">
-      <div class="num">W3</div>
-      <div class="card">
-        <div class="body">
-          <div class="top"><span class="title">E-firma vía Formstack</span><span class="tag extra">Extra</span></div>
-          <div class="desc">Escribe eventos de firma de vuelta a Salesforce. Además está condicionado a confirmar que la suscripción de Formstack de WSC cubre firma electrónica.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="wstep">
-      <div class="num">W4</div>
-      <div class="card">
-        <div class="body">
-          <div class="top"><span class="title">Chat / AI en vivo</span><span class="tag blocked">CEO</span></div>
-          <div class="desc">Según lo que se decida en Q4. Normalmente escribe la transcripción de la conversación en la org, por eso queda de este lado de la cerca.</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  </section>
 
   <footer>
-    Ábrelo directamente en el navegador (doble click) — no depende de ningún servidor.<br />
-    Última actualización: <strong>2026-08-07</strong> — se cerraron los <strong>pasos 11 y 12: el
-    portal ahora lee PRODUCCIÓN</strong> (conexión JWT vía External Client App + integration user +
-    Railway, verificada en vivo). El sandbox era copia del mismo día de prod, así que el esquema
-    coincidió y el change set del permission set validó limpio al primer intento; volúmenes reales
-    ~24k órdenes / ~32k clientes. <strong>Documents queda vacío en prod</strong> (usa Files, no
-    Attachment). Ese mismo día se cerraron el paso 17 (responsividad + pulido visual) y el paso 15:
-    <strong>el Basic Auth ya no existe</strong>, borrado por el stakeholder <em>sin</em> el checkpoint
-    del CEO. Eso dejó sin sitio al arreglo del defecto de los Preview Deployments — ver paso 12.<br />
-    Antes, el <strong>2026-08-06 — reestructuración completa.</strong> El eje pasó de
-    <em>lectura vs escritura</em> a <em>camino a producción</em>, y se incorporó la fase que
-    faltaba en todos los planes anteriores: <strong>el portal leía de un SANDBOX</strong>, así que
-    entre ese estado y un cliente real había una migración entera (pasos 11 y 12, ya cerrados el 2026-08-07). Los pasos
-    hechos se renumeraron 1–10 de corrido; la caché dejó de ser prematura (la paginación, en cambio, se descartó el 2026-08-07 por volumen irreal)
-    porque en producción cambian de categoría.<br />
-    Ese mismo día se cerró el DNS (paso 7) — el portal vive en
-    <code>portal.wholesaleshelfcorporations.com</code> y el correo sale desde
-    <code>noreply@wholesaleshelfcorporations.com</code> — y Refer a Friend salió de la secuencia
-    numerada a la cerca de escritura (W2). Runbook de DNS en <code>docs/dns-runbook.md</code>.
+    Ábrelo directamente en el navegador — no depende de ningún servidor.
+    Detalle de cada paso completado: <a href="roadmap-completed-notes.md">roadmap-completed-notes.md</a>.
+    Estado vigente: <a href="../CLAUDE.md">CLAUDE.md §0.5</a>. Runbook de DNS: <a href="dns-runbook.md">dns-runbook.md</a>.<br />
+    Última actualización: <strong>2026-08-08</strong> — rediseño del roadmap; el detalle de los pasos hechos se movió a las notas. La paginación se descartó el 2026-08-07 por volumen real (~2.6k órdenes WSC), así que el total es 17.
   </footer>
 </div>
 
 <script>
   (function () {
-    // Solo cuentan los pasos de lectura/infra — los de escritura (.wstep) están diferidos
-    // y deliberadamente no suman al progreso.
-    var steps = document.querySelectorAll(".step");
-    var doneCount = 0;
-    steps.forEach(function (step) {
-      if (step.classList.contains("done")) doneCount++;
-    });
+    // Solo cuentan los pasos de lectura/infra (.step, sin .wstep). El script recalcula
+    // todo desde el DOM, así que la barra no puede contradecir el contenido.
+    var steps = document.querySelectorAll(".step:not(.wstep)");
+    var done = 0;
+    steps.forEach(function (s) { if (s.classList.contains("done")) done++; });
+    var total = steps.length;
+    var pct = total ? Math.round((done / total) * 100) : 0;
     var fill = document.querySelector(".progress-fill");
+    if (fill) fill.style.width = pct + "%";
     var label = document.querySelector(".progress-label");
-    var pct = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
-    fill.style.width = pct + "%";
-    label.textContent = doneCount + " / " + steps.length;
+    if (label) label.textContent = done + " / " + total;
+    var hero = document.querySelector("[data-heronum]");
+    if (hero) hero.innerHTML = done + "<small>/" + total + "</small>";
+    var pctEl = document.querySelector("[data-pct]");
+    if (pctEl) pctEl.textContent = pct + "%";
+    var remEl = document.querySelector("[data-remaining]");
+    if (remEl) remEl.textContent = (total - done) + " restantes";
   })();
 </script>
 </body>
