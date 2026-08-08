@@ -298,10 +298,30 @@ ahí está toda la separación.
 | `BFF_ORIGIN` | `https://wscbff-production.up.railway.app` | la URL del servicio de staging |
 | `BASIC_AUTH_USER` / `_PASSWORD` | quitar en el go-live | **dejar siempre** |
 
-### 3. Código — un cambio pequeño
+### 3. Código — ✅ HECHO 2026-08-08 (commit `4293cea`)
 
-Mover los dos rewrites de `/api` y `/auth` de `vercel.json` al middleware, leyendo
-`process.env.BFF_ORIGIN`. Son unas 10 líneas y **está pendiente de hacer** — no está hecho.
+`apps/web/middleware.ts` enruta `/api` y `/auth` según el entorno, leyendo
+`process.env.BFF_ORIGIN`. La regla vive aparte en `apps/web/src/lib/bff-routing.ts` porque un
+middleware solo se puede ejercitar desplegándolo, y esa es la parte que tiene que estar bien;
+está cubierta por tests.
+
+**No es un simple "mover los rewrites", y la diferencia importa.** Es deliberadamente asimétrico:
+
+- **Production → `inherit`.** El middleware se aparta y sigue mandando el rewrite literal de
+  `vercel.json`, el de siempre. Un `BFF_ORIGIN` ausente o mal escrito **no puede tumbar** un
+  portal que sirve clientes reales. Verificado en vivo tras el despliegue: producción responde
+  401, no 503.
+- **Todo lo demás → falla cerrado.** Un preview sin configurar recibe **503**, no hereda el
+  backend de producción. Un preview que no funciona lo arregla alguien en un minuto; un preview
+  que funciona *contra la Salesforce de producción* no se nota hasta que ya ha filtrado algo.
+
+⚠️ **Nombres que se cruzan:** el entorno de Railway se llama `development`, pero el "Development"
+de Vercel es el de `vercel dev` en local, **no** el de los previews. `BFF_ORIGIN` va marcado en
+**Preview**.
+
+⚠️ **Vercel no reconstruye un commit que ya construyó.** Una rama que apunte al mismo SHA que
+producción **no genera Preview**. Para probar el middleware hace falta que la rama lleve un
+commit propio.
 
 ### 4. Regla de ramas
 
