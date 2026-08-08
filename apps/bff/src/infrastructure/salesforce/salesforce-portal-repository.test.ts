@@ -55,6 +55,19 @@ describe("SalesforcePortalRepository — trash-data filter", () => {
     expect(soql[0]).toMatch(/Status__c != 'Inactive'/);
   });
 
+  // Stakeholder rule (2026-08-08): a bare FU_User is not enough — a client only signs in if
+  // they own at least one live (non-Cancelled) WSC order. Otherwise they'd reach an empty
+  // portal (the real case: devinzond@gmail.com, whose only order is Cancelled).
+  it("only resolves a client who owns a live, non-Cancelled WSC order — the access gate", async () => {
+    const { repo, soql } = makeRepo();
+    await repo.findClientByEmail("client@example.com");
+    expect(soql[0]).toMatch(/FROM FU_User__c/);
+    // A semi-join into the client's own orders, reusing the same Cancelled bar as the reads.
+    expect(soql[0]).toMatch(/Id IN \(SELECT Client__c FROM Online_Order__c/);
+    expect(soql[0]).toMatch(/Brand__c = 'WSC'/);
+    expect(soql[0]).toMatch(/NOT Status__c LIKE 'Cancelled%'/);
+  });
+
   it("keeps NULL-status records in — the filters exclude only explicit trash", async () => {
     const { repo, soql } = makeRepo();
     await repo.findClientByEmail("newclient@example.com");

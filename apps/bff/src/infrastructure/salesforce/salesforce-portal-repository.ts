@@ -106,6 +106,23 @@ const ORDER_NOT_CANCELLED = "(NOT Status__c LIKE 'Cancelled%')";
 const PAYMENT_ORDER_NOT_CANCELLED = "(NOT Online_Order__r.Status__c LIKE 'Cancelled%')";
 const CLIENT_NOT_INACTIVE = "(Status__c != 'Inactive' OR Status__c = null)";
 
+/**
+ * Portal access gate — stakeholder rule (2026-08-08): a bare `FU_User__c` is NOT enough to
+ * sign in. The client must own **at least one live order** — a WSC `Online_Order__c` that
+ * isn't Cancelled. A user with only Cancelled orders (or none at all) would otherwise land
+ * in an empty portal; the real symptom was `devinzond@gmail.com`, an FU_User whose only
+ * order is "Cancelled - Duplicate Order". "Not Cancelled" IS the bar the stakeholder set:
+ * "To Verify Payment" (the first live pipeline stage) and every later stage — Pending
+ * Balance, Verified - *, ON HOLD - * — all clear it, so this reuses the very same Cancelled
+ * test as the order reads rather than enumerating a status allow-list (which the
+ * record-type-filtered picklist makes fragile). A semi-join keeps the sign-in path to one
+ * query; `Client__c` is the order's lookup to `FU_User__c`. It rides on `findClientByEmail`
+ * next to `CLIENT_NOT_INACTIVE` — the same single choke point — so a client with no live
+ * order never gets a magic link, never a session, and never reaches any read
+ * (anti-enumeration preserved).
+ */
+const CLIENT_HAS_LIVE_ORDER = `Id IN (SELECT Client__c FROM Online_Order__c WHERE Brand__c = 'WSC' AND ${ORDER_NOT_CANCELLED})`;
+
 /** Renders ids as a SOQL `IN` list. Ids come from Salesforce itself (never from the
  *  caller), but they're escaped anyway so this can't become an injection point if a
  *  future caller passes one through. */
@@ -287,13 +304,19 @@ export class SalesforcePortalRepository implements PortalRepository {
     };
   }
 
-  /** email → FU_User__c (ADR-0005). Brand-scoped isn't needed here: FU_User__c isn't
-   *  brand-specific, unlike Online_Order__c — the row-level scoping happens at the
-   *  order/payment read above, keyed off this resolved client id. */
+  /** email → FU_User__c (ADR-0005), gated on two stakeholder rules: the client is not
+   *  Inactive (`CLIENT_NOT_INACTIVE`) AND owns at least one live WSC order
+   *  (`CLIENT_HAS_LIVE_ORDER`). This is the single sign-in choke point — a client who fails
+   *  either gate never gets a magic link — so both checks live here rather than being
+   *  copied onto every read. The subquery is the only place FU_User resolution touches
+   *  Brand/Online_Order__c; the row-level scoping of the actual data still happens at the
+   *  order/payment reads, keyed off this resolved client. */
   async findClientByEmail(email: string): Promise<ClientIdentity | null> {
     const safeEmail = soqlEscape(email);
     const clients = await this.query(
-      `SELECT Id, Name, E_Mail__c FROM FU_User__c WHERE E_Mail__c = '${safeEmail}' AND ${CLIENT_NOT_INACTIVE} LIMIT 1`,
+      `SELECT Id, Name, E_Mail__c FROM FU_User__c
+       WHERE E_Mail__c = '${safeEmail}' AND ${CLIENT_NOT_INACTIVE} AND ${CLIENT_HAS_LIVE_ORDER}
+       LIMIT 1`,
     );
     const record = clients[0];
     if (!record) {
